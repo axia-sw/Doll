@@ -1110,35 +1110,35 @@ namespace doll { namespace script {
 			} else {
 				Str chk( s );
 				switch( chk.readChar() ) {
-				// �y�z
+				// 【】
 				case 0x3010:
 					expectChar = 0x3011;
 					acceptNL = true;
 					type = SPK;
 					s = chk;
 					break;
-				// �u�v
+				// 「」
 				case 0x300C:
 					expectChar = 0x300D;
 					acceptNL = true;
 					type = MSG1;
 					s = chk;
 					break;
-				// �w�x
+				// 『』
 				case 0x300E:
 					expectChar = 0x300F;
 					acceptNL = true;
 					type = MSG2;
 					s = chk;
 					break;
-				// �i�j
+				// （）
 				case 0xFF08:
 					expectChar = 0xFF09;
 					acceptNL = true;
 					type = MSG3;
 					s = chk;
 					break;
-				// �o�p
+				// ｛｝
 				case 0xFF5B:
 					expectChar = 0xFF5D;
 					acceptNL = true;
