@@ -1,4 +1,4 @@
-project(Doll LANGUAGES CXX)
+project(Doll LANGUAGES C CXX)
 cmake_minimum_required(VERSION 3.4)
 
 find_package(Git)
@@ -71,11 +71,12 @@ if(${GIT_IS_INSIDE_REPO} EQUAL 1)
 endif()
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/lib/gitinfo.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/gitinfo.h.in
     ${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 )
 
 add_library(Doll
+	ext/glew/src/glew.c
 	lib/DollAxlib.cpp
 	lib/Core/Config.cpp
 	lib/Core/Defs.cpp
@@ -133,7 +134,7 @@ add_library(Doll
 	lib/Util/Metrics.cpp
 	lib/UX/DialogueWidget.cpp
 	lib/UX/Widget.cpp
-    ${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
+	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 	include/doll/AxlibConfig.h
 	include/doll/Doll.hpp
 	include/doll/Core/Config.hpp
@@ -219,26 +220,36 @@ add_library(Doll
 	include/doll/Util/ValueStack.hpp
 	include/doll/UX/DialogueWidget.hpp
 	include/doll/UX/Widget.hpp
-	ext/glew/src/glew.c
 )
+
+set_source_files_properties(ext/glew/src/glew.c PROPERTIES LANGUAGE C)
 
 target_include_directories(
 	Doll
-	PUBLIC ${CMAKE_SOURCE_DIR}/include
-	PUBLIC ${CMAKE_SOURCE_DIR}/ext/axlib/include
-	PRIVATE ${CMAKE_SOURCE_DIR}/ext/glew/include
-	PRIVATE ${CMAKE_SOURCE_DIR}/ext/STB
-    PRIVATE ${CMAKE_BINARY_DIR}/include
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ext/axlib/include
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/glew/include
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/STB
+	PRIVATE ${CMAKE_BINARY_DIR}/include
 )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 	target_include_directories(
 		Doll
-		PRIVATE ${CMAKE_SOURCE_DIR}/ext/XA2
+		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/XA2
+	)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	target_link_libraries(
+		Doll
+		PUBLIC gdiplus
+		PUBLIC opengl32
 	)
 endif()
 
 target_compile_definitions(
 	Doll
+	PRIVATE GLEW_STATIC=1
 	PRIVATE DOLL__BUILD=1
 )
