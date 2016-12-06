@@ -253,3 +253,19 @@ target_compile_definitions(
 	PRIVATE GLEW_STATIC=1
 	PRIVATE DOLL__BUILD=1
 )
+
+
+find_package(PNG REQUIRED)
+
+target_include_directories(
+	Doll
+	PRIVATE ${PNG_INCLUDE_DIRS}
+)
+target_link_libraries(
+	Doll
+	PRIVATE ${PNG_LIBRARY}
+)
+target_compile_definitions(
+	Doll
+	PRIVATE ${PNG_DEFINITIONS}
+)

@@ -6,6 +6,8 @@
 #include "doll/Core/MemoryTags.hpp"
 #include "doll/Math/Math.hpp"
 
+#include <png.h>
+
 static void *doll__stbi_malloc( size_t n, const char *f, unsigned l, const char *fn )
 {
 	AX_ASSERT_NOT_NULL( doll::gDefaultAllocator );
@@ -130,6 +132,309 @@ namespace doll
 
 		// meets requirements; this is valid
 		return true;
+	}
+
+	class LoadingTexture {
+		enum class ELoadResult {
+			success,
+			failure,
+			keepSearching
+		};
+		enum class ELoadType {
+			none,
+
+			png,
+			stb
+		};
+		ELoadResult loadPNG( const Str &filename, const TArr<U8> &data );
+		ELoadResult loadViaSTB( const Str &filename, const TArr<U8> &data );
+
+		U32 m_res_x, m_res_y;
+		U8 *m_data;
+		ELoadType m_loadedType;
+		TMutArr<U8> m_ownedBuffer;
+		ETextureFormat m_format;
+		U32 m_channels;
+
+		struct LibpngReadData {
+			TArr<U8> data;
+			UPtr offset;
+		};
+		static void libpngRead_f( png_structp pngptr, png_bytep data, png_size_t length ) {
+			LibpngReadData *const io = reinterpret_cast< LibpngReadData * >( png_get_io_ptr( pngptr ) );
+			AX_ASSERT_NOT_NULL( io );
+
+			AX_ASSERT( io->data.isUsed() );
+
+			if( io->offset + length > io->data.num() || io->offset + length < io->offset ) {
+				png_error( pngptr, "Read error" );
+			}
+
+			memcpy( data, io->data.get() + io->offset, length );
+			io->offset += length;
+		}
+		
+		struct LibpngMessageData {
+			const LoadingTexture *loading;
+			Str filename;
+		};
+		static void libpngError_f( png_structp pngptr, png_const_charp message ) {
+			const LibpngMessageData *const data = reinterpret_cast< LibpngMessageData * >( png_get_error_ptr( pngptr ) );
+			AX_ASSERT_NOT_NULL( data );
+
+			g_ErrorLog( data->filename ) += Str( message );
+			longjmp( png_jmpbuf( pngptr ), 1 );
+		}
+		static void libpngWarning_f( png_structp pngptr, png_const_charp message ) {
+			const LibpngMessageData *const data = reinterpret_cast< LibpngMessageData * >( png_get_error_ptr( pngptr ) );
+			AX_ASSERT_NOT_NULL( data );
+
+			g_WarningLog( data->filename ) += Str( message );
+		}
+
+	public:
+		LoadingTexture()
+		: m_res_x( 0 )
+		, m_res_y( 0 )
+		, m_data( nullptr )
+		, m_loadedType( ELoadType::none )
+		, m_ownedBuffer()
+		, m_format( kTexFmtRGB8 )
+		, m_channels( 0 )
+		{
+		}
+		~LoadingTexture() {
+			fini();
+		}
+
+		Bool load( Str filename, TArr<U8> data ) {
+			ELoadResult r;
+
+			AX_ASSERT_MSG( m_loadedType == ELoadType::none, "Already initialized" );
+
+			if( ( r = loadPNG( filename, data ) ) != ELoadResult::keepSearching ) {
+				AX_ASSERT( r == ELoadResult::failure || m_loadedType == ELoadType::png );
+				return r == ELoadResult::success;
+			}
+
+			if( ( r = loadViaSTB( filename, data ) ) != ELoadResult::keepSearching ) {
+				AX_ASSERT( r == ELoadResult::failure || m_loadedType == ELoadType::stb );
+				return r == ELoadResult::success;
+			}
+
+			return false;
+		}
+		Void fini() {
+			switch( m_loadedType ) {
+			case ELoadType::none:
+				break;
+
+			case ELoadType::png:
+				m_ownedBuffer.clear();
+				m_data = nullptr;
+				break;
+
+			case ELoadType::stb:
+				AX_ASSERT_NOT_NULL( m_data );
+				m_data = ( stbi_image_free( m_data ), nullptr );
+				break;
+			}
+
+			m_loadedType = ELoadType::none;
+			m_res_x = 0;
+			m_res_y = 0;
+		}
+
+		U32 res_x() const { return m_res_x; }
+		U32 res_y() const { return m_res_y; }
+		ETextureFormat format() const { return kTexFmtRGBA8; }
+		U32 channels() const { return 4; }
+
+		U8 *data() const { AX_ASSERT_NOT_NULL( m_data ); return m_data; }
+	};
+
+	LoadingTexture::ELoadResult LoadingTexture::loadPNG( const Str &filename, const TArr<U8> &data ) {
+		static const U32 kMaxPNGRes = 16384;
+		static const UPtr kPNGSigSize = 8;
+		if( data.num() < kPNGSigSize ) {
+			if( filename.getExtension().caseCmp( ".png" ) ) {
+				g_WarningLog( filename ) += "PNG file is too small";
+			}
+
+			return ELoadResult::keepSearching;
+		}
+
+		if( !png_check_sig( ( const png_byte * )data.get(), kPNGSigSize ) ) {
+			if( filename.getExtension().caseCmp( ".png" ) ) {
+				g_WarningLog( filename ) += "Has '.png' extension, but not a valid PNG file";
+			}
+
+			return ELoadResult::keepSearching;
+		}
+
+		LibpngMessageData msgdata;
+		msgdata.loading = this;
+		msgdata.filename = filename;
+
+		png_structp pngptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, (png_voidp)&msgdata, &libpngError_f, &libpngWarning_f );
+		if( !pngptr ) {
+			g_ErrorLog( filename ) += "Failed to create PNG read struct";
+			return ELoadResult::failure;
+		}
+
+		png_infop infoptr = png_create_info_struct( pngptr );
+		if( !infoptr ) {
+			g_ErrorLog( filename ) += "Failed to create PNG info struct";
+			png_destroy_read_struct( &pngptr, nullptr, nullptr );
+			return ELoadResult::failure;
+		}
+
+		png_set_user_limits( pngptr, kMaxPNGRes, kMaxPNGRes );
+
+		LibpngReadData iodata;
+		iodata.data = data;
+		iodata.offset = 0;
+		png_set_read_fn( pngptr, &iodata, &libpngRead_f );
+
+		TMutArr<png_bytep> rows;
+
+		if( setjmp( png_jmpbuf( pngptr ) ) ) {
+			png_destroy_read_struct( &pngptr, &infoptr, nullptr );
+			m_ownedBuffer.purge();
+			return ELoadResult::failure;
+		}
+
+		png_set_sig_bytes( pngptr, 0 );
+		png_read_info( pngptr, infoptr );
+
+		const int pngbitdepth = png_get_bit_depth( pngptr, infoptr );
+		const int pngcolortype = png_get_color_type( pngptr, infoptr );
+
+		if( pngcolortype == PNG_COLOR_TYPE_PALETTE ) {
+			png_set_palette_to_rgb( pngptr );
+		} else if( pngcolortype == PNG_COLOR_TYPE_GRAY && pngbitdepth < 8 ) {
+				png_set_expand_gray_1_2_4_to_8( pngptr );
+		}
+		png_set_gray_to_rgb( pngptr );
+
+		if( png_get_valid( pngptr, infoptr, PNG_INFO_tRNS ) ) {
+			png_set_tRNS_to_alpha( pngptr );
+		}
+
+		if( pngbitdepth == 16 ) {
+			png_set_strip_16( pngptr );
+		} else if( pngbitdepth < 8 ) {
+			png_set_packing( pngptr );
+		}
+
+		png_read_update_info( pngptr, infoptr );
+
+		char buf[ 128 ];
+
+		const U32 pngresx = png_get_image_width( pngptr, infoptr );
+		const U32 pngresy = png_get_image_height( pngptr, infoptr );
+		g_DebugLog += "M";
+		switch( png_get_color_type( pngptr, infoptr ) ) {
+		case PNG_COLOR_TYPE_GRAY:
+			m_format = kTexFmtRGB8;
+			m_channels = 3;
+			break;
+		case PNG_COLOR_TYPE_GRAY_ALPHA:
+			m_format = kTexFmtRGBA8;
+			m_channels = 4;
+			break;
+		case PNG_COLOR_TYPE_RGB:
+			m_format = kTexFmtRGB8;
+			m_channels = 3;
+			break;
+		case PNG_COLOR_TYPE_RGB_ALPHA:
+			m_format = kTexFmtRGBA8;
+			m_channels = 4;
+			break;
+
+		default:
+			g_ErrorLog( filename ) += axspf( buf, "Unknown color type: %i", int( png_get_color_type( pngptr, infoptr ) ) );
+			longjmp( png_jmpbuf( pngptr ), 1 );
+		}
+
+		g_VerboseLog( filename ) += axspf( buf, "PNG resolution: %ux%u", pngresx, pngresy );
+		g_DebugLog += buf;
+
+		if( pngresx > kMaxPNGRes || pngresy > kMaxPNGRes ) {
+			g_ErrorLog( filename ) += axspf( buf, "PNG is too large (%ux%u exceeds maximum of %u on any axis)", pngresx, pngresy, kMaxPNGRes );
+			longjmp( png_jmpbuf( pngptr ), 1 );
+		}
+
+		if( !rows.reserve( axarr_size_t( pngresy ) ) ) {
+			g_ErrorLog( filename ) += "Failed to allocate PNG row pointers";
+			longjmp( png_jmpbuf( pngptr ), 1 );
+		}
+
+		if( !m_ownedBuffer.resize( pngresx*pngresy*m_channels ) ) {
+			g_ErrorLog( filename ) += "Failed to allocate PNG image data";
+			longjmp( png_jmpbuf( pngptr ), 1 );
+		}
+
+		do {
+			const U32 stride = pngresx*m_channels;
+			rows.resize( pngresy );
+			for( U32 y = 0; y < pngresy; ++y ) {
+				rows[ pngresy - ( y + 1 ) ] = m_ownedBuffer.pointer( y*stride );
+			}
+		} while( false );
+
+		png_set_rows( pngptr, infoptr, rows.pointer() );
+
+		png_read_image( pngptr, rows.pointer() );
+		png_read_end( pngptr, nullptr );
+
+		png_destroy_read_struct( &pngptr, &infoptr, nullptr );
+
+		m_res_x = pngresx;
+		m_res_y = pngresy;
+
+		m_data = m_ownedBuffer.pointer();
+		return ELoadResult::success;
+	}
+	LoadingTexture::ELoadResult LoadingTexture::loadViaSTB( const Str &filename, const TArr<U8> &data ) {
+		// Check if it's a known extension
+		do {
+			static const Str knownexts[] = {
+				".png", ".jpg", ".bmp", ".tga", ".psd", ".dds"
+			};
+
+			const Str fileext( filename.getExtension() );
+
+			Bool found = false;
+			for( const Str &testext : knownexts ) {
+				if( fileext.caseCmp( testext ) ) {
+					found = true;
+					break;
+				}
+			}
+
+			if( !found ) {
+				return ELoadResult::keepSearching;
+			}
+		} while( false );
+
+		stbi_set_flip_vertically_on_load( 1 );
+
+		// Try loading the data into memory
+		do {
+			int w = 0, h = 0, c = 0;
+			auto *image = stbi_load_from_memory( ( const stbi_uc * )data.get(), int(ptrdiff_t(data.num())), &w, &h, &c, STBI_rgb_alpha );
+			if( !image ) {
+				return ELoadResult::failure;
+			}
+			m_data = reinterpret_cast< U8 * >( image );
+			m_res_x = static_cast< U32 >( w );
+			m_res_y = static_cast< U32 >( h );
+		} while( false );
+
+		// Done
+		m_loadedType = ELoadType::stb;
+		return ELoadResult::success;
 	}
 
 	/*
@@ -646,41 +951,42 @@ namespace doll
 	// load up a new texture
 	RTexture *MTextures::loadTexture( Str filename, CTextureAtlas *specificAtlas )
 	{
-		stbi_set_flip_vertically_on_load( 1 );
-
 		//
 		//	XXX: This needs to be fixed to support RGB8 too
 		//
 
+		LoadingTexture loading;
+
 		// load the file
-		U8 *filedata = nullptr;
-		UPtr filesize = 0;
+		do {
+			U8 *filedata = nullptr;
+			UPtr filesize = 0;
 
-		if( !core_loadFile( filename, filedata, filesize, kTag_Texture ) ) {
-			return nullptr;
-		}
+			if( !core_loadFile( filename, filedata, filesize, kTag_Texture ) ) {
+				return nullptr;
+			}
 
-		// try to load up the image
-		int width, height, channels;
-		U8 *data = nullptr;
+			// try to load up the image
+			const Bool didLoad = loading.load( filename, TArr<U8>(filedata, filesize) );
+			core_freeFile( filedata );
 
-		data = stbi_load_from_memory( (const stbi_uc *)filedata, (int)filesize, &width, &height, &channels, STBI_rgb_alpha );
-		core_freeFile( filedata );
+			if( !didLoad ) {
+				g_DebugLog( filename ) += "Failed to load image.";
+				return nullptr;
+			}
+		} while( false );
 
-		g_DebugLog( filename ) += axf( "res: %i, %i; channels: %i;", width, height, channels );
-
-		if( !AX_VERIFY_MSG( data != nullptr, "Could not load image" ) ) {
-			return nullptr;
-		}
-
-		const ETextureFormat format = kTexFmtRGBA8;
-		const int forceChannels = 4;
+		const U32 width = loading.res_x();
+		const U32 height = loading.res_y();
+		const ETextureFormat format = loading.format();
+		const U32 channels = loading.channels();
+		U8 *const data = loading.data();
 
 		// swap colors then copy the memory over
-		for( int y=0; y<height; ++y ) {
-			for( int x=0; x<width; ++x ) {
-				U8 *off = &data[ ( y*width + x )*forceChannels ];
-				U8 tmp = off[ 2 ];
+		for( U32 y=0; y<height; ++y ) {
+			for( U32 x=0; x<width; ++x ) {
+				U8 *const off = &data[ ( y*width + x )*channels ];
+				const U8 tmp = off[ 2 ];
 				off[ 2 ] = off[ 0 ];
 				off[ 0 ] = tmp;
 			}
@@ -688,10 +994,6 @@ namespace doll
 
 		// load the image as an actual texture
 		RTexture *const tex = makeTexture( width, height, ( Void * )data, format, specificAtlas );
-
-		// we no longer require the image data
-		stbi_image_free( data );
-		data = nullptr;
 
 		// done
 		return tex;
