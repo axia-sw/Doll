@@ -493,6 +493,7 @@ namespace doll
 
 		for( RLayer *pLayer = head(); pLayer != nullptr; pLayer = pLayer->next() ) {
 			pLayer->reflowWithin( Host );
+			pLayer->reflow();
 		}
 	}
 	Void RLayer::reflowWithin( const SRect &Host )

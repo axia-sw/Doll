@@ -646,6 +646,8 @@ namespace doll
 	// load up a new texture
 	RTexture *MTextures::loadTexture( Str filename, CTextureAtlas *specificAtlas )
 	{
+		stbi_set_flip_vertically_on_load( 1 );
+
 		//
 		//	XXX: This needs to be fixed to support RGB8 too
 		//
@@ -662,8 +664,10 @@ namespace doll
 		int width, height, channels;
 		U8 *data = nullptr;
 
-		data = stbi_load_from_memory( nullptr, 0, &width, &height, &channels, STBI_rgb_alpha );
+		data = stbi_load_from_memory( (const stbi_uc *)filedata, (int)filesize, &width, &height, &channels, STBI_rgb_alpha );
 		core_freeFile( filedata );
+
+		g_DebugLog( filename ) += axf( "res: %i, %i; channels: %i;", width, height, channels );
 
 		if( !AX_VERIFY_MSG( data != nullptr, "Could not load image" ) ) {
 			return nullptr;
