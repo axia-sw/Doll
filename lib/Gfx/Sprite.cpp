@@ -132,13 +132,13 @@ namespace doll
 	static inline Void _applyCamera( F32 x, F32 y, F32 angle, F32 orgX, F32 orgY, F32 resX, F32 resY )
 	{
 		Mat4f proj;
-		proj.loadOrthoProj( orgX, orgX + resX, orgY + resY, orgY, 1, 1000 );
+		proj.loadOrthoProj( orgX, orgX + resX, orgY + resY, orgY, 0, 1000 );
 
-		glMatrixMode( GL_PROJECTION );
-		glLoadMatrixf( proj.ptr() );
+		gfx_r_loadProjection( proj.ptr() );
 
-		const F32 c = cos( 360 - wrap360( angle ) );
-		const F32 s = sin( 360 - wrap360( angle ) );
+		// FIXME: This doesn't actually work
+		const F32 c = cos( degrees( 360 - wrap360( angle ) ) );
+		const F32 s = sin( degrees( 360 - wrap360( angle ) ) );
 		const F32 z = -s;
 		const F32 p = -( x*c + y*z );
 		const F32 q = -( x*s + y*c );
@@ -150,8 +150,8 @@ namespace doll
 			p, q, 0, 1
 		};
 
-		glMatrixMode( GL_MODELVIEW );
-		glLoadMatrixf( viewTransform );
+		// HACK: Uncomment once the above above is correct
+		//gfx_r_loadModelView( viewTransform );
 	}
 	Void RSpriteGroup::render_gl( S32 w, S32 h )
 	{
@@ -197,16 +197,10 @@ namespace doll
 		};
 		_applyCamera( camera.translation.x, camera.translation.y, camera.rotation, org[ 0 ], org[ 1 ], res[ 0 ], res[ 1 ] );
 
-		// fixed memory buffer (receives the quads)
-		SVertex2DSprite quad[ 4 ];
+		renderPrims.reset();
+		renderPrims.setPrimitiveType( kTopologyTriangleList );
 
-		// prepare to render each sprite
-		glEnableClientState( GL_VERTEX_ARRAY );
-		glEnableClientState( GL_COLOR_ARRAY );
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-		glVertexPointer( 2, GL_FLOAT, sizeof( quad[ 0 ] ), &quad[ 0 ].x );
-		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( quad[ 0 ] ), &quad[ 0 ].diffuse );
-		glTexCoordPointer( 2, GL_FLOAT, sizeof( quad[ 0 ] ), &quad[ 0 ].u );
+		SVertex2DSprite quad[ 4 ];
 
 		// render each sprite
 		for( RSprite *sprite = grp_spriteList.head(); sprite != nullptr; sprite = sprite->grp_spriteLink.next() ) {
@@ -257,10 +251,10 @@ namespace doll
 			const U32 d2 = sprite->getFrameCornerDiffuse( 1 );
 			const U32 d3 = sprite->getFrameCornerDiffuse( 2 );
 			const U32 d4 = sprite->getFrameCornerDiffuse( 3 );
-			const Vec2f bl = ( xform.translation + rotate( Vec2f( x1, y1 ), xform.rotation ) ).snap();
-			const Vec2f tl = ( xform.translation + rotate( Vec2f( x1, y2 ), xform.rotation ) ).snap();
-			const Vec2f tr = ( xform.translation + rotate( Vec2f( x2, y2 ), xform.rotation ) ).snap();
-			const Vec2f br = ( xform.translation + rotate( Vec2f( x2, y1 ), xform.rotation ) ).snap();
+			const Vec2f tl = ( xform.translation + rotate( Vec2f( x1, y1 ), xform.rotation ) ).snap();
+			const Vec2f tr = ( xform.translation + rotate( Vec2f( x2, y1 ), xform.rotation ) ).snap();
+			const Vec2f bl = ( xform.translation + rotate( Vec2f( x1, y2 ), xform.rotation ) ).snap();
+			const Vec2f br = ( xform.translation + rotate( Vec2f( x2, y2 ), xform.rotation ) ).snap();
 #define SETQ(I_,X_,Y_,D_,U_,V_)\
 	do {\
 		quad[I_].x=X_;\
@@ -270,12 +264,38 @@ namespace doll
 		quad[I_].u=U_;\
 		quad[I_].v=V_;\
 	} while(0)
+#define SENDQ(I_)\
+	do {\
+		renderPrims.color( quad[I_].diffuse );\
+		renderPrims.texcoord2f( quad[I_].u, quad[I_].v );\
+		renderPrims.vertex2f( quad[I_].x, quad[I_].y );\
+	} while(0)
+#define Q_TL 0
+#define Q_TR 1
+#define Q_BL 2
+#define Q_BR 3
 
-			SETQ( 0, tl.x, tl.y, d3, s1, t2 );
-			SETQ( 1, tr.x, tr.y, d2, s2, t2 );
-			SETQ( 2, bl.x, bl.y, d1, s1, t1 );
-			SETQ( 3, br.x, br.y, d4, s2, t1 );
+			const UPtr texh = texture->getBackingTexture();
+			renderPrims.setTexture( texh );
 
+			SETQ( Q_TL, tl.x, tl.y, d3, s1, t2 );
+			SETQ( Q_TR, tr.x, tr.y, d2, s2, t2 );
+			SETQ( Q_BL, bl.x, bl.y, d1, s1, t1 );
+			SETQ( Q_BR, br.x, br.y, d4, s2, t1 );
+
+			SENDQ( Q_BL );
+			SENDQ( Q_TL );
+			SENDQ( Q_TR );
+
+			SENDQ( Q_BL );
+			SENDQ( Q_TR );
+			SENDQ( Q_BR );
+
+#undef Q_BR
+#undef Q_BL
+#undef Q_TR
+#undef Q_TL
+#undef SENDQ
 #undef SETQ
 
 #if 0
@@ -290,18 +310,13 @@ namespace doll
 			};
 #endif
 
-			const UPtr texh = texture->getBackingTexture();
-			const GLuint tex = GLuint( texh );
-
-			glBindTexture( GL_TEXTURE_2D, tex );
-
 #if 0
 			hr = device->SetTransform( D3DTS_WORLD, &modelTransform );
 			AX_ASSERT_MSG( SUCCEEDED( hr ), "Invalid D3D op" );
 #endif
-
-			glDrawArrays( GL_TRIANGLE_STRIP, 0, 2 );
 		}
+
+		renderPrims.submit();
 	}
 	Void RSpriteGroup::update()
 	{

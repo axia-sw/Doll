@@ -31,7 +31,7 @@ namespace doll
 			static const U32 kFormat_Colored  = Vertex::kFmtPos | kVF_DiffuseBit;
 			static const U32 kFormat_Textured = Vertex::kFmtPos | kVF_DiffuseBit | kVF_Tex1;
 
-			__forceinline static void set( Vertex *p, F32 x, F32 y ) {
+			AX_FORCEINLINE static void set( Vertex *p, F32 x, F32 y ) {
 				p->x = x;
 				p->y = y;
 				p->z = 0.0f;
@@ -45,7 +45,7 @@ namespace doll
 			static const U32 kFormat_Colored  = Vertex::kFmtPos | kVF_DiffuseBit;
 			static const U32 kFormat_Textured = Vertex::kFmtPos | kVF_DiffuseBit | kVF_Tex1;
 
-			__forceinline static void set( Vertex *p, F32 x, F32 y ) {
+			AX_FORCEINLINE static void set( Vertex *p, F32 x, F32 y ) {
 				p->x = x;
 				p->y = y;
 				//p->z = 1.0f;
@@ -87,6 +87,7 @@ namespace doll
 		{
 			primType = kTopologyTriangleList;
 			vertexFormat = Vertex::kFmtPos | kVF_DiffuseBit;
+			lastTexture = 0;
 		}
 
 		inline U32 getVertexCount() const

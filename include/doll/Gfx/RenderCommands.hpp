@@ -27,7 +27,8 @@ namespace doll
 		RCMD_DRAW_IMAGE,
 		RCMD_SET_SCISSOR,
 		RCMD_CLEAR_RECT,
-		RCMD_BLEND
+		RCMD_BLEND,
+		RCMD_SET_ORTHO
 	};
 	enum ECorner
 	{

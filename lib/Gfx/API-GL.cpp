@@ -377,6 +377,17 @@ namespace doll
 		destroyBufferGL( (GLuint)(UPtr)ib );
 	}
 
+	Void CGfxAPI_GL::vsSetProjectionMatrix( const F32 *matrix )
+	{
+		glMatrixMode( GL_PROJECTION );
+		glLoadMatrixf( matrix );
+	}
+	Void CGfxAPI_GL::vsSetModelViewMatrix( const F32 *matrix )
+	{
+		glMatrixMode( GL_MODELVIEW );
+		glLoadMatrixf( matrix );
+	}
+
 	Void CGfxAPI_GL::psoSetScissorEnable( Bool enable )
 	{
 		if( enable ) {

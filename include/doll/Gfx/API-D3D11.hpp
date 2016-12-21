@@ -38,6 +38,9 @@ namespace doll
 		virtual IGfxAPIIBuffer *createIBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) override;
 		virtual Void destroyVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void destroyIBuffer( IGfxAPIIBuffer * ) override;
+		
+		virtual Void vsSetProjectionMatrix( const F32 *matrix ) override;
+		virtual Void vsSetModelViewMatrix( const F32 *matrix ) override;
 
 		virtual Void psoSetScissorEnable( Bool enable ) override;
 		virtual Void psoSetTextureEnable( Bool enable ) override;

@@ -94,6 +94,15 @@ namespace doll
 		( ( Void )pIBuf );
 	}
 
+	Void CGfxAPI_D3D11::vsSetProjectionMatrix( const F32 *matrix )
+	{
+		( ( Void )matrix );
+	}
+	Void CGfxAPI_D3D11::vsSetModelViewMatrix( const F32 *matrix )
+	{
+		( ( Void )matrix );
+	}
+
 	Void CGfxAPI_D3D11::psoSetScissorEnable( Bool enable )
 	{
 		( ( Void )enable );

@@ -106,6 +106,17 @@ namespace doll
 	{
 	}
 
+	inline void setViewport( const SViewport &VP )
+	{
+		gfx_r_setViewport
+		(
+			max( VP.shape.x1, 0 ),
+			max( VP.shape.y1, 0 ),
+			VP.shape.resX(),
+			VP.shape.resY()
+		);
+	}
+
 	Void RLayer::renderGL( MLayers::SRenderer &Renderer, CGfxFrame *pView )
 	{
 		// Skip this viewport if it's either not visible or not meant to be rendered from the given viewport
@@ -124,13 +135,7 @@ namespace doll
 		
 		// Apply the GL viewport
 		const SViewport VP = Renderer.topViewport();
-		gfx_r_setViewport
-		(
-			max( VP.shape.x1, 0 ),
-			max( VP.shape.y1, 0 ),
-			VP.shape.resX(),
-			VP.shape.resY()
-		);
+		setViewport( VP );
 
 		// Set the scissor rectangle
 		gfx_r_setScissor
@@ -148,6 +153,7 @@ namespace doll
 		if( m_Properties.bAutoclear ) {
 			gfx_clearQueue();
 		}
+		setViewport( VP );
 		postrenderGL( pView );
 
 		// Render child layers

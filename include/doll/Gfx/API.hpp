@@ -216,6 +216,9 @@ namespace doll
 		virtual Void destroyVBuffer( IGfxAPIVBuffer * ) = 0;
 		virtual Void destroyIBuffer( IGfxAPIIBuffer * ) = 0;
 
+		virtual Void vsSetProjectionMatrix( const F32 *matrix ) = 0;
+		virtual Void vsSetModelViewMatrix( const F32 *matrix ) = 0;
+
 		virtual Void psoSetScissorEnable( Bool enable ) = 0;
 		virtual Void psoSetTextureEnable( Bool enable ) = 0;
 		virtual Void psoSetBlend( EBlendOp, EBlendFactor colA, EBlendFactor colB, EBlendFactor alphaA, EBlendFactor alphaB ) = 0;
@@ -276,6 +279,9 @@ namespace doll
 
 	DOLL_FUNC U32 DOLL_API gfx_r_resX();
 	DOLL_FUNC U32 DOLL_API gfx_r_resY();
+
+	DOLL_FUNC Void DOLL_API gfx_r_loadProjection( const F32 *matrix );
+	DOLL_FUNC Void DOLL_API gfx_r_loadModelView( const F32 *matrix );
 
 	DOLL_FUNC Void DOLL_API gfx_r_enableScissor();
 	DOLL_FUNC Void DOLL_API gfx_r_disableScissor();

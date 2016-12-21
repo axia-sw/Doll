@@ -200,6 +200,17 @@ namespace doll
 		return g_pCurrentFrame->getResY();
 	}
 
+	DOLL_FUNC Void DOLL_API gfx_r_loadProjection( const F32 *matrix )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->vsSetProjectionMatrix( matrix );
+	}
+	DOLL_FUNC Void DOLL_API gfx_r_loadModelView( const F32 *matrix )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->vsSetModelViewMatrix( matrix );
+	}
+
 	DOLL_FUNC Void DOLL_API gfx_r_enableScissor()
 	{
 		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );

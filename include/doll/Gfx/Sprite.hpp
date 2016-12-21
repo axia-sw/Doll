@@ -6,6 +6,7 @@
 #include "../Math/Math.hpp"
 #include "Texture.hpp"
 #include "API-GL.hpp"
+#include "PrimitiveBuffer.hpp"
 
 #ifndef DOLL_HAS_SPRITE_ACTIONS
 # define DOLL_HAS_SPRITE_ACTIONS 1
@@ -764,6 +765,8 @@ namespace doll
 		Bool virtualResolutionEnabled;
 		Vec2f virtualResolution;
 		Vec2f virtualOrigin;
+
+		PrimitiveBuffer renderPrims;
 	};
 
 	/*
