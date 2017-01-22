@@ -171,6 +171,10 @@ namespace doll
 			return *this;
 		}
 
+		inline U64 elapsedNanoseconds() const
+		{
+			return microsecondsToNanoseconds( elapsedMicroseconds() );
+		}
 		inline U64 elapsedMicroseconds() const
 		{
 			return uCurrMicrosecs - uPrevMicrosecs;

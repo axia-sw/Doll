@@ -854,7 +854,7 @@ namespace doll
 	}
 
 	// make a new texture
-	RTexture *MTextures::makeTexture( U16 width, U16 height, Void *data, ETextureFormat format, CTextureAtlas *specificAtlas )
+	RTexture *MTextures::makeTexture( U16 width, U16 height, const Void *data, ETextureFormat format, CTextureAtlas *specificAtlas )
 	{
 		CTextureAtlas *atlas = nullptr;
 		RTexture *tex = nullptr;
@@ -1331,7 +1331,7 @@ namespace doll
 		return nullptr;
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, void *data, ETextureFormat format )
+	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format )
 	{
 		RTexture *const tex = g_textureMgr.makeTexture( width, height, data, format );
 		if( !tex ) {
@@ -1340,7 +1340,7 @@ namespace doll
 
 		return tex->getIdentifier();
 	}
-	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, void *data, ETextureFormat format, CTextureAtlas *atlas )
+	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas )
 	{
 		AX_ASSERT_NOT_NULL( atlas );
 

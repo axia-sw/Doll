@@ -1,11 +1,13 @@
-#undef WIN32_LEAN_AND_MEAN // this can't be defined because we need DeviceIoControl
-#if !defined( _WIN32_WINNT ) || ( _WIN32_WINNT < 0x0601 )
-# undef _WIN32_WINNT
-# define _WIN32_WINNT 0x0601 // must be at least this
+#ifdef _WIN32
+# undef WIN32_LEAN_AND_MEAN // this can't be defined because we need DeviceIoControl
+# if !defined( _WIN32_WINNT ) || ( _WIN32_WINNT < 0x0601 )
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT 0x0601 // must be at least this
+# endif
+# include <Windows.h>
+# undef min
+# undef max
 #endif
-#include <Windows.h>
-#undef min
-#undef max
 
 #include "doll/IO/File.hpp"
 #include "doll/IO/VFS.hpp"
@@ -255,6 +257,52 @@ namespace doll
 		}
 	}
 
+#ifndef _WIN32
+	union AlignPtr {
+		Void  *p;
+		Void **a;
+		UPtr   n;
+	};
+#endif
+	static Void *alignedAlloc( UPtr cBytes, UPtr uAlignment )
+	{
+#ifdef _WIN32
+		return _aligned_malloc( cBytes, uAlignment );
+#else
+		AlignPtr x;
+
+		Void *const p = malloc( cBytes + uAlignment + sizeof(Void*) );
+		if( !p ) {
+			return nullptr;
+		}
+
+		x.p  = p;
+		x.a += 1;
+		x.n += uAlignment - x.n%uAlignment;
+
+		*( x.a - 1 ) = p;
+
+		return x.p;
+#endif
+	}
+	static Void alignedFree( Void *p )
+	{
+#ifdef _WIN32
+		_aligned_free( p );
+#else
+		AlignPtr x;
+
+		if( !p ) {
+			return;
+		}
+
+		x.p  = p;
+		p = *( x.a - 1 );
+
+		free( p );
+#endif
+	}
+
 	Bool RStreamFile::open( Str filename, UPtr cBufferBytes, UPtr cMinSectors )
 	{
 		//
@@ -286,7 +334,7 @@ namespace doll
 
 		AX_ASSERT( m_cMaxBytes > 0 );
 
-		if( !AX_VERIFY_MEMORY( m_pBuffer = _aligned_malloc( m_cMaxBytes, m_uSectorAlignment ) ) ) {
+		if( !AX_VERIFY_MEMORY( m_pBuffer = alignedAlloc( m_cMaxBytes, m_uSectorAlignment ) ) ) {
 			m_cMaxBytes = 0;
 
 			m_pFile = fs_close( m_pFile );
@@ -300,7 +348,7 @@ namespace doll
 	Void RStreamFile::close()
 	{
 		if( m_pBuffer != nullptr ) {
-			_aligned_free( m_pBuffer );
+			alignedFree( m_pBuffer );
 			m_pBuffer = nullptr;
 		}
 
@@ -466,6 +514,8 @@ namespace doll
 		AX_ASSERT_NOT_NULL( m_pFile );
 		return m_uPos;
 	}
+
+	//--------------------------------------------------------------------//
 
 	DOLL_FUNC RStreamFile *DOLL_API core_sfopen( Str filename, UPtr cBufferBytes, UPtr cMinSectors )
 	{

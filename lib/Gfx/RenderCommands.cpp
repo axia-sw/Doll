@@ -13,6 +13,12 @@
 namespace doll
 {
 
+#ifndef _WIN32
+	struct RECT {
+		S32 left, top, right, bottom;
+	};
+#endif
+
 	static RLayer *         g_pCurrentLayer   = nullptr;
 	static TMutArr<U8> *    g_pRenderCommands = nullptr;
 	static PrimitiveBuffer *g_pRenderPrims    = nullptr;
@@ -910,7 +916,7 @@ namespace doll
 
 	static U32 g_curInk = 0xFFFFFFFF;
 
-	DOLL_FUNC EResult DOLL_API gfx_ink( DWORD color )
+	DOLL_FUNC EResult DOLL_API gfx_ink( U32 color )
 	{
 		g_curInk = color;
 		return kSuccess;

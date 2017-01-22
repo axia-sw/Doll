@@ -1,14 +1,19 @@
-#undef WIN32_LEAN_AND_MEAN // this can't be defined because we need DeviceIoControl
-#if !defined( _WIN32_WINNT ) || ( _WIN32_WINNT < 0x0601 )
-# undef _WIN32_WINNT
-# define _WIN32_WINNT 0x0601 // must be at least this
+#ifdef _WIN32
+# undef WIN32_LEAN_AND_MEAN // this can't be defined because we need DeviceIoControl
+# if !defined( _WIN32_WINNT ) || ( _WIN32_WINNT < 0x0601 )
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT 0x0601 // must be at least this
+# endif
+# include <Windows.h>
+# include <ShlObj.h>
+# undef min
+# undef max
+#else
+# include <errno.h>
+# include <sys/stat.h>
 #endif
-#include <Windows.h>
-#include <ShlObj.h>
-#undef min
-#undef max
 
-#include "doll/IO/SysFs.hpp"
+#include "doll/IO/SysFS.hpp"
 
 #include "doll/Core/Memory.hpp"
 #include "doll/Core/MemoryTags.hpp"
@@ -18,6 +23,7 @@
 namespace doll
 {
 
+#ifdef _WIN32
 	enum class EWin32Path
 	{
 		File,
@@ -326,6 +332,7 @@ namespace doll
 		WIN32_FIND_DATAW m_findData;
 		Bool             m_bHaveData;
 	};
+#endif
 
 	DOLL_FUNC U32 DOLL_API sysfs_getSectorSize( const Str &filename )
 	{
@@ -336,6 +343,7 @@ namespace doll
 		//	`     physical sector size.
 		//
 
+#ifdef _WIN32
 		const Str root = ( filename.isEmpty() ? app_getPath() : filename ).getRoot();
 		char szDrive[ 8 ] = { '\\', '\\', '.', '\\', 'C', ':', 0, 0 };
 
@@ -363,14 +371,19 @@ namespace doll
 		hDrive = INVALID_HANDLE_VALUE;
 
 		if( !bResult ) {
-			return false;
+			return 0;
 		}
 
 		return ( UPtr )desc.BytesPerPhysicalSector;
+#else
+		// Hard-coded assumption fallback
+		return 512;
+#endif
 	}
 
 	DOLL_FUNC Bool DOLL_API sysfs_stat( SFileStat &dst, const Str &filename )
 	{
+#ifdef _WIN32
 		wchar_t wszName[ kMaxPath*2 ];
 		if( !win32path( wszName, filename, EWin32Path::File ) ) {
 			return false;
@@ -396,9 +409,13 @@ namespace doll
 
 		FindClose( hFind );
 		return true;
+#else
+		return false;
+#endif
 	}
 	DOLL_FUNC Bool DOLL_API sysfs_statHandle( SFileStat &dst, OSFile f )
 	{
+#ifdef _WIN32
 		BY_HANDLE_FILE_INFORMATION info;
 
 		if( !GetFileInformationByHandle( win32h( f ), &info ) ) {
@@ -414,10 +431,14 @@ namespace doll
 		dst.cBytes        = U64(info.nFileSizeHigh)<<32 | U64(info.nFileSizeLow);
 
 		return true;
+#else
+		return false;
+#endif
 	}
 
 	DOLL_FUNC EFileOpenResult DOLL_API sysfs_open( OSFile &f, const Str &filename, U32 flags, U32 attribs )
 	{
+#ifdef _WIN32
 		wchar_t wszFilename[ kMaxPath*2 ];
 
 		if( !win32path( wszFilename, filename, EWin32Path::File ) ) {
@@ -449,26 +470,36 @@ namespace doll
 
 		f = ( OSFile )h;
 		return EFileOpenResult::Ok;
+#else
+		return EFileOpenResult::UnknownError;
+#endif
 	}
 	DOLL_FUNC NullPtr DOLL_API sysfs_close( OSFile f )
 	{
+#ifdef _WIN32
 		if( win32h( f ) != INVALID_HANDLE_VALUE ) {
 			CloseHandle( win32h( f ) );
 		}
+#endif
 
 		return nullptr;
 	}
 
 	DOLL_FUNC U64 DOLL_API sysfs_size( OSFile f )
 	{
+#ifdef _WIN32
 		LARGE_INTEGER fileSize;
 		if( !GetFileSizeEx( win32h( f ), &fileSize ) ) {
 			return 0;
 		}
 
 		return (U64)fileSize.QuadPart;
+#else
+		return 0;
+#endif
 	}
 
+#ifdef _WIN32
 	static EFileIOResult win32ioerr()
 	{
 		const DWORD dwLastErr = GetLastError();
@@ -487,8 +518,10 @@ namespace doll
 
 		return EFileIOResult::UnknownError;
 	}
+#endif
 	DOLL_FUNC EFileIOResult DOLL_API sysfs_write( OSFile f, const Void *pSrc, UPtr cBytes, UPtr &cBytesWritten )
 	{
+#ifdef _WIN32
 		const DWORD dwReq = DWORD( cBytes & 0xFFFFFFFF );
 		DWORD dwGot = 0;
 
@@ -498,9 +531,13 @@ namespace doll
 
 		cBytesWritten = ( UPtr )dwGot;
 		return EFileIOResult::Ok;
+#else
+		return EFileIOResult::UnknownError;
+#endif
 	}
 	DOLL_FUNC EFileIOResult DOLL_API sysfs_read( OSFile f, Void *pDst, UPtr cBytes, UPtr &cBytesRead )
 	{
+#ifdef _WIN32
 		const DWORD dwReq = DWORD( cBytes & 0xFFFFFFFF );
 		DWORD dwGot = 0;
 
@@ -510,10 +547,14 @@ namespace doll
 
 		cBytesRead = ( UPtr )dwGot;
 		return EFileIOResult::Ok;
+#else
+		return EFileIOResult::UnknownError;
+#endif
 	}
 
 	DOLL_FUNC Bool DOLL_API sysfs_seek( OSFile f, S64 uOffset, ESeekMode mode )
 	{
+#ifdef _WIN32
 		DWORD dwMoveMethod = 0;
 		switch( mode ) {
 		case ESeekMode::Absolute:
@@ -533,18 +574,26 @@ namespace doll
 		offset.QuadPart = uOffset;
 
 		return SetFilePointerEx( win32h( f ), offset, nullptr, dwMoveMethod ) != FALSE;
+#else
+		return false;
+#endif
 	}
 	DOLL_FUNC U64 DOLL_API sysfs_tell( const OSFile f )
 	{
+#ifdef _WIN32
 		LARGE_INTEGER offset = { { 0, 0 } };
 		if( !SetFilePointerEx( win32h( f ), offset, &offset, FILE_CURRENT ) ) {
 			return 0;
 		}
 		return U64( offset.QuadPart );
+#else
+		return 0;
+#endif
 	}
 
 	DOLL_FUNC EFileOpenResult DOLL_API sysfs_openDir( OSDir &dstDir, const Str &dirname )
 	{
+#ifdef _WIN32
 		dstDir = nullptr;
 
 		CWin32Dir *const pDir = new CWin32Dir();
@@ -560,21 +609,31 @@ namespace doll
 
 		dstDir = ( OSDir )pDir;
 		return r;
+#else
+		return EFileOpenResult::UnknownError;
+#endif
 	}
 	DOLL_FUNC NullPtr DOLL_API sysfs_closeDir( OSDir dir )
 	{
+#ifdef _WIN32
 		delete ( CWin32Dir * )dir;
+#endif
 		return nullptr;
 	}
 
 	DOLL_FUNC Bool DOLL_API sysfs_readDir( OSDir dir, SDirEntry &dstEntry )
 	{
 		AX_ASSERT_NOT_NULL( dir );
+#ifdef _WIN32
 		return ( ( CWin32Dir * )dir )->read( dstEntry );
+#else
+		return false;
+#endif
 	}
 
 	DOLL_FUNC UPtr DOLL_API sysfs_getDir( char *pszDst, UPtr cDstBytes )
 	{
+#ifdef _WIN32
 		static CRITICAL_SECTION cs;
 		static wchar_t wszBuf[ 32768 ];
 		static bool didInit = false;
@@ -603,9 +662,17 @@ namespace doll
 		LeaveCriticalSection( &cs );
 
 		return UPtr( dwNumChars );
+#else
+		AX_ASSERT_NOT_NULL( pszDst );
+		AX_ASSERT( cDstBytes > 0 );
+
+		*pszDst = '\0';
+		return 0;
+#endif
 	}
 	DOLL_FUNC Bool DOLL_API sysfs_setDir( const Str &dir )
 	{
+#ifdef _WIN32
 		static CRITICAL_SECTION cs;
 		static wchar_t wszBuf[ 32768 ];
 		static bool didInit = false;
@@ -631,6 +698,9 @@ namespace doll
 		LeaveCriticalSection( &cs );
 
 		return result;
+#else
+		return false;
+#endif
 	}
 
 	class MDirStack
@@ -753,6 +823,7 @@ namespace doll
 		return true;
 	}
 
+#ifdef _WIN32
 	template< int tCSIDL >
 	static Bool DOLL_API sysfs__getShellDir( Str &dst )
 	{
@@ -773,14 +844,27 @@ namespace doll
 		dst = Str( szBuf, cBuf );
 		return true;
 	}
+#endif
 
 	DOLL_FUNC Bool DOLL_API sysfs_getAppDataDir( Str &dst )
 	{
+#ifdef _WIN32
 		return sysfs__getShellDir< CSIDL_LOCAL_APPDATA >( dst );
+#else
+		// ~/.etc/
+		dst = Str();
+		return false;
+#endif
 	}
 	DOLL_FUNC Bool DOLL_API sysfs_getMyDocsDir( Str &dst )
 	{
+#ifdef _WIN32
 		return sysfs__getShellDir< CSIDL_MYDOCUMENTS >( dst );
+#else
+		// ~/Documents
+		dst = Str();
+		return false;
+#endif
 	}
 
 }

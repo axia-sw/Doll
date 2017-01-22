@@ -1,8 +1,12 @@
+#pragma once
+
 #include "../Core/Defs.hpp"
 #include "../Core/Engine.hpp"
 
 namespace doll
 {
+
+	using namespace ax;
 
 	DOLL_FUNC const char *DOLL_API doll_getEngineString();
 

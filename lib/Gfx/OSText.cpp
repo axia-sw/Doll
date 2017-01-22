@@ -1,11 +1,28 @@
-#ifdef _MSC_VER
-# pragma warning( push )
-# pragma warning( disable: 4458 ) // declaration of 'nativeRegion' hides class member
+#include "doll/Core/Defs.hpp"
+
+#define DOLL_OSTEXT_GDIPLUS 0
+#define DOLL_OSTEXT_DWRITE  0
+
+#if AX_OS_UWP
+# undef  DOLL_OSTEXT_DWRITE
+# define DOLL_OSTEXT_DWRITE 1
+#elif AX_OS_WINDOWS
+# undef  DOLL_OSTEXT_GDIPLUS
+# define DOLL_OSTEXT_GDIPLUS 1
 #endif
-#include <Windows.h>
-#include <gdiplus.h>
-#ifdef _MSC_VER
-# pragma warning( pop )
+
+#ifdef _WIN32
+# ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4458 ) // declaration of 'nativeRegion' hides class member
+# endif
+# include <Windows.h>
+# if DOLL_OSTEXT_GDIPLUS
+#  include <gdiplus.h>
+# endif
+# ifdef _MSC_VER
+#  pragma warning( pop )
+# endif
 #endif
 
 #include "doll/Gfx/OSText.hpp"
@@ -14,26 +31,32 @@
 #include "doll/Core/Memory.hpp"
 #include "doll/Core/MemoryTags.hpp"
 
-#include <gl/GL.h> // ### FOR TESTING ###
+#include <GL/gl.h> // ### FOR TESTING ###
 
 namespace doll
 {
 
+#if DOLL_OSTEXT_GDIPLUS
 	using namespace Gdiplus;
+#endif
 
 	// Collection of resources used for rendering text in a particular style
 	struct STextStyle: public TPoolObject< STextStyle, kTag_Font >
 	{
 		// Number of references on this instance
 		U32                  cRefs;
+#if DOLL_OSTEXT_GDIPLUS
 		// [GDI+] Font family used
 		TTypeBuf<FontFamily> font;
+#endif
 		// Font size
 		S32                  fontSize;
 
 		STextStyle()
 		: cRefs( 1 )
+#if DOLL_OSTEXT_GDIPLUS
 		, font()
+#endif
 		, fontSize( 12 )
 		{
 		}
@@ -80,12 +103,14 @@ namespace doll
 		// Fill color
 		U32              uFillColor;
 
+#if DOLL_OSTEXT_GDIPLUS
 		// [GDI] Bitmap bits (directly readable)
 		DWORD *          pBmpBits;
 		// [GDI] Bitmap handle
 		HBITMAP          hBmp;
 		// [GDI] Temporary device context associated with this item
 		HDC              hDC;
+#endif
 
 		// Text string to render
 		MutStr           text;
@@ -98,14 +123,17 @@ namespace doll
 		, pStyle( nullptr )
 		, uLineColor( 0xFF000000 )
 		, uFillColor( 0xFFFFFFFF )
+#if DOLL_OSTEXT_GDIPLUS
 		, pBmpBits( nullptr )
 		, hBmp( NULL )
 		, hDC( NULL )
+#endif
 		, text()
 		{
 		}
 		~STextItem()
 		{
+#if DOLL_OSTEXT_GDIPLUS
 			if( hBmp != NULL ) {
 				DeleteObject( hBmp );
 				hBmp = NULL;
@@ -117,6 +145,7 @@ namespace doll
 				DeleteDC( hDC );
 				hDC = NULL;
 			}
+#endif
 
 			if( pStyle != nullptr ) {
 				pStyle = pStyle->drop();
@@ -152,9 +181,11 @@ namespace doll
 	: m_pDefStyle( nullptr )
 	, m_items()
 	{
+#if DOLL_OSTEXT_GDIPLUS
 		GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
 		GdiplusStartup( &gdiplusToken, &gdiplusStartupInput, NULL );
+#endif
 	}
 	MOSText::~MOSText()
 	{
@@ -167,6 +198,7 @@ namespace doll
 			return false;
 		}
 
+#if DOLL_OSTEXT_GDIPLUS
 		wchar_t wszBuf[ 256 ] = { L'\0' };
 		if( !AX_VERIFY_MSG( fontFamily.toWStr( wszBuf ), "Invalid UTF-8 encoding" ) ) {
 			delete pTextStyle;
@@ -175,6 +207,7 @@ namespace doll
 
 		pTextStyle->font.init( wszBuf );
 		pTextStyle->fontSize = S32( fontSize );
+#endif
 		
 		if( m_pDefStyle != nullptr ) {
 			m_pDefStyle->drop();
@@ -212,6 +245,7 @@ namespace doll
 		// ### TODO ### Measure the text so that only the minimum size needed is
 		//              used.
 
+#if DOLL_OSTEXT_GDIPLUS
 		BITMAPINFO bi;
 		memset( &bi, 0, sizeof( bi ) );
 		bi.bmiHeader.biSize = sizeof( BITMAPINFOHEADER );
@@ -248,9 +282,12 @@ namespace doll
 		}
 
 		SelectObject( pTextItem->hDC, pTextItem->hBmp );
+#endif
+
 		return pTextItem;
 	}
 
+#if DOLL_OSTEXT_GDIPLUS
 	static Gdiplus::Color getGdipColor( U32 uColor )
 	{
 		return
@@ -262,8 +299,10 @@ namespace doll
 				DOLL_COLOR_B( uColor )
 			);
 	}
+#endif
 	Void MOSText::drawText( STextItem &item )
 	{
+#if DOLL_OSTEXT_GDIPLUS
 		AX_ASSERT_NOT_NULL( item.pStyle );
 		AX_ASSERT_NOT_NULL( item.hBmp );
 		AX_ASSERT_NOT_NULL( item.hDC );
@@ -296,6 +335,7 @@ namespace doll
 
 		item.uResX = item.drawSize.x;
 		item.uResY = item.drawSize.y;
+#endif
 	}
 
 	DOLL_FUNC STextItem *DOLL_API gfx_newOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
@@ -325,14 +365,18 @@ namespace doll
 	DOLL_FUNC const Void *DOLL_API gfx_ostext_getBits( const STextItem *pText )
 	{
 		AX_ASSERT_NOT_NULL( pText );
+#if DOLL_OSTEXT_GDIPLUS
 		return ( const Void * )pText->pBmpBits;
+#else
+		return nullptr;
+#endif
 	}
 
 	DOLL_FUNC U16 DOLL_API gfx_ostext_makeTexture( const STextItem *pText, CTextureAtlas *pDefAtlas )
 	{
 		AX_ASSERT_NOT_NULL( pText );
 
-		RTexture *const pTex = g_textureMgr.makeTexture( pText->uResX, pText->uResY, pText->pBmpBits, kTexFmtRGBA8, pDefAtlas );
+		RTexture *const pTex = g_textureMgr.makeTexture( pText->uResX, pText->uResY, gfx_ostext_getBits( pText ), kTexFmtRGBA8, pDefAtlas );
 		if( !AX_VERIFY_MEMORY( pTex ) ) {
 			return 0;
 		}

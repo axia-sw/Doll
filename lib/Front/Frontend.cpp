@@ -7,9 +7,6 @@
 # include <io.h>
 #endif
 
-#include <stdlib.h>
-#include <sys/stat.h>
-
 #include "doll/Front/Frontend.hpp"
 #include "doll/Front/Input.hpp"
 #include "doll/Front/Setup.hpp"
@@ -42,6 +39,16 @@
 #include "doll/UX/Widget.hpp"
 
 #include "doll/private/gitinfo.gen.h"
+
+#include <stdlib.h>
+#include <sys/stat.h>
+
+#ifndef _WIN32
+// Needed for isatty()
+# include <unistd.h>
+// Used for nanosleep()
+# include <time.h>
+#endif
 
 #if DOLL__USE_GLFW
 # if AX_OS_WINDOWS
@@ -499,10 +506,10 @@ namespace doll
 		g_core.tooling.useANSIOutput = isConsoleTypeANSICompatible( g_core.tooling.stdoutType );
 		g_core.tooling.useANSIErrors = isConsoleTypeANSICompatible( g_core.tooling.stderrType );
 
+#ifdef _WIN32
 		// free (potentially used) temporary memory that won't be used again
 		getEnv( nullptr );
 
-#ifdef _WIN32
 		if( GetSystemMetrics( SM_CLEANBOOT ) != 0 && !g_core.tooling.isTool ) {
 			fprintf( stderr, "Error. Safe mode not supported.\n" );
 			fflush( stderr );
@@ -646,7 +653,10 @@ namespace doll
 			glfwTerminate();
 		}
 #endif
+
+#if AX_OS_WINDOWS
 		CoUninitialize();
+#endif
 	}
 
 	static Bool doll__wnd_init( SCoreConfig &conf )
@@ -828,6 +838,15 @@ namespace doll
 		snd_fini();
 	}
 
+// Not entirely clear why this is necessary on not-Windows...
+//
+// Removing this snippet of preprocessor hackery will result in `Bool` suddenly
+// being interpreted as an `int` here.
+#ifndef _WIN32
+# undef  Bool
+# define Bool bool
+#endif
+
 	DOLL_FUNC Bool DOLL_API doll_init( const SCoreConfig *pConf )
 	{
 		AX_ASSERT( g_core.notInitialized() );
@@ -957,11 +976,23 @@ namespace doll
 		g_core.frame.timing.updateMe( microseconds() );
 
 		// Apply frame limiter if necessary
+#ifdef _WIN32
 		const U32 cMillisecs = g_core.frame.timing.elapsedMilliseconds();
 		if( cMillisecs < g_core.frame.uLimitMillisecs ) {
-			// FIXME: Cross-platform "sleeping"
 			Sleep( g_core.frame.uLimitMillisecs - cMillisecs );
 		}
+#else
+		const U64 cNanosecs = g_core.frame.timing.elapsedNanoseconds();
+		const U64 cMaxNanosecs = millisecondsToNanoseconds( g_core.frame.uLimitMillisecs );
+		if( cNanosecs < cMaxNanosecs ) {
+			const U32 cDeltaNanosecs = U32( cMaxNanosecs - cNanosecs );
+			const struct timespec ts = {
+				cDeltaNanosecs/AXTIME_NANOSECS,
+				cDeltaNanosecs%AXTIME_NANOSECS
+			};
+			nanosleep( &ts, nullptr );
+		}
+#endif
 	}
 
 	DOLL_FUNC Bool DOLL_API doll_sync()

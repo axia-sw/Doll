@@ -1,10 +1,12 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN 1
-#include <Windows.h>
-#include <Objbase.h>
-#undef min
-#undef max
+#ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN 1
+# include <Windows.h>
+# include <Objbase.h>
+# undef min
+# undef max
+#endif
 
 #include <stddef.h>
 #include <stdlib.h>

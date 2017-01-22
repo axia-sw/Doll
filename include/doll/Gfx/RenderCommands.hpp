@@ -148,7 +148,7 @@ namespace doll
 		SRenderVec2i tl;
 		SRenderVec2i br;
 
-		DWORD value;
+		U32 value;
 	};
 	struct SRenderCmd_Blend
 	{
@@ -178,7 +178,7 @@ namespace doll
 
 	//--------------------------------------------------------------------//
 
-	DOLL_FUNC EResult DOLL_API gfx_ink( DWORD color );
+	DOLL_FUNC EResult DOLL_API gfx_ink( U32 color );
 
 	DOLL_FUNC EResult DOLL_API gfx_dot( S32 x, S32 y );
 	DOLL_FUNC EResult DOLL_API gfx_line( S32 x1, S32 y1, S32 x2, S32 y2 );

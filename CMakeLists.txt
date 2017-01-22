@@ -224,6 +224,9 @@ add_library(Doll
 
 set_source_files_properties(ext/glew/src/glew.c PROPERTIES LANGUAGE C)
 
+set_property(TARGET Doll PROPERTY CXX_STANDARD 14)
+set_property(TARGET Doll PROPERTY CXX_STANDARD_REQUIRED true)
+
 target_include_directories(
 	Doll
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -245,6 +248,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		Doll
 		PUBLIC gdiplus
 		PUBLIC opengl32
+	)
+else()
+	target_link_libraries(
+		Doll
+		PUBLIC GL
+		PUBLIC pthread
+		PUBLIC glfw
 	)
 endif()
 

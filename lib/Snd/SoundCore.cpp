@@ -7,7 +7,7 @@
 
 #define DOLL_SND_IMPL_XAUDIO2 0
 
-#if DOLL_DX_AVAILABLE
+#if DOLL_DX_AVAILABLE || 1 // HACK
 # undef  DOLL_SND_IMPL_XAUDIO2
 # define DOLL_SND_IMPL_XAUDIO2 1
 #endif
@@ -519,7 +519,7 @@ namespace doll
 
 		const U32 cLoopSamples = buf.cLoopSamples != 0 ? buf.cLoopSamples : (U32)bufiter->cSamples;
 		if( m_cPlaybackSamples + buf.cLoopSamples*buf.cLoops <= m_cPlaybackSamples ) {
-			m_cPlaybackSamples = ~0UL;
+			m_cPlaybackSamples = ~0U;
 		} else {
 			m_cPlaybackSamples += U32( bufiter->cSamples + cLoopSamples*buf.cLoops );
 		}

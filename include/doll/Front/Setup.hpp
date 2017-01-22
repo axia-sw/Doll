@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Core/Defs.hpp"
 #include "../Gfx/API.hpp"
 

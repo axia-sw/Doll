@@ -13,10 +13,13 @@
 # endif
 #endif
 
+// Temporary hack
 #ifndef DOLL__USE_GLFW
-# define DOLL__USE_GLFW 1
-#else
-# define DOLL__USE_GLFW 0
+# ifdef _WIN32
+#  define DOLL__USE_GLFW 0
+# else
+#  define DOLL__USE_GLFW 1
+# endif
 #endif
 
 #define DOLL_RGBA(R_,G_,B_,A_)\

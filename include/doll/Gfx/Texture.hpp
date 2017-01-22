@@ -251,7 +251,7 @@ namespace doll
 
 		static MTextures instance;
 	
-		RTexture *makeTexture( U16 width, U16 height, Void *data, ETextureFormat format = kTexFmtRGBA8, CTextureAtlas *specificAtlas = nullptr );
+		RTexture *makeTexture( U16 width, U16 height, const Void *data, ETextureFormat format = kTexFmtRGBA8, CTextureAtlas *specificAtlas = nullptr );
 		RTexture *loadTexture( Str filename, CTextureAtlas *specificAtlas = nullptr );
 
 		CTextureAtlas *allocateAtlas( ETextureFormat fmt, U16 resX, U16 resY );
@@ -292,8 +292,8 @@ namespace doll
 	DOLL_FUNC CTextureAtlas *DOLL_API gfx_newTextureAtlas( U16 resX, U16 resY, U16 format );
 	DOLL_FUNC CTextureAtlas *DOLL_API gfx_deleteTextureAtlas( CTextureAtlas *atlas );
 
-	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, void *data, ETextureFormat format );
-	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, void *data, ETextureFormat format, CTextureAtlas *atlas );
+	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format );
+	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas );
 
 	DOLL_FUNC U16 DOLL_API gfx_loadTexture( Str filename );
 	DOLL_FUNC U16 DOLL_API gfx_loadTextureInAtlas( Str filename, CTextureAtlas *atlas );

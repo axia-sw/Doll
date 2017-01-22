@@ -9,7 +9,7 @@ namespace doll
 
 	class CFrameCounter;
 
-	typedef F64( __stdcall *FnCalculateFrameCounter )( Void *pParm, F64 fCurrent, F64 fPrior );
+	typedef F64( DOLL_API *FnCalculateFrameCounter )( Void *pParm, F64 fCurrent, F64 fPrior );
 
 	enum class EFrameCounter
 	{

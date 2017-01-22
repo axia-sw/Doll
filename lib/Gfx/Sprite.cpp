@@ -5,7 +5,7 @@
 #include "doll/Gfx/API-GL.hpp"
 #include "doll/Math/Math.hpp"
 
-#include <gl/GL.h>
+#include <GL/gl.h>
 
 namespace doll
 {

@@ -1,5 +1,7 @@
 #include "doll/Snd/API-XA2.hpp"
 
+#ifdef _WIN32
+
 #ifdef _MSC_VER
 # pragma warning(push)
 # pragma warning(disable:28218)
@@ -453,3 +455,17 @@ namespace doll
 	}
 
 }
+
+#else
+
+namespace doll
+{
+
+	DOLL_FUNC detail::ISoundHW *DOLL_API snd_xa2_initHW()
+	{
+		return nullptr;
+	}
+
+}
+
+#endif

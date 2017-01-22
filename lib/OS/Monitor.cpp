@@ -93,12 +93,14 @@ namespace doll {
 
 	DOLL_FUNC Bool DOLL_API os_getDesktopInfo( SDesktopInfo &dst )
 	{
-		if( !Windows::queryDesktopInfo( dst ) ) {
-			dst = SDesktopInfo();
-			return false;
+#if AX_OS_WINDOWS
+		if( Windows::queryDesktopInfo( dst ) ) {
+			return true;
 		}
+#endif
 		
-		return true;
+		dst = SDesktopInfo();
+		return false;
 	}
 
 }

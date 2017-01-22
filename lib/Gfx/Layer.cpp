@@ -3,7 +3,7 @@
 #include "doll/Gfx/RenderCommands.hpp"
 #include "doll/Gfx/API-GL.hpp"
 
-#include <gl/GL.h>
+#include <GL/gl.h>
 
 namespace doll
 {

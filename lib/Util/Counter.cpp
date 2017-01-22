@@ -34,25 +34,25 @@ namespace doll
 		gListAccessor.unlock();
 	}
 
-	static F64 __stdcall calcLinear_f( Void *, F64 fValue, F64 )
+	static F64 DOLL_API calcLinear_f( Void *, F64 fValue, F64 )
 	{
 		return fValue;
 	}
-	static F64 __stdcall calcSlerp_f( Void *, F64 fValue, F64 )
+	static F64 DOLL_API calcSlerp_f( Void *, F64 fValue, F64 )
 	{
 		return slerp( 0.0, 1.0, float( fValue ) );
 	}
-	static F64 __stdcall calcAccel_f( Void *, F64 fValue, F64 )
+	static F64 DOLL_API calcAccel_f( Void *, F64 fValue, F64 )
 	{
 		return fValue*fValue;
 	}
-	static F64 __stdcall calcDecel_f( Void *, F64 fValue, F64 )
+	static F64 DOLL_API calcDecel_f( Void *, F64 fValue, F64 )
 	{
 		const F64 fInverted = 1.0 - fValue;
 
 		return fInverted*fInverted;
 	}
-	static F64 __stdcall calcAccelDecel_f( Void *, F64 fValue, F64 )
+	static F64 DOLL_API calcAccelDecel_f( Void *, F64 fValue, F64 )
 	{
 		if( fValue < 0.5 ) {
 			return fValue*fValue;

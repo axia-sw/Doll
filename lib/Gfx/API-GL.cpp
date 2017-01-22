@@ -764,6 +764,16 @@ namespace doll
 		}
 	}
 
+	static void errorBox( OSWindow wnd, const char *message, const char *title = "Error" )
+	{
+		AX_ASSERT_NOT_NULL( message );
+		AX_ASSERT_NOT_NULL( title );
+
+#ifdef _WIN32
+		MessageBoxA( HWND(wnd), message, title, MB_ICONERROR | MB_OK );
+#endif
+	}
+
 	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc )
 	{
 #if DOLL__USE_GLFW
@@ -785,7 +795,7 @@ namespace doll
 			os_finiGL( pCtx );
 #endif
 
-			MessageBoxW( ( HWND )wnd, L"Error. GLEW initialization failed. (Wtf?)", L"Error", MB_ICONERROR | MB_OK );
+			errorBox( wnd, "Error. GLEW initialization failed. (Wtf?)" );
 
 			return nullptr;
 		}
@@ -795,8 +805,8 @@ namespace doll
 			os_finiGL( pCtx );
 #endif
 
-			const wchar_t *const pwszErrorMsg =
-				L"Error. OpenGL version too low.\n\n"
+			const char *const pszErrorMsg =
+				"Error. OpenGL version too low.\n\n"
 				"Your video driver is reporting a version of OpenGL below 1.5.\n"
 				"It is likely that you did not update your video drivers directly from your GPU vendor. (AMD, NVIDIA, or Intel.)\n\n"
 				"Update your drivers, bro. (Seriously.)\n\n"
@@ -804,9 +814,9 @@ namespace doll
 				" * You're in safe mode. (How? We check for that before getting here!)\n"
 				" * You're actually running this on a GPU from 2003 or earlier. (WHY!?)\n"
 				" * You have transcended the physical world and are now software. Welcome to the Wired, Lain.";
-			const wchar_t *const pwszErrorCap = L"Error - OpenGL version is lower than 1.4";
+			const char *const pszErrorCap = "Error - OpenGL version is lower than 1.4";
 
-			MessageBoxW( NULL, pwszErrorMsg, pwszErrorCap, MB_ICONERROR | MB_OK );
+			errorBox( wnd, pszErrorMsg, pszErrorCap );
 			return nullptr;
 		}
 
@@ -846,7 +856,7 @@ namespace doll
 			}
 			axstr_cat( szBuf, "\nTry updating your video driver or upgrading to a newer GPU." );
 
-			MessageBoxA( ( HWND )wnd, szBuf, "Error - OpenGL extensions missing", MB_ICONERROR | MB_OK );
+			errorBox( wnd, szBuf, "Error - OpenGL extensions missing" );
 			return nullptr;
 		}
 
