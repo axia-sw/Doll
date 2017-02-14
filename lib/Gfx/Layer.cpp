@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxLayer
+
 #include "doll/Gfx/Layer.hpp"
 #include "doll/Gfx/Sprite.hpp"
 #include "doll/Gfx/RenderCommands.hpp"

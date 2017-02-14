@@ -1,4 +1,6 @@
-﻿#include "doll/Gfx/API.hpp"
+﻿#define DOLL_TRACE_FACILITY doll::kLog_APIMgr
+
+#include "doll/Gfx/API.hpp"
 
 // FIXME: Find a better way to include files.
 
@@ -122,13 +124,15 @@ namespace doll
 
 	DOLL_FUNC IGfxAPI *DOLL_API gfx_initAPI( OSWindow wnd, const SGfxInitDesc *pInitDesc )
 	{
-#if DOLL__USE_GLFW
+#if DOLL__USE_GLFW && 0 // FIXME: Why was this here?
 		AX_ASSERT_IS_NULL( wnd );
 #else
 		AX_ASSERT_NOT_NULL( wnd );
 #endif
 
 		if( !pInitDesc || pInitDesc->apis.isEmpty() ) {
+			DOLL_TRACE( "Filling in defaults for initialization API..." );
+
 			static const EGfxAPI defAPIs[] = {
 #if defined( _WIN32 ) && !DOLL__USE_GLFW
 				kGfxAPIDirect3D11,
@@ -149,12 +153,14 @@ namespace doll
 			return gfx_initAPI( wnd, &desc );
 		}
 
+		DOLL_TRACE( "Trying each API..." );
 		for( EGfxAPI api : pInitDesc->apis ) {
 			IGfxAPI *pAPI = nullptr;
 
 			switch( api ) {
 #define DOLL_GFX__API(Name_,BriefName_) \
 	case kGfxAPI##Name_: \
+		DOLL_TRACE( "Trying API \"" #Name_ "\"..." );\
 		pAPI = CGfxAPI_##BriefName_::init( wnd, *pInitDesc ); \
 		break;
 
@@ -163,6 +169,7 @@ namespace doll
 #undef DOLL_GFX__API
 
 			case kNumGfxAPIs:
+				DOLL_TRACE( "Got invalid value (kNumGfxAPIs)" );
 				AX_UNREACHABLE();
 			}
 
@@ -171,6 +178,7 @@ namespace doll
 			}
 		}
 
+		DOLL_TRACE( "All initialization attempts failed" );
 		return nullptr;
 	}
 	DOLL_FUNC NullPtr DOLL_API gfx_finiAPI( IGfxAPI *p )

@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxSprite
+
 #include "doll/Gfx/Sprite.hpp"
 #include "doll/Gfx/Action.hpp"
 #include "doll/Gfx/Vertex.hpp"

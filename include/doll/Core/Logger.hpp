@@ -10,6 +10,12 @@
 # define DOLL_DEFAULT_REPORT_CHANNEL 0
 #endif
 
+// You should redefine this in your own code when using logging macros like
+// DOLL_ERROR_LOG and so on
+#ifndef DOLL_TRACE_FACILITY
+# define DOLL_TRACE_FACILITY DOLL_DEFAULT_REPORT_CHANNEL
+#endif
+
 #define DOLL__LOG_BASE 0x7000
 
 namespace doll
@@ -470,14 +476,14 @@ namespace doll
 	static ReportProxy g_ErrorLog( ESeverity::Error );
 
 #define DOLL_REFERENCE_LOG( Kind, From )\
-	doll::Kind##Log[ From ]( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
+	doll::g_##Kind##Log[ From ]( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
 
-#define DOLL_VERBOSE_LOG doll::g_VerboseLog ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
-#define DOLL_INFO_LOG    doll::g_InfoLog    ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
-#define DOLL_DEBUG_LOG   doll::g_DebugLog   ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
-#define DOLL_HINT_LOG    doll::g_HintLog    ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
-#define DOLL_WARNING_LOG doll::g_WarningLog ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
-#define DOLL_ERROR_LOG   doll::g_ErrorLog   ( __FILE__, __LINE__, AX_PRETTY_FUNCTION )
+#define DOLL_VERBOSE_LOG DOLL_REFERENCE_LOG(Verbose, DOLL_TRACE_FACILITY)
+#define DOLL_INFO_LOG    DOLL_REFERENCE_LOG(Info   , DOLL_TRACE_FACILITY)
+#define DOLL_DEBUG_LOG   DOLL_REFERENCE_LOG(Debug  , DOLL_TRACE_FACILITY)
+#define DOLL_HINT_LOG    DOLL_REFERENCE_LOG(Hint   , DOLL_TRACE_FACILITY)
+#define DOLL_WARNING_LOG DOLL_REFERENCE_LOG(Warning, DOLL_TRACE_FACILITY)
+#define DOLL_ERROR_LOG   DOLL_REFERENCE_LOG(Error  , DOLL_TRACE_FACILITY)
 
 #undef vsprintf_s
 

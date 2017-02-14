@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxAPIDrv
+
 #include "doll/Core/Defs.hpp"
 #include "doll/Gfx/APIs.def.hpp"
 #if DOLL_GFX_DIRECT3D11_ENABLED

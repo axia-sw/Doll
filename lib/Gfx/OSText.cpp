@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxOSText
+
 #include "doll/Core/Defs.hpp"
 
 #define DOLL_OSTEXT_GDIPLUS 0
@@ -18,6 +20,7 @@
 # endif
 # include <Windows.h>
 # if DOLL_OSTEXT_GDIPLUS
+#  include <wtypes.h> // needed for mingw `PROPID` definition
 #  include <gdiplus.h>
 # endif
 # ifdef _MSC_VER

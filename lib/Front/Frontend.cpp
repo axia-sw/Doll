@@ -7,6 +7,8 @@
 # include <io.h>
 #endif
 
+#define DOLL_TRACE_FACILITY doll::kLog_FrontendEngine
+
 #include "doll/Front/Frontend.hpp"
 #include "doll/Front/Input.hpp"
 #include "doll/Front/Setup.hpp"
@@ -766,23 +768,26 @@ namespace doll
 		desc.vsync = conf.video.iVsync;
 
 		const OSWindow gfxwnd =
-#if DOLL__USE_GLFW
+#if DOLL__USE_GLFW && 0 // FIXME: Why was this here?
 			OSWindow(0)
 #else
-			g_core.view.window
+			(OSWindow)g_core.view.window
 #endif
 			;
 
+		axpf("gfx: Trying initAPI\n");
 		if( !AX_VERIFY_MSG( g_core.view.pGfxAPI = gfx_initAPI( gfxwnd, &desc ), "Failed to initialize graphics" ) ) {
 			return false;
 		}
 
+		axpf("gfx: Trying newCGfxFrame\n");
 		g_core.view.pGfxFrame = new CGfxFrame( *g_core.view.pGfxAPI );
 		if( !AX_VERIFY_MEMORY( g_core.view.pGfxFrame ) ) {
 			g_core.view.pGfxAPI = gfx_finiAPI( g_core.view.pGfxAPI );
 			return false;
 		}
 
+		axpf("gfx: Trying CGfxFrame::getMemVBuf\n");
 		if( !AX_VERIFY_MEMORY( g_core.view.pGfxFrame->getMemVBuf( 2*1024*1024 ) ) ) {
 			delete g_core.view.pGfxFrame;
 			g_core.view.pGfxFrame = nullptr;
@@ -790,9 +795,11 @@ namespace doll
 			return false;
 		}
 
+		axpf("gfx: layerMgr->setDefaultFrame\n");
 		g_layerMgr->setDefaultFrame( g_core.view.pGfxFrame );
 		gfx_r_setFrame( g_core.view.pGfxFrame );
 
+		axpf("gfx: Set aspect\n");
 		gfx_setCurrentLayer( gfx_getDefaultLayer() );
 		gfx_getDefaultLayer()->setGLFrame( gfx_r_getFrame() );
 
@@ -800,6 +807,7 @@ namespace doll
 
 		gfx_setLayerSize( gfx_getDefaultLayer(), g_core.view.pGfxFrame->getResX(), g_core.view.pGfxFrame->getResY() );
 
+		axpf("gfx: spritemgr::init_gl\n");
 		if( !AX_VERIFY_MSG( g_spriteMgr.init_gl(), "Failed to initialize sprite system" ) ) {
 			delete g_core.view.pGfxFrame;
 			g_core.view.pGfxFrame = nullptr;
@@ -808,6 +816,7 @@ namespace doll
 			return false;
 		}
 
+		axpf("gfx: done\n");
 		return true;
 	}
 	static Void doll__gfx_fini()
@@ -854,25 +863,30 @@ namespace doll
 		g_DebugLog += doll_getEngineString();
 
 		SCoreConfig conf;
+		axpf("Trying sysinit\n");
 		if( !doll__sys_init( conf, pConf ) ) {
 			return false;
 		}
 
+		axpf("Trying wndinit\n");
 		if( !doll__wnd_init( conf ) ) {
 			doll__sys_fini();
 			return false;
 		}
 
+		axpf("Trying gfxinit\n");
 		if( !doll__gfx_init( conf ) ) {
 			doll__wnd_fini();
 			doll__sys_fini();
 			return false;
 		}
 
+		axpf("Trying sndinit\n");
 		if( !doll__snd_init( conf ) ) {
 			g_WarningLog += "Not using sound.";
 		}
 
+		axpf("Making window visible\n");
 #if DOLL__USE_GLFW
 		glfwShowWindow( g_core.view.window );
 		glfwFocusWindow( g_core.view.window );

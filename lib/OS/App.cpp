@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_OSApp
+
 #include "doll/OS/App.hpp"
 
 #if AX_OS_WINDOWS

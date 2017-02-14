@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_CoreConfig
+
 #include "doll/Core/Config.hpp"
 #include "doll/Core/Logger.hpp"
 

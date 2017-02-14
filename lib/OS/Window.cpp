@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_OSWindow
+
 #include "doll/OS/Window.hpp"
 
 #include "doll/Core/Defs.hpp"

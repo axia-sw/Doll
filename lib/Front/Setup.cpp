@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_FrontendSetup
+
 #include "doll/Front/Setup.hpp"
 #include "doll/Core/Config.hpp"
 #include "doll/Core/Logger.hpp"
@@ -143,7 +145,7 @@ namespace doll
 
 		Str v = core_getConfigVarValue( p ).trim();
 
-		// FIXME: Add `rgb()` (and `argb()`ÅE`rgba()`) functions and float variants
+		// FIXME: Add `rgb()` (and `argb()`ÔøΩE`rgba()`) functions and float variants
 		// FIXME: Add standard color names (e.g., "black," "cyan," etc)
 
 		if( v.startsWith( '#' ) ) {
@@ -236,10 +238,10 @@ namespace doll
 			return false;
 		}
 
-		tryConfig( *p, filename );
+		const Bool r = tryConfig( *p, filename );
 
 		core_deleteConfig( p );
-		return true;
+		return r;
 	}
 
 	Bool SCoreConfig::tryConfig( CConfiguration &conf, Str filename )
@@ -287,10 +289,10 @@ namespace doll
 			return false;
 		}
 
-		tryConfig( *p, filename );
+		const Bool r = tryConfig( *p, filename );
 
 		core_deleteConfig( p );
-		return true;
+		return r;
 	}
 
 	DOLL_FUNC Bool DOLL_API app_loadUserConfig( SUserConfig &dstConf, Str filename )

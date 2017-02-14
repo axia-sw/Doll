@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_SndFile
+
 #include "doll/Snd/WaveFile.hpp"
 
 #include "doll/Core/Logger.hpp"

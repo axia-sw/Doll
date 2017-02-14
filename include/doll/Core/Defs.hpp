@@ -11,6 +11,10 @@
 #   define DOLL__SECURE_LIB 0
 #  endif
 # endif
+// When building we use a different internal logging channel
+# ifndef DOLL_TRACE_FACILITY
+#  define DOLL_TRACE_FACILITY doll::kLog_Internal
+# endif
 #endif
 
 // Temporary hack

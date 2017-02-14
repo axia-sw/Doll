@@ -20,7 +20,7 @@ namespace doll
 			}
 
 			char szBuf[ 512 ];
-			g_ErrorLog( file, uLine, func ) += (axspf(szBuf, "DX error 0x%.8X from %.*s", U32(hr), expr.lenInt(), expr.get() ), szBuf);
+			g_ErrorLog[ kLog_UtilSafeDX ]( file, uLine, func ) += (axspf(szBuf, "DX error 0x%.8X from %.*s", U32(hr), expr.lenInt(), expr.get() ), szBuf);
 
 			return false;
 		}

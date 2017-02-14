@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_CoreVFS
+
 #include "doll/IO/VFS.hpp"
 #include "doll/IO/VFS-SysFS.hpp"
 

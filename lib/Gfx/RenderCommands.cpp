@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxRenderCommands
+
 #include "doll/Gfx/RenderCommands.hpp"
 #include "doll/Gfx/PrimitiveBuffer.hpp"
 #include "doll/Gfx/Texture.hpp"

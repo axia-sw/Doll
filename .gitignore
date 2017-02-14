@@ -92,6 +92,9 @@ ipch/
 *.cachefile
 *.VC.*
 
+# Visual Studio Code files
+.vscode/
+
 # Visual Studio profiler
 *.psess
 *.vsp

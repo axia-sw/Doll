@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_SndCore
+
 #include "doll/Snd/SoundCore.hpp"
 
 #include "doll/Core/Defs.hpp"

@@ -1,9 +1,15 @@
 ﻿#if defined( _WIN32 )
-# undef WIN32_LEAN_AND_MEAN
+# undef  _WIN32_WINNT
+# undef  WIN32_LEAN_AND_MEAN
+# define _WIN32_WINNT 0x0600
 # define WIN32_LEAN_AND_MEAN 1
 # include <Windows.h>
 # undef min
 # undef max
+#else
+# include <unistd.h>
+# include <sys/stat.h>
+# include <sys/types.h>
 #endif
 
 #include <stdio.h>
@@ -313,12 +319,21 @@ namespace doll
 		// Register this reporter with the internal reporting system
 		static void install()
 		{
-			core_addReporter( &get() );
+			if( get().isInstalled() ) {
+				uninstall();
+				core_addReporter( &get_reset() );
+			} else {
+				core_addReporter( &get() );
+			}
+			get().setInstalled();
 		}
 		// Remove this reporter From the internal reporting system
 		static void uninstall()
 		{
-			core_removeReporter( &get() );
+			if( get().isInstalled() ) {
+				get().clearInstalled();
+				core_removeReporter( &get() );
+			}
 		}
 
 #define VS_STYLE_REPORT 1
@@ -463,6 +478,10 @@ namespace doll
 			writeString( mStdErr, "\n" );
 
 #if defined( _WIN32 )
+			if( mIsErrANSI || sev == ESeverity::Error ) {
+				fflush( nullptr );
+			}
+
 			if( sev != ESeverity::Error ) {
 				return;
 			}
@@ -552,12 +571,60 @@ namespace doll
 #endif
 		FileHandle mStdOut;
 		FileHandle mStdErr;
+#if defined( _WIN32 )
+		Bool mIsOutANSI;
+		Bool mIsErrANSI;
+#endif
+		Bool mIsInstalled;
 
 		// UNDOC: Singleton
-		static ConsoleReporter &get()
+		static ConsoleReporter &get_reset( Bool doReset = true )
 		{
 			static ConsoleReporter instance;
+			if( doReset ) {
+				instance.~ConsoleReporter();
+				new((void*)&instance, ax::detail::SPlcmntNw()) ConsoleReporter();
+			}
 			return instance;
+		}
+		static ConsoleReporter &get()
+		{
+			return get_reset( false );
+		}
+
+		static Bool isPipeRedirectedToFile( FileHandle handle )
+		{
+#if defined( _WIN32 )
+			if( handle == INVALID_HANDLE_VALUE ) {
+				return false;
+			}
+
+			static constexpr DWORD cchBuffLen = 16;
+			WCHAR wszBuff[ cchBuffLen + 1 ];
+
+			if( GetFinalPathNameByHandleW( handle, wszBuff, cchBuffLen, FILE_NAME_NORMALIZED ) == 0 ) {
+				return GetLastError() == ERROR_INSUFFICIENT_BUFFER;
+			}
+
+			return true;
+#else
+			if( !handle ) {
+				return false;
+			}
+
+			const int fd = fileno( handle );
+			struct stat statbuf;
+
+			if( fstat( fd, &statbuf ) != 0 ) {
+				return false;
+			}
+
+			if( S_ISREG( statbuf.st_mode ) ) {
+				return true;
+			}
+
+			return false;
+#endif
 		}
 
 		// UNDOC: Constructor
@@ -565,6 +632,11 @@ namespace doll
 		: IReporter()
 		, mStdOut( NULL )
 		, mStdErr( NULL )
+#if defined( _WIN32 )
+		, mIsOutANSI( DOLL__CORESTRUC.tooling.useANSIOutput )
+		, mIsErrANSI( DOLL__CORESTRUC.tooling.useANSIErrors )
+#endif
+		, mIsInstalled( false )
 		{
 #if defined( _WIN32 )
 			mStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -581,18 +653,50 @@ namespace doll
 			mStdErr = stderr;
 #endif
 
-			core_addReporter( this );
+			if( isPipeRedirectedToFile( mStdOut ) ) {
+				mIsOutANSI = false;
+			}
+
+			if( isPipeRedirectedToFile( mStdErr ) ) {
+				mIsErrANSI = false;
+			}
 		}
 		// UNDOC: Destructor
 		virtual ~ConsoleReporter()
 		{
-			core_removeReporter( this );
+			if( mIsInstalled ) {
+				mIsInstalled = false;
+				core_removeReporter( this );
+			}
+		}
+
+		void setInstalled()
+		{
+			mIsInstalled = true;
+		}
+		void clearInstalled()
+		{
+			mIsInstalled = false;
+		}
+		Bool isInstalled() const
+		{
+			return mIsInstalled;
 		}
 		
 		// No copy constructor
-		ConsoleReporter( const ConsoleReporter & );
+		ConsoleReporter( const ConsoleReporter & ) = delete;
 		// No assignment operator
-		ConsoleReporter &operator=( const ConsoleReporter & );
+		ConsoleReporter &operator=( const ConsoleReporter & ) = delete;
+
+		Bool isANSI( FileHandle f ) const
+		{
+#if defined( _WIN32 )
+			return f == mStdOut ? mIsOutANSI : mIsErrANSI;
+#else
+			((void)f);
+			return true;
+#endif
+		}
 
 		// Retrieve the current colors of the given console handle
 		static unsigned char getCurrentColors( FileHandle f )
@@ -616,15 +720,21 @@ namespace doll
 			return 0x07;
 		}
 		// Set the current colors for the given console handle
-		static void setCurrentColors( FileHandle f, unsigned char colors )
+		void setCurrentColors( FileHandle f, unsigned char colors )
 		{
+			static const Str mapF[16] = {
+				"\x1b[30;22m", "\x1b[34;22m", "\x1b[32;22m", "\x1b[36;22m",
+				"\x1b[31;22m", "\x1b[35;22m", "\x1b[33;22m", "\x1b[37;22m",
+				"\x1b[30;1m", "\x1b[34;1m", "\x1b[32;1m", "\x1b[36;1m",
+				"\x1b[31;1m", "\x1b[35;1m", "\x1b[33;1m", "\x1b[37;1m"
+			};
+			
 			if( !f ) {
 				return;
 			}
 
-#if defined( _WIN32 )
-			SetConsoleTextAttribute( f, ( WORD )colors );
-#else
+			const Str &code = mapF[ colors & 0x0F ];
+
 			//
 			//	MAP ORDER (0-7):
 			//	Black, Blue, Green, Cyan, Red, Magenta, Yellow, Grey
@@ -632,25 +742,27 @@ namespace doll
 			//	TERMINAL COLOR ORDER (0-7):
 			//	Black, Red, Green, Yellow, Blue, Magenta, Cyan, Grey
 			//
-			static const char *const mapF[16] = {
-				"\x1b[30;22m", "\x1b[34;22m", "\x1b[32;22m", "\x1b[36;22m",
-				"\x1b[31;22m", "\x1b[35;22m", "\x1b[33;22m", "\x1b[37;22m",
-				"\x1b[30;1m", "\x1b[34;1m", "\x1b[32;1m", "\x1b[36;1m",
-				"\x1b[31;1m", "\x1b[35;1m", "\x1b[33;1m", "\x1b[37;1m"
-			};
-			
-			const char *const code = mapF[ colors & 0x0F ];
-			fwrite( ( const void * )code, strlen( code ), 1, f );
+			if( isANSI( f ) ) {
+				writeString( f, code );
+			} else {
+#if defined( _WIN32 )
+				SetConsoleTextAttribute( f, ( WORD )colors );
+#else
+				((void)0);
 #endif
+			}
 		}
 		// Write a string of text to the given console handle
 		static void writeString( FileHandle f, Str s )
 		{
 #if defined( _WIN32 )
-			FILE *fp = stdout;
-			if( f == GetStdHandle( STD_ERROR_HANDLE ) ) {
-				fp = stderr;
-			}
+			static const FileHandle e = GetStdHandle( STD_ERROR_HANDLE );
+
+			FILE *const fp =
+				( f == e )
+				? stderr
+				: stdout
+				;
 
 			axfpf( fp, "%.*s", s.lenInt(), s.get() );
 #else

@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_CoreAsyncIO
+
 #include "doll/IO/AsyncIO.hpp"
 
 #include "doll/Core/Engine.hpp"

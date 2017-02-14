@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_UtilCounter
+
 #include "doll/Util/Counter.hpp"
 
 #include "doll/Math/Basic.hpp"

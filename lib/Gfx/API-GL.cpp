@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_GfxAPIDrv
+
 #include "doll/Core/Defs.hpp"
 #include "doll/Gfx/APIs.def.hpp"
 #if DOLL_GFX_OPENGL_ENABLED
@@ -772,54 +774,60 @@ namespace doll
 #ifdef _WIN32
 		MessageBoxA( HWND(wnd), message, title, MB_ICONERROR | MB_OK );
 #endif
+
+		g_ErrorLog[ kLog_GfxAPIDrv ] += axf( "GL: %s: %s", title, message );
 	}
 
 	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc )
 	{
+		DOLL_TRACE( axf( "wnd=%p, desc=%p", (void*)wnd, (void*)&desc ) );
 #if DOLL__USE_GLFW
 		((void)desc);
 #else
 		SGLContext *const pCtx = os_initGL( wnd, SGLInitInfo().setDepthStencil( 24, 8 ).setFullscreen( desc.windowing != kGfxScreenModeWindowed, desc.vsync ) );
 		if( !AX_VERIFY_MSG( pCtx != nullptr, "Failed to initialize OpenGL context" ) ) {
+			axpf("f\n");
 			return nullptr;
 		}
 #endif
 
-		g_DebugLog += axf( "GL version: %s", glGetString( GL_VERSION ) );
-		g_DebugLog += axf( "GL vendor: %s", glGetString( GL_VENDOR ) );
-		g_DebugLog += axf( "GL renderer: %s", glGetString( GL_RENDERER ) );
+		DOLL_DEBUG_LOG += axf( "GL version: %s", glGetString( GL_VERSION ) );
+		DOLL_DEBUG_LOG += axf( "GL vendor: %s", glGetString( GL_VENDOR ) );
+		DOLL_DEBUG_LOG += axf( "GL renderer: %s", glGetString( GL_RENDERER ) );
 
+		DOLL_TRACE( "Trying to initialize GLEW..." );
 		GLenum glewErr;
 		if( ( glewErr = glewInit() ) != GLEW_OK ) {
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
 #endif
 
-			errorBox( wnd, "Error. GLEW initialization failed. (Wtf?)" );
-
+			errorBox( wnd, "GLEW initialization failed." );
 			return nullptr;
 		}
 
+		DOLL_TRACE( "Checking for modern GL support" );
 		if( !GLEW_VERSION_1_5 || !GLEW_ARB_vertex_buffer_object ) {
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
 #endif
 
 			const char *const pszErrorMsg =
-				"Error. OpenGL version too low.\n\n"
+				"OpenGL version is too low.\n\n"
 				"Your video driver is reporting a version of OpenGL below 1.5.\n"
 				"It is likely that you did not update your video drivers directly from your GPU vendor. (AMD, NVIDIA, or Intel.)\n\n"
-				"Update your drivers, bro. (Seriously.)\n\n"
+				"Try updating your drivers and restarting if you have not already done so.\n\n"
 				"Other possibilities include:\n"
 				" * You're in safe mode. (How? We check for that before getting here!)\n"
 				" * You're actually running this on a GPU from 2003 or earlier. (WHY!?)\n"
 				" * You have transcended the physical world and are now software. Welcome to the Wired, Lain.";
-			const char *const pszErrorCap = "Error - OpenGL version is lower than 1.4";
+			const char *const pszErrorCap = "Error - OpenGL version is lower than 1.5";
 
 			errorBox( wnd, pszErrorMsg, pszErrorCap );
 			return nullptr;
 		}
 
+		DOLL_TRACE( "Checking OpenGL extension availability..." );
 		static const char *const pszExtNames[] = {
 			"GL_ARB_vertex_buffer_object",
 			"GL_ARB_vertex_array_object",
@@ -860,6 +868,7 @@ namespace doll
 			return nullptr;
 		}
 
+		DOLL_TRACE( "Creating CGfxAPI_GL object..." );
 #if DOLL__USE_GLFW
 		SGLContext *const pCtx = nullptr;
 #endif
@@ -869,9 +878,11 @@ namespace doll
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
 #endif
+			errorBox( wnd, "Insufficient memory" );
 			return nullptr;
 		}
 
+		DOLL_TRACE( "Done!" );
 		return pGLAPI;
 	}
 

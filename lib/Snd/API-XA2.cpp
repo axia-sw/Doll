@@ -1,3 +1,5 @@
+#define DOLL_TRACE_FACILITY doll::kLog_SndAPI
+
 #include "doll/Snd/API-XA2.hpp"
 
 #ifdef _WIN32
