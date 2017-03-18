@@ -1,3 +1,0 @@
-[submodule "ext/axlib"]
-	path = ext/axlib
-	url = https://github.com/axia-sw/axlib.git

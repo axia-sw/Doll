@@ -230,7 +230,7 @@ set_property(TARGET Doll PROPERTY CXX_STANDARD_REQUIRED true)
 target_include_directories(
 	Doll
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ext/axlib/include
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../axlib/include
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/glew/include
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/STB
 	PRIVATE ${CMAKE_BINARY_DIR}/include
