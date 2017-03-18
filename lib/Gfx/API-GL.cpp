@@ -592,7 +592,7 @@ namespace doll
 			applyLayoutPointers( ( SGfxLayout * )m_pCurrLayout, 0 );
 		}
 	}
-	
+
 	Void CGfxAPI_GL::iaSetLayout( IGfxAPIVLayout *pLayout )
 	{
 		if( m_pCurrLayout == (SGfxLayout*)pLayout ) {
@@ -633,7 +633,7 @@ namespace doll
 
 		glEnable( GL_SCISSOR_TEST );
 		gfx_r_setScissor( posX, posY, resX, resY );
-		
+
 		glClearColor
 		(
 			F32( DOLL_COLOR_R( value ) )/255.0f,
@@ -669,7 +669,7 @@ namespace doll
 		glBindTexture( GL_TEXTURE_2D, oldtex );
 		CHECKGL();
 	}
-	
+
 	static Bool updateBufferGL( GLenum target, GLenum targetBinding, UPtr vbuffer, UPtr offset, UPtr size, const void *pData )
 	{
 		const GLuint oldvbo = getGLUint( targetBinding );

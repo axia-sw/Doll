@@ -211,7 +211,7 @@ namespace doll
 		pTextStyle->font.init( wszBuf );
 		pTextStyle->fontSize = S32( fontSize );
 #endif
-		
+
 		if( m_pDefStyle != nullptr ) {
 			m_pDefStyle->drop();
 		}
