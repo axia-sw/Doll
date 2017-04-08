@@ -65,70 +65,6 @@ namespace ax {
 			return c;
 		}
 
-		UPtr Copy( char *dst, UPtr maxDst, const char *src );
-		UPtr CopyN( char *dst, UPtr maxDst, const char *src, UPtr n );
-
-		UPtr Append( char *dst, size_t maxDst, const char *src );
-		UPtr AppendN( char *dst, size_t maxDst, const char *src, UPtr n );
-
-		Void ConvertLower( char *buf );
-		Void ConvertUpper( char *buf );
-		Void ConvertLowerN( char *buf, UPtr n );
-		Void ConvertUpperN( char *buf, UPtr n );
-
-		Bool Compare( const char *a, const char *b );
-		Bool CompareInsensitive( const char *a, const char *b );
-
-		Bool CompareN( const char *a, const char *b, UPtr n );
-		Bool CompareInsensitiveN( const char *a, const char *b, UPtr n );
-
-		UPtr FormatV( char *dst, UPtr maxDst, const char *fmt, va_list args );
-		inline UPtr Format( char *dst, UPtr maxDst, const char *fmt, ... ) {
-			va_list args;
-
-			va_start( args, fmt );
-			const UPtr r = FormatV( dst, maxDst, fmt, args );
-			va_end( args );
-
-			return r;
-		}
-
-		template< UPtr _size_ >
-		inline UPtr Copy( char ( &dst )[ _size_ ], const char *src ) {
-			return Copy( &dst[ 0 ], _size_, src );
-		}
-		template< UPtr _size_ >
-		inline UPtr CopyN( char ( &dst )[ _size_ ], const char *src,
-		UPtr n ) {
-			return CopyN( &dst[ 0 ], _size_, src, n );
-		}
-
-		template< UPtr _size_ >
-		inline UPtr Append( char ( &dst )[ _size_ ], const char *src ) {
-			return Append( &dst[ 0 ], _size_, src );
-		}
-		template< UPtr _size_ >
-		inline UPtr AppendN( char ( &dst )[ _size_ ], const char *src,
-		UPtr n ) {
-			return AppendN( &dst[ 0 ], _size_, src, n );
-		}
-
-		template< UPtr _size_ >
-		inline UPtr FormatV( char ( &dst )[ _size_ ], const char *fmt,
-		va_list args ) {
-			return FormatV( &dst[ 0 ], _size_, fmt, args );
-		}
-		template< UPtr _size_ >
-		inline UPtr Format( char ( &dst )[ _size_ ], const char *fmt, ... ) {
-			va_list args;
-
-			va_start( args, fmt );
-			const UPtr r = FormatV( &dst[ 0 ], _size_, fmt, args );
-			va_end( args );
-
-			return r;
-		}
-
 	}
 
 }
@@ -147,50 +83,6 @@ namespace ax {
 namespace ax {
 
 	namespace Text {
-
-		UPtr Copy( char *dst, UPtr maxDst, const char *src ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				*dst = '\0';
-				return 0;
-			}
-			
-			return axstr_cpy( dst, maxDst, src );
-		}
-		UPtr CopyN( char *dst, UPtr maxDst, const char *src, UPtr n ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				*dst = '\0';
-				return 0;
-			}
-
-			return axstr_cpyn( dst, maxDst, src, n );
-		}
-
-		UPtr Append( char *dst, UPtr maxDst, const char *src ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				return strlen( dst );
-			}
-			
-			return axstr_cat( dst, maxDst, src );
-		}
-		UPtr AppendN( char *dst, size_t maxDst, const char *src, UPtr n ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				return strlen( dst );
-			}
-
-			return axstr_catn( dst, maxDst, src, n );
-		}
 
 		Void ConvertLower( char *buf ) {
 			AX_ASSERT_NOT_NULL( buf );
@@ -225,54 +117,6 @@ namespace ax {
 				++buf;
 				--n;
 			}
-		}
-
-		Bool Compare( const char *a, const char *b ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-
-			return strcmp( a, b ) == 0;
-		}
-		Bool CompareInsensitive( const char *a, const char *b ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-#if defined( _WIN32 )
-			return _stricmp( a, b ) == 0;
-#else
-			return strcasecmp( a, b ) == 0;
-#endif
-		}
-
-		Bool CompareN( const char *a, const char *b, UPtr n ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-			return strncmp( a, b, n ) == 0;
-		}
-		Bool CompareInsensitiveN( const char *a, const char *b, UPtr n ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-#if defined( _WIN32 )
-			return _strnicmp( a, b, n ) == 0;
-#else
-			return strncasecmp( a, b, n ) == 0;
-#endif
-		}
-
-		UPtr FormatV( char *dst, UPtr maxDst, const char *fmt, va_list args ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT_NOT_NULL( fmt );
-			AX_ASSERT( maxDst > 0 );
-
-			auto r = axspfv( dst, maxDst, fmt, args );
-
-			if( r < 0 ) {
-				return 0;
-			}
-
-			return ( UPtr )r;
 		}
 
 	}
@@ -715,14 +559,14 @@ namespace doll
 			pre[ 0 ] = '\0';
 			const SConfigVar *prnt = var.parent->parent;
 			while( prnt != nullptr ) {
-				ax::Text::Append( pre, "  " );
+				axstr_cat( pre, "  " );
 				prnt = prnt->parent;
 			}
 
 			const SConfigValue *val = var.values.head();
 
 			if( val != var.values.tail() ) {
-				ax::Text::Format( buf, "%s%.*s:", pre, nn,np );
+				axspf( buf, "%s%.*s:", pre, nn,np );
 
 				char tmp[ 512 ];
 				while( val != nullptr ) {
@@ -733,18 +577,18 @@ namespace doll
 						continue;
 					}
 
-					ax::Text::Format( tmp, "\n%s  %.*s", pre, val->value.len(), val->value.get() );
-					ax::Text::Append( buf, tmp );
+					axspf( tmp, "\n%s  %.*s", pre, val->value.len(), val->value.get() );
+					axstr_cat( buf, tmp );
 
 					val = next;
 				}
 			} else if( val != nullptr && val->value.isUsed() ) {
-				ax::Text::Format( buf, "%s%.*s = %.*s", pre, nn,np, val->value.len(), val->value.get() );
+				axspf( buf, "%s%.*s = %.*s", pre, nn,np, val->value.len(), val->value.get() );
 			} else {
-				ax::Text::Format( buf, "%s%.*s", pre, nn,np );
+				axspf( buf, "%s%.*s", pre, nn,np );
 			}
 		} else {
-			ax::Text::Format( buf, "[%.*s]", nn,np );
+			axspf( buf, "[%.*s]", nn,np );
 		}
 
 		g_InfoLog += buf;

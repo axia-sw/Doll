@@ -224,8 +224,11 @@ add_library(Doll
 
 set_source_files_properties(ext/glew/src/glew.c PROPERTIES LANGUAGE C)
 
-set_property(TARGET Doll PROPERTY CXX_STANDARD 14)
-set_property(TARGET Doll PROPERTY CXX_STANDARD_REQUIRED true)
+set_target_properties(Doll PROPERTIES
+    CXX_STANDARD          14
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS        ON
+)
 
 target_include_directories(
 	Doll
@@ -243,11 +246,24 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	)
 endif()
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	find_package(glfw3 3.2 REQUIRED)
+	find_package(OpenGL REQUIRED)
+	target_include_directories(Doll PRIVATE ${OPENGL_INCLUDE_DIR})
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	target_link_libraries(
 		Doll
 		PUBLIC gdiplus
 		PUBLIC opengl32
+	)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	target_link_libraries(
+		Doll
+		PUBLIC pthread
+		PUBLIC glfw
+		PUBLIC ${OPENGL_gl_LIBRARY}
 	)
 else()
 	target_link_libraries(

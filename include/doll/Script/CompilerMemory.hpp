@@ -22,20 +22,20 @@ namespace doll { namespace script {
 			return m_context;
 		}
 
-		static Void *operator new( UPtr cBytes );
+		static Void *operator new( SizeType cBytes );
 		static Void operator delete( Void *pBytes );
 
-		static Void *operator new[]( UPtr cBytes );
+		static Void *operator new[]( SizeType cBytes );
 		static Void operator delete[]( Void *pBytes );
 
-		static Void *operator new( UPtr cBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
+		static Void *operator new( SizeType cBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
 		static Void operator delete( Void *pBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
 
-		static Void *operator new[]( UPtr cBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
+		static Void *operator new[]( SizeType cBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
 		static Void operator delete[]( Void *pBytes, const char *pszFilename, U32 uLine, const char *pszFunc );
 
 		// placement new
-		static Void *operator new( UPtr cBytes, Void *pExistingObj );
+		static Void *operator new( SizeType cBytes, Void *pExistingObj );
 		// placement new (dummy delete)
 		static Void operator delete( Void *pBytes, Void *pExistingObj );
 

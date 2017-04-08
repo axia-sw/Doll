@@ -7,7 +7,12 @@
 #include "doll/Gfx/API-GL.hpp"
 #include "doll/Math/Math.hpp"
 
-#include <GL/gl.h>
+// FIXME: GL shouldn't be necessary now that we have a renderer API
+#ifdef __APPLE__
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 namespace doll
 {

@@ -66,6 +66,10 @@
 # include <GLFW/glfw3native.h>
 #endif
 
+#if AX_OS_MACOSX
+typedef void *NSWindow;
+#endif
+
 namespace doll
 {
 

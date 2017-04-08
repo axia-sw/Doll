@@ -12,7 +12,7 @@ namespace doll { namespace script {
 	{
 	}
 
-	Void *CompilerObject::operator new( UPtr cBytes )
+	Void *CompilerObject::operator new( SizeType cBytes )
 	{
 		return DOLL__TEMP_ALLOCATOR->alloc( cBytes, kTag_Script, nullptr, 0, nullptr );
 	}
@@ -21,7 +21,7 @@ namespace doll { namespace script {
 		DOLL__TEMP_ALLOCATOR->dealloc( pBytes, nullptr, 0, nullptr );
 	}
 
-	Void *CompilerObject::operator new[]( UPtr cBytes )
+	Void *CompilerObject::operator new[]( SizeType cBytes )
 	{
 		return DOLL__TEMP_ALLOCATOR->alloc( cBytes, kTag_Script, nullptr, 0, nullptr );
 	}
@@ -30,7 +30,7 @@ namespace doll { namespace script {
 		DOLL__TEMP_ALLOCATOR->dealloc( pBytes, nullptr, 0, nullptr );
 	}
 
-	Void *CompilerObject::operator new( UPtr cBytes, const char *pszFilename, U32 uLine, const char *pszFunc )
+	Void *CompilerObject::operator new( SizeType cBytes, const char *pszFilename, U32 uLine, const char *pszFunc )
 	{
 		return DOLL__TEMP_ALLOCATOR->alloc( cBytes, kTag_Script, pszFilename, int( uLine ), pszFunc );
 	}
@@ -39,7 +39,7 @@ namespace doll { namespace script {
 		DOLL__TEMP_ALLOCATOR->dealloc( pBytes, pszFilename, int( uLine ), pszFunc );
 	}
 
-	Void *CompilerObject::operator new[]( UPtr cBytes, const char *pszFilename, U32 uLine, const char *pszFunc )
+	Void *CompilerObject::operator new[]( SizeType cBytes, const char *pszFilename, U32 uLine, const char *pszFunc )
 	{
 		return DOLL__TEMP_ALLOCATOR->alloc( cBytes, kTag_Script, pszFilename, int( uLine ), pszFunc );
 	}
@@ -48,7 +48,7 @@ namespace doll { namespace script {
 		DOLL__TEMP_ALLOCATOR->dealloc( pBytes, pszFilename, int( uLine ), pszFunc );
 	}
 
-	Void *CompilerObject::operator new( UPtr cBytes, Void *pExistingObj )
+	Void *CompilerObject::operator new( SizeType cBytes, Void *pExistingObj )
 	{
 		( Void )cBytes;
 		( Void )pExistingObj;

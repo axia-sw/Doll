@@ -681,7 +681,7 @@ namespace doll
 		{
 		}
 
-		inline void *operator new( UPtr n, int tag = tTag, const char *file = nullptr, int line = 0, const char *func = nullptr )
+		inline void *operator new( SizeType n, int tag = tTag, const char *file = nullptr, int line = 0, const char *func = nullptr )
 		{
 			return gPool.alloc( n, tag, file, line, func );
 		}

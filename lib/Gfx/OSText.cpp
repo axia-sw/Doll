@@ -34,7 +34,12 @@
 #include "doll/Core/Memory.hpp"
 #include "doll/Core/MemoryTags.hpp"
 
-#include <GL/gl.h> // ### FOR TESTING ###
+// ### FOR TESTING ###
+#ifdef __APPLE__
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 namespace doll
 {

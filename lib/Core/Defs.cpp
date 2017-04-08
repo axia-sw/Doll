@@ -4,6 +4,7 @@
 /* Mac OS X */
 #if defined(__APPLE__)
 # include <mach-o/dyld.h>
+# include <errno.h>
 static char *getexename(char *buff, size_t n) {
 	uint32_t size;
 
