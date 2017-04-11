@@ -360,7 +360,7 @@ namespace doll
 	\
 	va_list args;\
 	va_start( args, _Fmt_ );\
-	axspf( buf, sizeof( buf ), _Fmt_, args );\
+	axspfv( buf, sizeof( buf ), _Fmt_, args );\
 	buf[ sizeof( buf ) - 1 ] = '\0';\
 	va_end( args );\
 	\
