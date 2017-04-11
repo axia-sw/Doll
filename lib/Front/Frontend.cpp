@@ -96,6 +96,7 @@ namespace doll
 #if DOLL__USE_GLFW
 	static void glfw_error_f( int error, const char *description )
 	{
+		axerrf( "GLFW error %i: %s\n", error, description );
 		basicErrorf( "GLFW error %i: %s\n", error, description );
 	}
 #endif
@@ -534,6 +535,8 @@ namespace doll
 #endif
 
 #if DOLL__USE_GLFW
+		g_InfoLog += axf( "GLFW version: %s", glfwGetVersionString() );
+
 		glfwSetErrorCallback( &glfw_error_f );
 		if( !g_core.tooling.isTool && !glfwInit() ) {
 			fprintf( stderr, "Error. Could not initialize GLFW.\n" );
@@ -546,6 +549,7 @@ namespace doll
 
 			return false;
 		}
+		glfwSetErrorCallback( &glfw_error_f );
 #endif
 
 		// Store the launch directory
@@ -687,15 +691,31 @@ namespace doll
 		}
 
 #if DOLL__USE_GLFW
+# ifndef __APPLE__
 		glfwWindowHint( GLFW_VISIBLE, GLFW_FALSE );
+# endif
 		glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
 
+# ifdef __APPLE__
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 2 );
+		glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+		glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE );
+# else
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 2 );
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+# endif
 
-		GLFWwindow *wnd; 
-
-		if( !AX_VERIFY_MSG( ( wnd = glfwCreateWindow( int( unsigned( conf.video.uResX ) ), int( unsigned( conf.video.uResY ) ), conf.script.szTitle, nullptr, nullptr ) ) != nullptr, "Failed to create window" ) ) {
+		GLFWwindow *const wnd =
+			glfwCreateWindow
+			(
+				int( unsigned( conf.video.uResX ) ),
+				int( unsigned( conf.video.uResY ) ),
+				conf.script.szTitle,
+				nullptr,
+				nullptr
+			);
+		if( !AX_VERIFY_MSG( wnd != nullptr, "Failed to create window" ) ) {
 			return false;
 		}
 
@@ -711,6 +731,12 @@ namespace doll
 
 		glfwSetKeyCallback( wnd, &glfw_keyButton_f );
 		glfwSetCharCallback( wnd, &glfw_keyChar_f );
+		
+		glfwMakeContextCurrent( wnd );
+
+# ifndef _WIN32
+		glfwShowWindow( wnd );
+# endif
 
 		g_core.view.window = wnd;
 #else

@@ -75,6 +75,18 @@ configure_file(
     ${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 )
 
+set(Doll_OS_SPECIFIC_SOURCES "")
+set(Doll_OS_SPECIFIC_HEADERS "")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	set(Doll_OS_SPECIFIC_SOURCES
+		lib/OS/macOS/Cocoa.mm
+	)
+	set(Doll_OS_SPECIFIC_HEADERS
+		lib/OS/macOS/Cocoa.h
+	)
+endif()
+
 add_library(Doll
 	ext/glew/src/glew.c
 	lib/DollAxlib.cpp
@@ -134,6 +146,7 @@ add_library(Doll
 	lib/Util/Metrics.cpp
 	lib/UX/DialogueWidget.cpp
 	lib/UX/Widget.cpp
+	${Doll_OS_SPECIFIC_SOURCES}
 	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 	include/doll/AxlibConfig.h
 	include/doll/Doll.hpp
@@ -220,6 +233,7 @@ add_library(Doll
 	include/doll/Util/ValueStack.hpp
 	include/doll/UX/DialogueWidget.hpp
 	include/doll/UX/Widget.hpp
+	${Doll_OS_SPECIFIC_HEADERS}
 )
 
 set_source_files_properties(ext/glew/src/glew.c PROPERTIES LANGUAGE C)
@@ -264,6 +278,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 		PUBLIC pthread
 		PUBLIC glfw
 		PUBLIC ${OPENGL_gl_LIBRARY}
+		PUBLIC "-framework Foundation"
+		PUBLIC "-framework AppKit"
+		PUBLIC "-framework Cocoa"
 	)
 else()
 	target_link_libraries(

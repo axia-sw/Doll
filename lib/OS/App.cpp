@@ -10,6 +10,10 @@
 # undef max
 #endif
 
+#if AX_OS_MACOSX
+# include "macOS/Cocoa.h"
+#endif
+
 namespace doll {
 
 	static Bool g_bReceivedQuit = false;
@@ -35,6 +39,8 @@ namespace doll {
 	{
 #if AX_OS_WINDOWS
 		PostQuitMessage( 0 );
+#elif AX_OS_MACOSX
+		return macOS::app::submitQuitEvent();
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API os_receivedQuitEvent()
@@ -55,6 +61,8 @@ namespace doll {
 
 		Windows::processMessage( Msg );
 		return true;
+#elif AX_OS_MACOSX
+		return macOS::app::waitForAndProcessEvent( g_bReceivedQuit );
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API os_processAllQueuedEvents()
@@ -69,6 +77,8 @@ namespace doll {
 		}
 
 		return bDidProcess;
+#elif AX_OS_MACOSX
+		return macOS::app::processAllQueuedEvents( g_bReceivedQuit );
 #endif
 	}
 

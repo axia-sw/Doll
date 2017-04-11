@@ -159,6 +159,7 @@ namespace doll
 
 		// HACK: Uncomment once the above above is correct
 		//gfx_r_loadModelView( viewTransform );
+		(void)viewTransform;
 	}
 	Void RSpriteGroup::render_gl( S32 w, S32 h )
 	{
