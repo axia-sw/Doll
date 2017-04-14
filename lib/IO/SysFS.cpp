@@ -769,7 +769,7 @@ namespace doll
 #endif
 	}
 
-	DOLL_FUNC Bool DOLL_API sysfs_seek( OSFile f, S64 uOffset, ESeekMode mode )
+	DOLL_FUNC Bool DOLL_API sysfs_seek( OSFile f, S64 inOffset, ESeekMode mode )
 	{
 #ifdef _WIN32
 		DWORD dwMoveMethod = 0;
@@ -788,12 +788,28 @@ namespace doll
 		}
 
 		LARGE_INTEGER offset;
-		offset.QuadPart = uOffset;
+		offset.QuadPart = inOffset;
 
 		return SetFilePointerEx( win32h( f ), offset, nullptr, dwMoveMethod ) != FALSE;
 #else
-		// FIXME: Implement
-		return false;
+		const int whence =
+			mode == ESeekMode::Absolute ? SEEK_SET :
+			mode == ESeekMode::Relative ? SEEK_CUR :
+			mode == ESeekMode::End      ? SEEK_END :
+			-1;
+		AX_ASSERT_MSG( whence != -1, "Invalid seek mode" );
+		if( whence == -1 ) {
+			return false;
+		}
+
+		const off_t offset = off_t( inOffset );
+
+		const off_t newpos = lseek( unixh( f ), offset, whence );
+		if( newpos == -1 ) {
+			return false;
+		}
+
+		return true;
 #endif
 	}
 	DOLL_FUNC U64 DOLL_API sysfs_tell( const OSFile f )
@@ -805,8 +821,12 @@ namespace doll
 		}
 		return U64( offset.QuadPart );
 #else
-		// FIXME: Implement
-		return 0;
+		const off_t pos = lseek( unixh( f ), 0, SEEK_CUR );
+		if( pos == -1 ) {
+			return 0;
+		}
+
+		return U64( S64(pos) );
 #endif
 	}
 
