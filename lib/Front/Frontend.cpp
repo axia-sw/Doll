@@ -164,7 +164,7 @@ namespace doll
 		if( mods & GLFW_MOD_ALT ) {
 			cvtmods |= kMF_LAlt;
 		}
-		
+
 		return cvtmods;
 	}
 	static void glfw_getMouse( GLFWwindow *window, S32 &dstClientPosX, S32 &dstClientPosY )
@@ -638,7 +638,7 @@ namespace doll
 	prepareDir( ECoreDir::ShortName_, coreDirs, conf.baseFS.sz##ShortName_##Dir, DefVal_ );
 #include "doll/Core/EngineDirs.def.hpp"
 #undef DOLL_ENGINE__DIR
-		
+
 		core_installDebugLogReporter();
 
 		g_core.frame.uUpdateId = 0;
@@ -697,10 +697,15 @@ namespace doll
 		glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
 
 # ifdef __APPLE__
+#  if 0 // Oops. Thought we *needed* GL 3.2 on macOS
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 2 );
 		glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 		glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE );
+#  else
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 2 );
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+#  endif
 # else
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 2 );
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
@@ -731,12 +736,8 @@ namespace doll
 
 		glfwSetKeyCallback( wnd, &glfw_keyButton_f );
 		glfwSetCharCallback( wnd, &glfw_keyChar_f );
-		
-		glfwMakeContextCurrent( wnd );
 
-# ifndef _WIN32
-		glfwShowWindow( wnd );
-# endif
+		glfwMakeContextCurrent( wnd );
 
 		g_core.view.window = wnd;
 #else

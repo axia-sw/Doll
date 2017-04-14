@@ -805,13 +805,13 @@ namespace doll
 			errorBox( wnd, "GLEW initialization failed." );
 			return nullptr;
 		}
-		
+
 		int glversion = 0;
 		{
 			int glver[2] = { 0, 0 };
 			const char *const glstr = (const char *)glGetString( GL_VERSION );
 			const char *const str = glstr != nullptr ? glstr : "0.0";
-			
+
 			static const size_t dstn = AX_COUNTOF(glver);
 			size_t dsti = 0;
 			const char *p;
@@ -821,18 +821,18 @@ namespace doll
 					glver[dsti] += int( *p - '0' );
 					continue;
 				}
-				
+
 				if( ++dsti == dstn ) {
 					break;
 				}
 			}
-			
+
 			if( glver[1] > 9 ) {
 				glver[1] = 9;
 			}
-			
+
 			glversion = glver[0]*100 + glver[1]*10 + 0;
-			axpf("\n\n\n%i.%i (%d)\n\n\n", glver[0], glver[1], glversion);
+			DOLL_TRACE( axf( "GL version: %i.%i (%d)", glver[0], glver[1], glversion ) );
 		}
 
 		DOLL_TRACE( "Checking for modern GL support" );
