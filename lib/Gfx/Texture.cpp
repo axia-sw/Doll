@@ -175,7 +175,7 @@ namespace doll
 			memcpy( data, io->data.get() + io->offset, length );
 			io->offset += length;
 		}
-		
+
 		struct LibpngMessageData {
 			const LoadingTexture *loading;
 			Str filename;
@@ -335,7 +335,6 @@ namespace doll
 
 		const U32 pngresx = png_get_image_width( pngptr, infoptr );
 		const U32 pngresy = png_get_image_height( pngptr, infoptr );
-		g_DebugLog += "M";
 		switch( png_get_color_type( pngptr, infoptr ) ) {
 		case PNG_COLOR_TYPE_GRAY:
 			m_format = kTexFmtRGB8;
@@ -396,6 +395,9 @@ namespace doll
 		m_res_y = pngresy;
 
 		m_data = m_ownedBuffer.pointer();
+
+		// Done
+		m_loadedType = ELoadType::png;
 		return ELoadResult::success;
 	}
 	LoadingTexture::ELoadResult LoadingTexture::loadViaSTB( const Str &filename, const TArr<U8> &data ) {
@@ -470,7 +472,7 @@ namespace doll
 		if( head!=nullptr ) {
 			return true;
 		}
-	
+
 		// register the total resolution (must be done before allocating free space
 		// node; otherwise the asserts will fail)
 		resolution.x = res.x;
@@ -758,7 +760,7 @@ namespace doll
 		UPtr cAdjNodes = 0;
 
 		const SPixelRect &mainRect = node->rect;
-		for( SNode *p = head; p != nullptr; p = p->next ) { 
+		for( SNode *p = head; p != nullptr; p = p->next ) {
 			if( p == node || p->textureId != 0 || !isAdjacent( p->rect, mainRect ) ) {
 				continue;
 			}
@@ -869,7 +871,7 @@ namespace doll
 		if( !AX_VERIFY_MSG( width > 0 && height > 0, "Invalid resolution" ) ) {
 			return nullptr;
 		}
-	
+
 		// try to allocate from an existing atlas first
 		if( specificAtlas != nullptr ) {
 			if( !AX_VERIFY_MSG( specificAtlas->getFormat() == format, "Invalid format for atlas" ) ) {
