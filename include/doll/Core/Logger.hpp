@@ -115,11 +115,11 @@ namespace doll
 
 	/*
 	===========================================================================
-	
+
 		REPORTER
 
 		Handle logging and reports
-	
+
 	===========================================================================
 	*/
 
@@ -347,7 +347,7 @@ namespace doll
 	};
 
 	// AX_TRACE(msg) submits a debug report concerning this code IF in debug mode
-#if AX_DEBUG_ENABLED
+#if AX_DEBUG_ENABLED != 0
 # define DOLL_TRACE( msg )\
 	doll::core_report( doll::ESeverity::Debug, __FILE__, __LINE__, msg )
 #else
