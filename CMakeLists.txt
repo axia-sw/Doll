@@ -80,9 +80,11 @@ set(Doll_OS_SPECIFIC_HEADERS "")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	set(Doll_OS_SPECIFIC_SOURCES
+		lib/Gfx/macOS/OSText_Cocoa.mm
 		lib/OS/macOS/Cocoa.mm
 	)
 	set(Doll_OS_SPECIFIC_HEADERS
+		lib/Gfx/macOS/OSText_Cocoa.hpp
 		lib/OS/macOS/Cocoa.h
 	)
 endif()
@@ -296,6 +298,20 @@ target_compile_definitions(
 	PRIVATE GLEW_STATIC=1
 	PRIVATE DOLL__BUILD=1
 )
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	target_compile_definitions(
+		Doll
+		PUBLIC _DEBUG=1
+		PUBLIC AX_DEBUG_ENABLED=1
+	)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	target_compile_definitions(
+		Doll
+		PUBLIC NDEBUG=1
+		PUBLIC AX_DEBUG_ENABLED=0
+	)
+endif()
 
 
 find_package(PNG REQUIRED)
