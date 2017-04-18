@@ -847,6 +847,16 @@ namespace doll
 			return false;
 		}
 
+#if DOLL__USE_GLFW
+		axpf("gfx: glfw: Resize properly\n");
+		do {
+			int w = 0, h = 0;
+			glfwGetWindowSize( g_core.view.window, &w, &h );
+			axpf( "gfx: glfw: got %i x %i\n", w, h);
+			glfw_onSized_f( g_core.view.window, w, h );
+		} while( false );
+#endif
+
 		axpf("gfx: done\n");
 		return true;
 	}
