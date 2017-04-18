@@ -77,7 +77,7 @@ namespace doll { namespace macOS {
 			[toCocoa(g_fontManager)
 				fontWithFamily:fontFamilyStr
 				traits:0
-				weight:5
+				weight:8
 				size:(CGFloat)size];
 		if( !font ) {
 			DOLL_TRACE( " - !font" );
@@ -86,7 +86,7 @@ namespace doll { namespace macOS {
 		}
 
 		NSMutableDictionary *const attribs =
-			[[NSMutableDictionary dictionaryWithCapacity: 3] retain];
+			[[NSMutableDictionary dictionaryWithCapacity: 5] retain];
 		if( !attribs ) {
 			DOLL_TRACE( " - !attribs" );
 			[fontFamilyStr dealloc];
@@ -95,6 +95,10 @@ namespace doll { namespace macOS {
 		}
 
 		[attribs setObject:font forKey:NSFontAttributeName];
+		[attribs setObject:[NSColor blackColor] forKey:NSStrokeColorAttributeName];
+		[attribs setObject:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
+		[attribs setObject:@-3.0 forKey:NSStrokeWidthAttributeName];
+
 		[fontFamilyStr dealloc];
 
 		clear();
