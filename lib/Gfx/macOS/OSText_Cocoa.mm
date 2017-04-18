@@ -140,7 +140,12 @@ namespace doll { namespace macOS {
 			return false;
 		}
 
-		[image lockFocus];
+		[image lockFocusFlipped:YES];
+
+		NSAffineTransform *const xform = [NSAffineTransform transform];
+		[xform translateXBy:0 yBy:double(size.y)];
+		[xform scaleXBy:1 yBy:-1];
+		[xform concat];
 
 		[textStr drawAtPoint:NSMakePoint(0, 0) withAttributes: toCocoa(m_attribs)];
 
