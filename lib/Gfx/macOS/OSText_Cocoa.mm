@@ -20,6 +20,9 @@ namespace doll { namespace macOS {
 	inline NSMutableDictionary *toCocoa( AppleMutableDictionary src ) {
 		return reinterpret_cast< NSMutableDictionary * >( src );
 	}
+	inline NSMutableParagraphStyle *toCocoa( AppleMutableParagraphStyle src ) {
+		return reinterpret_cast< NSMutableParagraphStyle * >( src );
+	}
 
 	inline AppleFontManager fromCocoa( NSFontManager *dst ) {
 		return reinterpret_cast< AppleFontManager >( dst );
@@ -35,6 +38,9 @@ namespace doll { namespace macOS {
 	}
 	inline AppleMutableDictionary fromCocoa( NSMutableDictionary *dst ) {
 		return reinterpret_cast< AppleMutableDictionary >( dst );
+	}
+	inline AppleMutableParagraphStyle fromCocoa( NSMutableParagraphStyle *dst ) {
+		return reinterpret_cast< AppleMutableParagraphStyle >( dst );
 	}
 
 	inline NSString *getCocoaString( Str src ) {
@@ -85,10 +91,21 @@ namespace doll { namespace macOS {
 			return false;
 		}
 
+		NSMutableParagraphStyle *const paraStyle =
+			[[NSMutableParagraphStyle alloc] init];
+		if( !paraStyle ) {
+			DOLL_TRACE( " - !paraStyle" );
+			[fontFamilyStr dealloc];
+			[font dealloc];
+			return false;
+		}
+		[paraStyle setLineBreakMode:NSLineBreakByWordWrapping];
+
 		NSMutableDictionary *const attribs =
 			[[NSMutableDictionary dictionaryWithCapacity: 5] retain];
 		if( !attribs ) {
 			DOLL_TRACE( " - !attribs" );
+			[paraStyle dealloc];
 			[fontFamilyStr dealloc];
 			[font dealloc];
 			return false;
@@ -98,6 +115,7 @@ namespace doll { namespace macOS {
 		[attribs setObject:[NSColor blackColor] forKey:NSStrokeColorAttributeName];
 		[attribs setObject:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
 		[attribs setObject:@-3.0 forKey:NSStrokeWidthAttributeName];
+		[attribs setObject:paraStyle forKey:NSParagraphStyleAttributeName];
 
 		[fontFamilyStr dealloc];
 
@@ -105,6 +123,7 @@ namespace doll { namespace macOS {
 
 		m_font = fromCocoa( font );
 		m_attribs = fromCocoa( attribs );
+		m_paragraphStyle = fromCocoa( paraStyle );
 
 		DOLL_TRACE( " + OK" );
 		return true;
@@ -112,6 +131,10 @@ namespace doll { namespace macOS {
 	void CocoaFont::clear() {
 		DOLL_TRACE( "CocoaFont::clear()" );
 
+		if( m_paragraphStyle != nullptr ) {
+			[toCocoa(m_paragraphStyle) dealloc];
+			m_paragraphStyle = nullptr;
+		}
 		if( m_attribs != nullptr ) {
 			[toCocoa(m_attribs) dealloc];
 			m_attribs = nullptr;
@@ -151,11 +174,13 @@ namespace doll { namespace macOS {
 		[xform scaleXBy:1 yBy:-1];
 		[xform concat];
 
-		[textStr drawAtPoint:NSMakePoint(0, 0) withAttributes: toCocoa(m_attribs)];
+		const auto rc = NSMakeRect( 0.0f, 0.0f, frameSize.width, frameSize.height );
+
+		[textStr drawInRect:rc withAttributes:toCocoa(m_attribs)];
 
 		NSBitmapImageRep *const bmp =
 			[[NSBitmapImageRep alloc]
-				initWithFocusedViewRect:NSMakeRect(0.0f, 0.0f, frameSize.width, frameSize.height)];
+				initWithFocusedViewRect:rc];
 
 		[image unlockFocus];
 

@@ -10,6 +10,7 @@ namespace doll { namespace macOS {
 	typedef struct {} *AppleMutableDictionary;
 	typedef struct {} *AppleImage;
 	typedef struct {} *AppleBitmap;
+	typedef struct {} *AppleMutableParagraphStyle;
 
 	class CocoaFont;
 	class CocoaText;
@@ -18,8 +19,9 @@ namespace doll { namespace macOS {
 	class CocoaFont {
 		static AppleFontManager g_fontManager;
 
-		AppleFont              m_font;
-		AppleMutableDictionary m_attribs;
+		AppleFont                  m_font;
+		AppleMutableDictionary     m_attribs;
+		AppleMutableParagraphStyle m_paragraphStyle;
 
 	public:
 		CocoaFont();
