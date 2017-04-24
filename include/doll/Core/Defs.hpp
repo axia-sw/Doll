@@ -4,6 +4,7 @@
 #include <axlib.hpp>
 
 #ifdef DOLL__BUILD
+# include "Private/Variants.hpp"
 # ifndef DOLL__SECURE_LIB
 #  if defined( _MSC_VER ) && defined( __STDC_WANT_SECURE_LIB__ )
 #   define DOLL__SECURE_LIB __STDC_WANT_SECURE_LIB__

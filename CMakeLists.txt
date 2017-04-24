@@ -152,6 +152,8 @@ add_library(Doll
 	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 	include/doll/AxlibConfig.h
 	include/doll/Doll.hpp
+	include/doll/Core/Private/Variants.def.hpp
+	include/doll/Core/Private/Variants.hpp
 	include/doll/Core/Config.hpp
 	include/doll/Core/Defs.hpp
 	include/doll/Core/Engine.hpp
@@ -304,12 +306,21 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		Doll
 		PUBLIC _DEBUG=1
 		PUBLIC AX_DEBUG_ENABLED=1
+		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_DEVELOPMENT
 	)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	target_compile_definitions(
 		Doll
 		PUBLIC NDEBUG=1
 		PUBLIC AX_DEBUG_ENABLED=0
+		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_DEBUG
+	)
+elseif((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel"))
+	target_compile_definitions(
+		Doll
+		PUBLIC NDEBUG=1
+		PUBLIC AX_DEBUG_ENABLED=0
+		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_RELEASE
 	)
 endif()
 

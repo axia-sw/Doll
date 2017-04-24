@@ -276,13 +276,7 @@ namespace doll
 		static char szBuf[ 256 ] = { '\0' };
 
 		if( szBuf[ 0 ] == '\0' ) {
-			const char *const pszDbgStr =
-#if AX_DEBUG_ENABLED
-				"Dbg"
-#else
-				""
-#endif
-				;
+			const char *const pszDbgStr = variantToString( kVariant );
 
 #if DOLL_GITINFO__REVNUM != 0
 # define DOLL__GITINFO_FMT " %s-r%u (%s %s)"
@@ -296,7 +290,7 @@ namespace doll
 			axspf
 			(
 				szBuf,
-				"Doll%s %u.%u.%u" DOLL__GITINFO_FMT,
+				"Doll-%s %u.%u.%u" DOLL__GITINFO_FMT,
 				pszDbgStr,
 				kVersionMajor,
 				kVersionMinor,
@@ -506,6 +500,7 @@ namespace doll
 #ifdef AX_GITINFO__TSTAMP
 		g_core.version.gitCommitTime = AX_GITINFO__TSTAMP;
 #endif
+		g_core.version.buildVariant = kVariant;
 
 		g_core.tooling.stdoutType = getConsoleType( stdout );
 		g_core.tooling.stderrType = getConsoleType( stderr );
