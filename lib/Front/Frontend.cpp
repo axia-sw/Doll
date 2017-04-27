@@ -290,7 +290,7 @@ namespace doll
 			axspf
 			(
 				szBuf,
-				"Doll-%s %u.%u.%u" DOLL__GITINFO_FMT,
+				"Doll %s %u.%u.%u" DOLL__GITINFO_FMT,
 				pszDbgStr,
 				kVersionMajor,
 				kVersionMinor,

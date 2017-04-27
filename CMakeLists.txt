@@ -1,6 +1,61 @@
 project(Doll LANGUAGES C CXX)
 cmake_minimum_required(VERSION 3.4)
 
+set(DollBuildVariantsList_ "DEVELOPMENT;DEBUG;PROFILE;RELEASE")
+
+set(DollDefaultVariant_ "DEBUG")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(DollDefaultVariant_ "DEVELOPMENT")
+elseif(CMAKE_BUILD_TYPE STRQUAL "RelWithDebInfo")
+	set(DollDefaultVariant_ "DEBUG")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	set(DollDefaultVariant_ "RELEASE")
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+	set(DollDefaultVariant_ "RELEASE")
+endif()
+
+#
+# Doll's "build variants" are configurations/schemes used to control how Doll's
+# code is generated and which internal options are used.
+#
+# There are four variants:
+#
+# DEVELOPMENT:
+#  - Enables various debug options and systems which should normally be disabled
+#    Generally meant for active development of Doll or debugging Doll itself.
+#
+# DEBUG:
+#  - Enables debug systems meant for users of Doll. This is usually what you
+#    want if you're developing something with Doll.
+#
+# PROFILE:
+#  - Same as the "RELEASE" option but enables profiling information collection.
+#    Useful for profile-guided-optimizations (PGO).
+#
+# RELEASE:
+#  - Generates an optimized library with debug information stripped. Use this
+#    when you're ready to ship. Can optionally use the PGO data dumped by the
+#    PROFILE stage for extra optimizations specific to your usage patterns.
+#
+
+set(DOLL_BUILD_VARIANT "${DollDefaultVariant_}" CACHE STRING "Build variant used by Doll (${DollBuildVariantsList_})")
+set_property(CACHE DOLL_BUILD_VARIANT PROPERTY STRINGS ${DollBuildVariantsList_})
+
+if(CMAKE_BUILD_TYPE STREQUAL "")
+	set(BuildTy_ "Release")
+	if(DOLL_BUILD_VARIANT STREQUAL "DEVELOPMENT")
+		set(BuildTy_ "Debug")
+	elseif(DOLL_BUILD_VARIANT STREQUAL "DEBUG")
+		set(BuildTy_ "RelWithDebInfo")
+	elseif(DOLL_BUILD_VARIANT STREQUAL "PROFILE")
+		set(BuildTy_ "Release")
+	elseif(DOLL_BUILD_VARIANT STREQUAL "RELEASE")
+		set(BuildTy_ "Release")
+	endif()
+	message(WARNING "Build type (CMAKE_BUILD_TYPE) not specified; defaulting to ${BuildTy_}")
+	set(CMAKE_BUILD_TYPE "${BuildTy_}")
+endif()
+
 find_package(Git)
 
 set(GIT_IS_INSIDE_REPO 0)
@@ -301,21 +356,28 @@ target_compile_definitions(
 	PRIVATE DOLL__BUILD=1
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(DOLL_BUILD_VARIANT STREQUAL "DEVELOPMENT")
 	target_compile_definitions(
 		Doll
 		PUBLIC _DEBUG=1
 		PUBLIC AX_DEBUG_ENABLED=1
 		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_DEVELOPMENT
 	)
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+elseif(DOLL_BUILD_VARIANT STREQUAL "DEBUG")
+	target_compile_definitions(
+		Doll
+		PUBLIC _DEBUG=1
+		PUBLIC AX_DEBUG_ENABLED=1
+		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_DEBUG
+	)
+elseif(DOLL_BUILD_VARIANT STREQUAL "PROFILE")
 	target_compile_definitions(
 		Doll
 		PUBLIC NDEBUG=1
 		PUBLIC AX_DEBUG_ENABLED=0
-		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_DEBUG
+		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_PROFILE
 	)
-elseif((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel"))
+elseif(DOLL_BUILD_VARIANT STREQUAL "RELEASE")
 	target_compile_definitions(
 		Doll
 		PUBLIC NDEBUG=1
@@ -323,7 +385,6 @@ elseif((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "MinS
 		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_RELEASE
 	)
 endif()
-
 
 find_package(PNG REQUIRED)
 
@@ -339,3 +400,19 @@ target_compile_definitions(
 	Doll
 	PRIVATE ${PNG_DEFINITIONS}
 )
+
+set(DollBuildSuffix "-${DOLL_BUILD_VARIANT}")
+
+set(DollExtraSuffix "")
+if(NOT GIT_BRANCH STREQUAL "")
+	set(DollExtraSuffix "-${GIT_BRANCH}-r${GIT_REVNUM}")
+endif()
+
+set(DollSystemSuffix "-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+set(DollSuffixes "${DollBuildSuffix}${DollExtraSuffix}${DollSystemSuffix}")
+
+set_target_properties(Doll PROPERTIES
+	OUTPUT_NAME "Doll${DollSuffixes}"
+)
+
