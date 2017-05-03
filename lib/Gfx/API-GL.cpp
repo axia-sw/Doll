@@ -142,6 +142,13 @@ namespace doll
 	{
 		return kGfxAPIOpenGL;
 	}
+	TArr<EShaderFormat> CGfxAPI_GL::getSupportedShaderFormats() const
+	{
+		static const EShaderFormat formats[] = {
+			kShaderFormatGLSL
+		};
+		return TArr<EShaderFormat>(formats);
+	}
 
 	Void CGfxAPI_GL::setDefaultState( const Mat4f &proj )
 	{

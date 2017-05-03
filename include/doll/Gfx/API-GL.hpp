@@ -25,6 +25,8 @@ namespace doll
 
 		virtual EGfxAPI getAPI() const override;
 
+		virtual TArr<EShaderFormat> getSupportedShaderFormats() const override;
+
 		virtual Void setDefaultState( const Mat4f &proj ) override;
 
 		virtual Void resize( U32 uResX, U32 uResY ) override;

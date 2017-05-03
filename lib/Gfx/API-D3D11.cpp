@@ -25,6 +25,14 @@ namespace doll
 		return kGfxAPIDirect3D11;
 	}
 
+	TArr<EShaderFormat> CGfxAPI_D3D11::getSupportedShaderFormats() const
+	{
+		static const EShaderFormat formats[] = {
+			kShaderFormatHLSL
+		};
+		return TArr<EShaderFormat>(formats);
+	}
+
 	Void CGfxAPI_D3D11::setDefaultState( const Mat4f &proj )
 	{
 		( ( Void )proj );

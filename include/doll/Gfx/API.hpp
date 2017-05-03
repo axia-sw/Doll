@@ -130,6 +130,14 @@ namespace doll
 		kBlendLogicalOrInverted
 	};
 
+	enum EShaderFormat
+	{
+		kShaderFormatSPIRV,
+		kShaderFormatGLSL,
+		kShaderFormatHLSL,
+		kShaderFormatMSL
+	};
+
 	struct SGfxInitDesc
 	{
 		TArr<EGfxAPI>  apis;
@@ -197,6 +205,8 @@ namespace doll
 		virtual ~IGfxAPI() {}
 
 		virtual EGfxAPI getAPI() const = 0;
+
+		virtual TArr<EShaderFormat> getSupportedShaderFormats() const = 0;
 
 		virtual Void setDefaultState( const Mat4f &proj ) = 0;
 
