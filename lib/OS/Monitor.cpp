@@ -4,6 +4,10 @@
 
 #include "doll/Core/Logger.hpp"
 
+#if AX_OS_MACOSX
+# include "macOS/Cocoa.h"
+#endif
+
 namespace doll {
 
 #if AX_OS_WINDOWS
@@ -97,6 +101,10 @@ namespace doll {
 	{
 #if AX_OS_WINDOWS
 		if( Windows::queryDesktopInfo( dst ) ) {
+			return true;
+		}
+#elif AX_OS_MACOSX
+		if( macOS::monitor::queryDesktopInfo( dst ) ) {
 			return true;
 		}
 #endif

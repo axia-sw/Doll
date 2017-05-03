@@ -9,8 +9,13 @@
 # undef min
 # undef max
 #else
+# include <pwd.h>
 # include <errno.h>
+# include <fcntl.h>
+# include <unistd.h>
+# include <sys/uio.h>
 # include <sys/stat.h>
+# include <sys/types.h>
 #endif
 
 #include "doll/IO/SysFS.hpp"
@@ -332,6 +337,68 @@ namespace doll
 		WIN32_FIND_DATAW m_findData;
 		Bool             m_bHaveData;
 	};
+#else
+# ifdef __APPLE__
+	typedef struct stat StatBuf;
+#  define fs_stat(Path_,Buf_) ::stat((Path_),(Buf_))
+#  define fd_stat(File_,Buf_) ::fstat((File_),(Buf_))
+# else
+	typedef struct stat64 StatBuf;
+#  define fs_stat(Path_,Buf_) ::stat64((Path_),(Buf_))
+#  define fd_stat(File_,Buf_) ::fstat64((File_),(Buf_))
+# endif
+
+	template< UPtr tMaxChars >
+	inline char *unixpath( char( &szDstBuf )[ tMaxChars ], const Str &name ) {
+		axstr_cpyn( szDstBuf, tMaxChars, name.get(), name.len() );
+		return &szDstBuf[0];
+	}
+
+	inline U32 attribs_fromunix( mode_t m ) {
+		U32 r = kFileAttrib_Regular;
+
+		if( S_ISDIR( m ) ) {
+			r = kFileAttrib_Directory;
+		} else if( S_ISBLK( m ) || S_ISCHR( m ) ) {
+			r = kFileAttrib_Device;
+		}
+
+		if( S_ISLNK( m ) ) {
+			// FIXME: Is this a flag on the mode or exclusive?
+			r |= kFileAttribF_SymLink;
+		}
+
+		return r;
+	}
+
+	inline U64 filetime_fromunixts( const struct timespec &ts ) {
+		((void)ts);
+		return 0; // FIXME
+	}
+	inline U64 filetime_fromunix( time_t t ) {
+		((void)t);
+		return 0; // FIXME
+	}
+
+	inline void updatestat( SFileStat &dst, const StatBuf &s ) {
+		dst.uAttributes = attribs_fromunix( s.st_mode );
+# ifdef __APPLE__
+		dst.uTimeCreated = filetime_fromunixts( s.st_birthtimespec );
+		dst.uTimeModified = filetime_fromunixts( s.st_mtimespec );
+		dst.uTimeAccessed = filetime_fromunixts( s.st_atimespec );
+# else
+		dst.uTimeCreated = filetime_fromunix( s.st_ctime ); // FIXME: This is the time of the last status change
+		dst.uTimeModified = filetime_fromunix( s.st_mtime );
+		dst.uTimeAccessed = filetime_fromunix( s.st_atime );
+# endif
+		dst.cBytes = U64( s.st_size );
+		dst.uDeviceId = U64( s.st_dev );
+		dst.uRecordId = U64( s.st_ino );
+	}
+
+	inline int unixh( OSFile f ) {
+		return int(UPtr(f));
+	}
 #endif
 
 	DOLL_FUNC U32 DOLL_API sysfs_getSectorSize( const Str &filename )
@@ -410,7 +477,19 @@ namespace doll
 		FindClose( hFind );
 		return true;
 #else
-		return false;
+		char szPath[ kMaxPath ];
+		if( !unixpath( szPath, filename ) ) {
+			return false;
+		}
+
+		StatBuf s;
+		if( fs_stat( szPath, &s ) != 0 ) {
+			return false;
+		}
+
+		updatestat( dst, s );
+
+		return true;
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API sysfs_statHandle( SFileStat &dst, OSFile f )
@@ -432,7 +511,14 @@ namespace doll
 
 		return true;
 #else
-		return false;
+		StatBuf s;
+		if( fd_stat( unixh(f), &s ) != 0 ) {
+			return false;
+		}
+
+		updatestat( dst, s );
+
+		return true;
 #endif
 	}
 
@@ -471,7 +557,93 @@ namespace doll
 		f = ( OSFile )h;
 		return EFileOpenResult::Ok;
 #else
-		return EFileOpenResult::UnknownError;
+		char szFilename[ kMaxPath ];
+
+		if( !unixpath( szFilename, filename ) ) {
+			return EFileOpenResult::InvalidFilename;
+		}
+
+		int oflags = 0;
+		switch( flags & kFileOpen_AccessMask ) {
+		case kFileOpenF_R:
+			oflags = O_RDONLY;
+			break;
+		case kFileOpenF_W:
+			oflags = O_WRONLY;
+			break;
+		case kFileOpenF_RW:
+			oflags = O_RDWR;
+			break;
+		default:
+			// FIXME: Need an "InvalidFlags" result
+			return EFileOpenResult::InvalidFilename;
+		}
+
+		// FIXME: No direct semantic equivalent for flock(2) mechanism (O_SHLOCK, O_EXLOCK)
+		// Just rigging it for now
+		if( flags & kFileOpenF_ExcludeR ) {
+			oflags |= O_EXLOCK;
+		}
+		if( flags & kFileOpenF_ShareW ) {
+			oflags |= O_SHLOCK;
+		}
+
+		if( ( flags & kFileOpen_CreateMask ) == 0 ) {
+			switch( flags & kFileOpen_AccessMask ) {
+			case kFileOpenF_R:
+				flags |= kFileOpenF_Existing;
+				break;
+			case kFileOpenF_W:
+				oflags |= O_CREAT;
+				break;
+			case kFileOpenF_RW:
+				oflags |= O_CREAT;
+				break;
+			default:
+				break;
+			}
+		}
+
+		// FIXME: Most of these file open requirements are unimplemented
+		switch( flags & kFileOpen_CreateMask ) {
+		case kFileOpenF_Existing:
+			break;
+		case kFileOpenF_NotExist:
+			oflags |= O_CREAT|O_EXCL;
+			break;
+		case kFileOpenF_Recreate:
+			oflags |= O_CREAT|O_TRUNC;
+			break;
+		case 0:
+			break;
+		}
+
+		// Cannot support this(?)
+		if( flags & kFileOpenF_DeleteOnClose ) {
+			// FIXME: Need an InvalidFlags result
+			return EFileOpenResult::InvalidFilename;
+		}
+
+		// Open the file
+		int fd = ::open( szFilename, oflags );
+		if( fd < 0 ) {
+			switch( errno ) {
+			case ENOENT:
+			case EEXIST:
+				return EFileOpenResult::NoFile;
+			case EACCES:
+				return EFileOpenResult::NoPermission;
+			case ENOMEM:
+				return EFileOpenResult::NoMemory;
+			case EINVAL:
+				return EFileOpenResult::InvalidFilename;
+			}
+
+			return EFileOpenResult::UnknownError;
+		}
+
+		f = OSFile( UPtr( SPtr( fd ) ) );
+		return EFileOpenResult::Ok;
 #endif
 	}
 	DOLL_FUNC NullPtr DOLL_API sysfs_close( OSFile f )
@@ -480,6 +652,8 @@ namespace doll
 		if( win32h( f ) != INVALID_HANDLE_VALUE ) {
 			CloseHandle( win32h( f ) );
 		}
+#else
+		::close( unixh(f) );
 #endif
 
 		return nullptr;
@@ -495,7 +669,11 @@ namespace doll
 
 		return (U64)fileSize.QuadPart;
 #else
-		return 0;
+		struct stat s;
+		if( ::fstat( unixh( f ), &s ) != 0 ) {
+			return 0;
+		}
+		return U64( s.st_size );
 #endif
 	}
 
@@ -518,6 +696,30 @@ namespace doll
 
 		return EFileIOResult::UnknownError;
 	}
+#else
+	static EFileIOResult unixioerr( ssize_t readRetval ) {
+		if( readRetval == 0 ) {
+			return EFileIOResult::NoData;
+		}
+
+		switch( errno ) {
+		case 0:
+			return EFileIOResult::Ok;
+
+		case EBADF:
+		case EINVAL:
+			return EFileIOResult::InvalidHandle;
+
+		case ENOBUFS:
+		case ENOMEM:
+			return EFileIOResult::NoMemory;
+
+		case EFBIG:
+			return EFileIOResult::NoLargeIO;
+		}
+
+		return EFileIOResult::UnknownError;
+	}
 #endif
 	DOLL_FUNC EFileIOResult DOLL_API sysfs_write( OSFile f, const Void *pSrc, UPtr cBytes, UPtr &cBytesWritten )
 	{
@@ -532,7 +734,13 @@ namespace doll
 		cBytesWritten = ( UPtr )dwGot;
 		return EFileIOResult::Ok;
 #else
-		return EFileIOResult::UnknownError;
+		ssize_t got = ::write( unixh(f), pSrc, cBytes );
+		if( got == -1 ) {
+			return unixioerr( -1 );
+		}
+
+		cBytesWritten = UPtr( got );
+		return EFileIOResult::Ok;
 #endif
 	}
 	DOLL_FUNC EFileIOResult DOLL_API sysfs_read( OSFile f, Void *pDst, UPtr cBytes, UPtr &cBytesRead )
@@ -548,11 +756,20 @@ namespace doll
 		cBytesRead = ( UPtr )dwGot;
 		return EFileIOResult::Ok;
 #else
-		return EFileIOResult::UnknownError;
+		ssize_t got = ::read( unixh(f), pDst, cBytes );
+		if( got == 0 && cBytes > 0 ) {
+			cBytesRead = 0;
+			return EFileIOResult::NoData;
+		} else if( got == -1 ) {
+			return unixioerr( got );
+		}
+
+		cBytesRead = UPtr( got );
+		return EFileIOResult::Ok;
 #endif
 	}
 
-	DOLL_FUNC Bool DOLL_API sysfs_seek( OSFile f, S64 uOffset, ESeekMode mode )
+	DOLL_FUNC Bool DOLL_API sysfs_seek( OSFile f, S64 inOffset, ESeekMode mode )
 	{
 #ifdef _WIN32
 		DWORD dwMoveMethod = 0;
@@ -571,11 +788,28 @@ namespace doll
 		}
 
 		LARGE_INTEGER offset;
-		offset.QuadPart = uOffset;
+		offset.QuadPart = inOffset;
 
 		return SetFilePointerEx( win32h( f ), offset, nullptr, dwMoveMethod ) != FALSE;
 #else
-		return false;
+		const int whence =
+			mode == ESeekMode::Absolute ? SEEK_SET :
+			mode == ESeekMode::Relative ? SEEK_CUR :
+			mode == ESeekMode::End      ? SEEK_END :
+			-1;
+		AX_ASSERT_MSG( whence != -1, "Invalid seek mode" );
+		if( whence == -1 ) {
+			return false;
+		}
+
+		const off_t offset = off_t( inOffset );
+
+		const off_t newpos = lseek( unixh( f ), offset, whence );
+		if( newpos == -1 ) {
+			return false;
+		}
+
+		return true;
 #endif
 	}
 	DOLL_FUNC U64 DOLL_API sysfs_tell( const OSFile f )
@@ -587,7 +821,12 @@ namespace doll
 		}
 		return U64( offset.QuadPart );
 #else
-		return 0;
+		const off_t pos = lseek( unixh( f ), 0, SEEK_CUR );
+		if( pos == -1 ) {
+			return 0;
+		}
+
+		return U64( S64(pos) );
 #endif
 	}
 
@@ -846,14 +1085,68 @@ namespace doll
 	}
 #endif
 
+#ifndef _WIN32
+	Str getEnv( MutStr &dst, const char *pszName ) {
+		const char *const var = getenv( pszName );
+		if( !var ) {
+			dst.clear();
+			return Str();
+		}
+
+		if( !dst.assign( var ) ) {
+			dst.clear();
+			return Str();
+		}
+
+		return dst;
+	}
+	Str getHomeDir() {
+		static MutStr buf;
+		static bool didInit = false;
+
+		if( !didInit ) {
+			struct passwd *const pw = getpwuid( getuid() );
+			if( !pw || !buf.assign( pw->pw_dir ) ) {
+				getEnv( buf, "HOME" );
+			}
+
+			didInit = true;
+		}
+
+		return buf;
+	}
+#endif
+
+	// FIXME: Add sysfs_getLogDir()
+	// FIXME: Add sysfs_getConfigDir()
+
 	DOLL_FUNC Bool DOLL_API sysfs_getAppDataDir( Str &dst )
 	{
 #ifdef _WIN32
 		return sysfs__getShellDir< CSIDL_LOCAL_APPDATA >( dst );
 #else
-		// ~/.etc/
-		dst = Str();
-		return false;
+		static MutStr buf;
+		static bool didInit = false;
+
+		if( !didInit ) {
+			// See the XDG base directory standard
+			if( !getEnv( buf, "XDG_DATA_HOME" ) ) {
+				if( !buf.assign( getHomeDir() ) ) {
+					dst = Str();
+					return false;
+				}
+
+				if( !buf.appendPath( ".local/share" ) ) {
+					dst = Str();
+					return false;
+				}
+			}
+
+			didInit = true;
+		}
+
+		dst = buf;
+		return true;
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API sysfs_getMyDocsDir( Str &dst )
@@ -861,9 +1154,24 @@ namespace doll
 #ifdef _WIN32
 		return sysfs__getShellDir< CSIDL_MYDOCUMENTS >( dst );
 #else
-		// ~/Documents
-		dst = Str();
-		return false;
+		static MutStr buf;
+		static bool didInit = false;
+
+		if( !didInit ) {
+			if( !buf.assign( getHomeDir() ) ) {
+				dst = Str();
+				return false;
+			}
+			if( !buf.appendPath( "Documents" ) ) {
+				dst = Str();
+				return false;
+			}
+
+			didInit = true;
+		}
+
+		dst = buf;
+		return true;
 #endif
 	}
 

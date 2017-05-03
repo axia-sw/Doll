@@ -571,10 +571,8 @@ namespace doll
 #endif
 		FileHandle mStdOut;
 		FileHandle mStdErr;
-#if defined( _WIN32 )
 		Bool mIsOutANSI;
 		Bool mIsErrANSI;
-#endif
 		Bool mIsInstalled;
 
 		// UNDOC: Singleton
@@ -632,10 +630,8 @@ namespace doll
 		: IReporter()
 		, mStdOut( NULL )
 		, mStdErr( NULL )
-#if defined( _WIN32 )
 		, mIsOutANSI( DOLL__CORESTRUC.tooling.useANSIOutput )
 		, mIsErrANSI( DOLL__CORESTRUC.tooling.useANSIErrors )
-#endif
 		, mIsInstalled( false )
 		{
 #if defined( _WIN32 )

@@ -66,6 +66,10 @@
 # include <GLFW/glfw3native.h>
 #endif
 
+#if AX_OS_MACOSX
+typedef void *NSWindow;
+#endif
+
 namespace doll
 {
 
@@ -92,6 +96,7 @@ namespace doll
 #if DOLL__USE_GLFW
 	static void glfw_error_f( int error, const char *description )
 	{
+		axerrf( "GLFW error %i: %s\n", error, description );
 		basicErrorf( "GLFW error %i: %s\n", error, description );
 	}
 #endif
@@ -159,7 +164,7 @@ namespace doll
 		if( mods & GLFW_MOD_ALT ) {
 			cvtmods |= kMF_LAlt;
 		}
-		
+
 		return cvtmods;
 	}
 	static void glfw_getMouse( GLFWwindow *window, S32 &dstClientPosX, S32 &dstClientPosY )
@@ -271,13 +276,7 @@ namespace doll
 		static char szBuf[ 256 ] = { '\0' };
 
 		if( szBuf[ 0 ] == '\0' ) {
-			const char *const pszDbgStr =
-#if AX_DEBUG_ENABLED
-				"Dbg"
-#else
-				""
-#endif
-				;
+			const char *const pszDbgStr = variantToString( kVariant );
 
 #if DOLL_GITINFO__REVNUM != 0
 # define DOLL__GITINFO_FMT " %s-r%u (%s %s)"
@@ -291,7 +290,7 @@ namespace doll
 			axspf
 			(
 				szBuf,
-				"Doll%s %u.%u.%u" DOLL__GITINFO_FMT,
+				"Doll %s %u.%u.%u" DOLL__GITINFO_FMT,
 				pszDbgStr,
 				kVersionMajor,
 				kVersionMinor,
@@ -501,6 +500,7 @@ namespace doll
 #ifdef AX_GITINFO__TSTAMP
 		g_core.version.gitCommitTime = AX_GITINFO__TSTAMP;
 #endif
+		g_core.version.buildVariant = kVariant;
 
 		g_core.tooling.stdoutType = getConsoleType( stdout );
 		g_core.tooling.stderrType = getConsoleType( stderr );
@@ -530,6 +530,8 @@ namespace doll
 #endif
 
 #if DOLL__USE_GLFW
+		g_InfoLog += axf( "GLFW version: %s", glfwGetVersionString() );
+
 		glfwSetErrorCallback( &glfw_error_f );
 		if( !g_core.tooling.isTool && !glfwInit() ) {
 			fprintf( stderr, "Error. Could not initialize GLFW.\n" );
@@ -542,6 +544,7 @@ namespace doll
 
 			return false;
 		}
+		glfwSetErrorCallback( &glfw_error_f );
 #endif
 
 		// Store the launch directory
@@ -630,7 +633,7 @@ namespace doll
 	prepareDir( ECoreDir::ShortName_, coreDirs, conf.baseFS.sz##ShortName_##Dir, DefVal_ );
 #include "doll/Core/EngineDirs.def.hpp"
 #undef DOLL_ENGINE__DIR
-		
+
 		core_installDebugLogReporter();
 
 		g_core.frame.uUpdateId = 0;
@@ -683,15 +686,36 @@ namespace doll
 		}
 
 #if DOLL__USE_GLFW
+# ifndef __APPLE__
 		glfwWindowHint( GLFW_VISIBLE, GLFW_FALSE );
+# endif
 		glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
 
+# ifdef __APPLE__
+#  if 0 // Oops. Thought we *needed* GL 3.2 on macOS
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 2 );
+		glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+		glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE );
+#  else
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 2 );
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+#  endif
+# else
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 2 );
+		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+# endif
 
-		GLFWwindow *wnd; 
-
-		if( !AX_VERIFY_MSG( ( wnd = glfwCreateWindow( int( unsigned( conf.video.uResX ) ), int( unsigned( conf.video.uResY ) ), conf.script.szTitle, nullptr, nullptr ) ) != nullptr, "Failed to create window" ) ) {
+		GLFWwindow *const wnd =
+			glfwCreateWindow
+			(
+				int( unsigned( conf.video.uResX ) ),
+				int( unsigned( conf.video.uResY ) ),
+				conf.script.szTitle,
+				nullptr,
+				nullptr
+			);
+		if( !AX_VERIFY_MSG( wnd != nullptr, "Failed to create window" ) ) {
 			return false;
 		}
 
@@ -707,6 +731,8 @@ namespace doll
 
 		glfwSetKeyCallback( wnd, &glfw_keyButton_f );
 		glfwSetCharCallback( wnd, &glfw_keyChar_f );
+
+		glfwMakeContextCurrent( wnd );
 
 		g_core.view.window = wnd;
 #else
@@ -815,6 +841,16 @@ namespace doll
 			g_core.view.pGfxAPI = gfx_finiAPI( g_core.view.pGfxAPI );
 			return false;
 		}
+
+#if DOLL__USE_GLFW
+		axpf("gfx: glfw: Resize properly\n");
+		do {
+			int w = 0, h = 0;
+			glfwGetWindowSize( g_core.view.window, &w, &h );
+			axpf( "gfx: glfw: got %i x %i\n", w, h);
+			glfw_onSized_f( g_core.view.window, w, h );
+		} while( false );
+#endif
 
 		axpf("gfx: done\n");
 		return true;

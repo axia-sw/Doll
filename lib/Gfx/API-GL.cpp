@@ -806,8 +806,37 @@ namespace doll
 			return nullptr;
 		}
 
+		int glversion = 0;
+		{
+			int glver[2] = { 0, 0 };
+			const char *const glstr = (const char *)glGetString( GL_VERSION );
+			const char *const str = glstr != nullptr ? glstr : "0.0";
+
+			static const size_t dstn = AX_COUNTOF(glver);
+			size_t dsti = 0;
+			const char *p;
+			for( p = str; *p != '\0'; ++p ) {
+				if( *p >= '0' && *p <= '9' ) {
+					glver[dsti] *= 10;
+					glver[dsti] += int( *p - '0' );
+					continue;
+				}
+
+				if( ++dsti == dstn ) {
+					break;
+				}
+			}
+
+			if( glver[1] > 9 ) {
+				glver[1] = 9;
+			}
+
+			glversion = glver[0]*100 + glver[1]*10 + 0;
+			DOLL_TRACE( axf( "GL version: %i.%i (%d)", glver[0], glver[1], glversion ) );
+		}
+
 		DOLL_TRACE( "Checking for modern GL support" );
-		if( !GLEW_VERSION_1_5 || !GLEW_ARB_vertex_buffer_object ) {
+		if( glversion < 150 ) {
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
 #endif
@@ -842,10 +871,40 @@ namespace doll
 		bool bExtsAvailable[ cExtNames ];
 
 		bool bAllAvailable = true;
+#ifndef __APPLE__
 		for( UPtr i = 0; i < cExtNames; ++i ) {
 			bExtsAvailable[ i ] = !!glewIsSupported( pszExtNames[ i ] );
 			bAllAvailable &= bExtsAvailable[ i ];
 		}
+#else
+# if 0
+		GLint cGLExts = 0;
+		glGetIntegerv( GL_NUM_EXTENSIONS, &cGLExts );
+
+		UPtr cExtsFound = 0;
+		for( GLint extIdx = 0; extIdx < cGLExts; ++extIdx ) {
+			const Str extName = ( const char * )glGetStringi( GL_EXTENSIONS, GLuint(extIdx) );
+			axpf( "    %0.3i: \"%.*s\"\n", extIdx, extName.lenInt(), extName.get() );
+			for( UPtr i = 0; i < cExtNames; ++i ) {
+				if( bExtsAvailable[ i ] ) {
+					continue;
+				}
+				if( extName.caseCmp( pszExtNames[ i ] ) ) {
+					bExtsAvailable[ i ] = true;
+					++cExtsFound;
+					break;
+				}
+			}
+		}
+		bAllAvailable = cExtsFound == cExtNames;
+# else
+		/* On all supported versions of macOS, everything we want is available */
+		for( UPtr i = 0; i < cExtNames; ++i ) {
+			bExtsAvailable[ i ] = true;
+		}
+		bAllAvailable = true;
+# endif
+#endif
 
 		if( !bAllAvailable ) {
 #if !DOLL__USE_GLFW

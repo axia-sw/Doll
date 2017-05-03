@@ -69,7 +69,7 @@ namespace doll
 
 	DOLL_FUNC Bool DOLL_API snd_enumDevices( TArr<SSoundDeviceInfo> &dst )
 	{
-		if( !AX_VERIFY( g_sound.init() ) ) {
+		if( !g_sound.init() ) {
 			dst = TArr<SSoundDeviceInfo>();
 			return false;
 		}
@@ -81,7 +81,7 @@ namespace doll
 	}
 	DOLL_FUNC CSoundDevice *DOLL_API snd_init( UPtr uDeviceId, const SSoundDeviceConf *pConf )
 	{
-		if( !AX_VERIFY( g_sound.init() ) ) {
+		if( !g_sound.init() ) {
 			return nullptr;
 		}
 
@@ -104,7 +104,10 @@ namespace doll
 	}
 	DOLL_FUNC Void DOLL_API snd_fini()
 	{
-		snd_playBGM( Str(), EPlayBGM::Now );
+		if( g_sound.pHW != nullptr ) {
+			snd_playBGM( Str(), EPlayBGM::Now );
+		}
+
 		g_sound.fini();
 	}
 	DOLL_FUNC CSoundDevice *DOLL_API snd_getDevice()

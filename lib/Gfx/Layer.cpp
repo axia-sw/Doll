@@ -5,7 +5,11 @@
 #include "doll/Gfx/RenderCommands.hpp"
 #include "doll/Gfx/API-GL.hpp"
 
-#include <GL/gl.h>
+#ifdef __APPLE__
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 namespace doll
 {

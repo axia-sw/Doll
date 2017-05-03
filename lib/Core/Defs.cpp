@@ -4,12 +4,13 @@
 /* Mac OS X */
 #if defined(__APPLE__)
 # include <mach-o/dyld.h>
+# include <errno.h>
 static char *getexename(char *buff, size_t n) {
 	uint32_t size;
 
 	size = n;
 
-	if (_NSGetExecutablePath(buff, &size)==0) {
+	if (_NSGetExecutablePath(buff, &size)!=0) {
 		errno = ERANGE;
 		return (char *)0;
 	}

@@ -5,6 +5,8 @@
 #include "MemoryTags.hpp"
 #include "Memory.hpp"
 
+#include "Version.hpp"
+
 #include "../OS/Key.hpp"
 #include "../OS/Window.hpp"
 #include "../Gfx/API.hpp"
@@ -188,7 +190,7 @@ namespace doll
 			return microsecondsToSeconds( elapsedMicroseconds() );
 		}
 	};
-	
+
 	class SFSPrefix: public TPoolObject<SFSPrefix, kTag_FileSys>
 	{
 	public:
@@ -265,9 +267,10 @@ namespace doll
 
 	struct SCoreVersion
 	{
-		U32 uOfficialVersion;
-		Str gitCommitHash;
-		Str gitCommitTime;
+		U32      uOfficialVersion;
+		Str      gitCommitHash;
+		Str      gitCommitTime;
+		EVariant buildVariant; // development, debug, profile, or release
 	};
 
 	struct SCoreMeta
@@ -316,6 +319,38 @@ namespace doll
 #endif
 
 	DOLL_FUNC SCoreStruc *DOLL_API doll_getCoreStruc();
+
+#ifdef DOLL__BUILD
+	// Specifically don't want to use these APIs internally
+#else
+	inline EVariant doll_buildVariant() {
+		return DOLL__CORESTRUC.version.buildVariant;
+	}
+	inline Bool doll_isReleaseBuild() {
+		return doll_buildVariant() == EVariant::release;
+	}
+	inline Bool doll_isProfileBuild() {
+		return doll_buildVariant() == EVariant::profile;
+	}
+	inline Bool doll_isDebugBuild() {
+		return
+			doll_buildVariant() == EVariant::debug ||
+			doll_buildVariant() == EVariant::development;
+	}
+	inline Bool doll_isDevelopmentBuild() {
+		return
+			doll_buildVariant() == EVariant::development;
+	}
+#endif
+	inline Str doll_getVariantName() {
+		switch( DOLL__CORESTRUC.version.buildVariant ) {
+#define DOLL_DEF_VARIANT(MacroName_, SymbolName_) case EVariant::SymbolName_: return #MacroName_;
+#include "Private/Variants.def.hpp"
+#undef DOLL_DEF_VARIANT
+		}
+
+		return Str();
+	}
 
 #if DOLL__USE_GLFW
 	DOLL_FUNC OSWindow DOLL_API doll__getOSWindow();

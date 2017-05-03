@@ -1,9 +1,11 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxOSText
 
 #include "doll/Core/Defs.hpp"
+#include "doll/Core/Logger.hpp"
 
 #define DOLL_OSTEXT_GDIPLUS 0
 #define DOLL_OSTEXT_DWRITE  0
+#define DOLL_OSTEXT_COCOA   0
 
 #if AX_OS_UWP
 # undef  DOLL_OSTEXT_DWRITE
@@ -11,6 +13,9 @@
 #elif AX_OS_WINDOWS
 # undef  DOLL_OSTEXT_GDIPLUS
 # define DOLL_OSTEXT_GDIPLUS 1
+#elif AX_OS_MACOSX || AX_OS_IOS
+# undef  DOLL_OSTEXT_COCOA
+# define DOLL_OSTEXT_COCOA   1
 #endif
 
 #ifdef _WIN32
@@ -28,13 +33,22 @@
 # endif
 #endif
 
+#if DOLL_OSTEXT_COCOA
+# include "macOS/OSText_Cocoa.hpp"
+#endif
+
 #include "doll/Gfx/OSText.hpp"
 #include "doll/Gfx/Texture.hpp"
 #include "doll/Gfx/RenderCommands.hpp"
 #include "doll/Core/Memory.hpp"
 #include "doll/Core/MemoryTags.hpp"
 
-#include <GL/gl.h> // ### FOR TESTING ###
+// ### FOR TESTING ###
+#ifdef __APPLE__
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 namespace doll
 {
@@ -51,29 +65,36 @@ namespace doll
 #if DOLL_OSTEXT_GDIPLUS
 		// [GDI+] Font family used
 		TTypeBuf<FontFamily> font;
+#elif DOLL_OSTEXT_COCOA
+		// [Cocoa] Text style specific data
+		macOS::CocoaFont     font;
 #endif
 		// Font size
 		S32                  fontSize;
 
 		STextStyle()
 		: cRefs( 1 )
-#if DOLL_OSTEXT_GDIPLUS
+#if DOLL_OSTEXT_GDIPLUS || DOLL_OSTEXT_COCOA
 		, font()
 #endif
 		, fontSize( 12 )
 		{
+			DOLL_TRACE( "STextStyle::STextStyle()" );
 		}
 		~STextStyle()
 		{
+			DOLL_TRACE( "STextStyle::~STextStyle()" );
 		}
 
 		inline STextStyle *grab()
 		{
+			DOLL_TRACE( "STextStyle::grab()" );
 			++cRefs;
 			return this;
 		}
 		inline STextStyle *drop()
 		{
+			DOLL_TRACE( "STextStyle::drop()" );
 			if( --cRefs == 0 ) {
 				delete this;
 			}
@@ -113,6 +134,9 @@ namespace doll
 		HBITMAP          hBmp;
 		// [GDI] Temporary device context associated with this item
 		HDC              hDC;
+#elif DOLL_OSTEXT_COCOA
+		// [Cocoa] Text image
+		macOS::CocoaText textImage;
 #endif
 
 		// Text string to render
@@ -130,12 +154,16 @@ namespace doll
 		, pBmpBits( nullptr )
 		, hBmp( NULL )
 		, hDC( NULL )
+#elif DOLL_OSTEXT_COOCA
+		, textImage()
 #endif
 		, text()
 		{
+			DOLL_TRACE( "STextItem::STextItem()" );
 		}
 		~STextItem()
 		{
+			DOLL_TRACE( "STextItem::~STextItem()" );
 #if DOLL_OSTEXT_GDIPLUS
 			if( hBmp != NULL ) {
 				DeleteObject( hBmp );
@@ -184,6 +212,7 @@ namespace doll
 	: m_pDefStyle( nullptr )
 	, m_items()
 	{
+		DOLL_TRACE( "MOSText::MOSText()" );
 #if DOLL_OSTEXT_GDIPLUS
 		GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
@@ -192,36 +221,61 @@ namespace doll
 	}
 	MOSText::~MOSText()
 	{
+		DOLL_TRACE( "MOSText::~MOSText()" );
 	}
 
 	Bool MOSText::setDefStyle( Str fontFamily, U32 fontSize )
 	{
+		DOLL_TRACE( axf( "MOSText::setDefStyle(fontFamily: \"%.*s\", size: %u)",
+			fontFamily.lenInt(), fontFamily.get(), fontSize ) );
+
 		STextStyle *const pTextStyle = new STextStyle();
 		if( !AX_VERIFY_MEMORY( pTextStyle ) ) {
+			DOLL_TRACE( " - !pTextStyle" );
 			return false;
 		}
 
 #if DOLL_OSTEXT_GDIPLUS
 		wchar_t wszBuf[ 256 ] = { L'\0' };
 		if( !AX_VERIFY_MSG( fontFamily.toWStr( wszBuf ), "Invalid UTF-8 encoding" ) ) {
+			DOLL_TRACE( " - !fontFamily.toWStr()" );
 			delete pTextStyle;
 			return false;
 		}
 
 		pTextStyle->font.init( wszBuf );
-		pTextStyle->fontSize = S32( fontSize );
+#elif DOLL_OSTEXT_COCOA
+		if( !pTextStyle->font.set( fontFamily, double(fontSize) ) ) {
+			DOLL_TRACE( "Failed to set font (Cocoa)" );
+		}
 #endif
+		pTextStyle->fontSize = S32( fontSize );
 
 		if( m_pDefStyle != nullptr ) {
 			m_pDefStyle->drop();
 		}
 
 		m_pDefStyle = pTextStyle;
+		DOLL_TRACE( "Font set successfully" );
 		return true;
 	}
 	STextItem *MOSText::newText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
 	{
-		if( !m_pDefStyle && !setDefStyle( "Verdana", 18 ) ) {
+		static const char *const defaultFontFamily =
+#if AX_OS_WINDOWS || AX_OS_UWP
+			"Verdana"
+#elif AX_OS_MACOSX || AX_OS_IOS
+			"Helvetica"
+#else
+			"sans"
+#endif
+			;
+
+		DOLL_TRACE( axf( "MOSText::newText(text: \"%.*s\", size: [%i, %i], lineColor: 0x%.8X, fillColor: 0x%.8X)",
+			text.lenInt(), text.get(), size.x, size.y, lineColor, fillColor ) );
+
+		if( !m_pDefStyle && !setDefStyle( defaultFontFamily, 18 ) ) {
+			DOLL_TRACE( " - !setDefStyle()" );
 			return nullptr;
 		}
 
@@ -229,10 +283,12 @@ namespace doll
 
 		STextItem *const pTextItem = new STextItem();
 		if( !AX_VERIFY_MEMORY( pTextItem ) ) {
+			DOLL_TRACE( " - !pTextItem" );
 			return nullptr;
 		}
 
 		if( !AX_VERIFY_MEMORY( pTextItem->text.tryAssign( text ) ) ) {
+			DOLL_TRACE( " - !pTextItem->text.tryAssign()" );
 			delete pTextItem;
 			return nullptr;
 		}
@@ -305,6 +361,7 @@ namespace doll
 #endif
 	Void MOSText::drawText( STextItem &item )
 	{
+		DOLL_TRACE( "MOSText::drawText()" );
 #if DOLL_OSTEXT_GDIPLUS
 		AX_ASSERT_NOT_NULL( item.pStyle );
 		AX_ASSERT_NOT_NULL( item.hBmp );
@@ -335,10 +392,14 @@ namespace doll
 
 		gfx.Flush( Gdiplus::FlushIntentionSync );
 		GdiFlush();
+#elif DOLL_OSTEXT_COCOA
+		AX_ASSERT_NOT_NULL( item.pStyle );
+
+		item.pStyle->font.render( item.textImage, item.text, item.drawSize );
+#endif
 
 		item.uResX = item.drawSize.x;
 		item.uResY = item.drawSize.y;
-#endif
 	}
 
 	DOLL_FUNC STextItem *DOLL_API gfx_newOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
@@ -370,6 +431,8 @@ namespace doll
 		AX_ASSERT_NOT_NULL( pText );
 #if DOLL_OSTEXT_GDIPLUS
 		return ( const Void * )pText->pBmpBits;
+#elif DOLL_OSTEXT_COCOA
+		return ( const Void * )pText->textImage.getBits();
 #else
 		return nullptr;
 #endif

@@ -7,7 +7,12 @@
 #include "doll/Gfx/API-GL.hpp"
 #include "doll/Math/Math.hpp"
 
-#include <GL/gl.h>
+// FIXME: GL shouldn't be necessary now that we have a renderer API
+#ifdef __APPLE__
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 namespace doll
 {
@@ -154,6 +159,7 @@ namespace doll
 
 		// HACK: Uncomment once the above above is correct
 		//gfx_r_loadModelView( viewTransform );
+		(void)viewTransform;
 	}
 	Void RSpriteGroup::render_gl( S32 w, S32 h )
 	{

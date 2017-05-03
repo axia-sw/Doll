@@ -3,6 +3,7 @@
 #include "doll/OS/Window.hpp"
 
 #include "doll/Core/Defs.hpp"
+#include "Window_Delegate.hpp"
 
 #ifndef DOLL_WINDOWS_ICON_RESOURCE
 # define DOLL_WINDOWS_ICON_RESOURCE   1
@@ -11,14 +12,19 @@
 # define DOLL_WINDOWS_CURSOR_RESOURCE 2
 #endif
 
+#if AX_OS_MACOSX
+# include "macOS/Cocoa.h"
+#endif
+
 namespace doll
 {
 
+#ifndef __APPLE__
 	struct SWndGlobInstance
 	{
-#if AX_OS_WINDOWS
+# if AX_OS_WINDOWS
 		ATOM wndClass = ((ATOM)0);
-#endif
+# endif
 
 		static SWndGlobInstance &get()
 		{
@@ -31,6 +37,7 @@ namespace doll
 		~SWndGlobInstance();
 	};
 	static TManager<SWndGlobInstance> WM;
+#endif
 
 	struct SWindow
 	{
@@ -48,34 +55,14 @@ namespace doll
 		if( p != nullptr ) {
 			return *p;
 		}
+#elif AX_OS_MACOSX
+		SWindow *p = ( SWindow * )macOS::wm::getData( ( macOS::wm::Window )window );
+		if( p != nullptr ) {
+			return *p;
+		}
 #endif
 
 		return Dummy;
-	}
-
-	template< typename TCallbackFn, typename... TArgs >
-	Bool callDelegate( SWndDelegate *pDelegate, TCallbackFn *ppfnFunc, TArgs... args )
-	{
-		if( !pDelegate || !ppfnFunc ) {
-			return false;
-		}
-
-		const UPtr uByteOffset = UPtr( ppfnFunc ) - UPtr( pDelegate );
-
-		for(;;) {
-			if( *ppfnFunc != nullptr && int( ( *ppfnFunc )( args... ) ) != 0 ) {
-				return true;
-			}
-
-			pDelegate = pDelegate->pSuper;
-			if( !pDelegate ) {
-				break;
-			}
-
-			ppfnFunc = ( TCallbackFn * )( UPtr( pDelegate ) + uByteOffset );
-		}
-
-		return false;
 	}
 
 #if AX_OS_WINDOWS
@@ -617,9 +604,10 @@ namespace doll
 	}
 #endif
 
+#ifndef __APPLE__
 	SWndGlobInstance::SWndGlobInstance()
 	{
-#if AX_OS_WINDOWS
+# if AX_OS_WINDOWS
 		WNDCLASSEXW wc;
 
 		wc.cbSize        = sizeof( wc );
@@ -641,14 +629,15 @@ namespace doll
 
 		wndClass = RegisterClassExW( &wc );
 		AX_EXPECT_NOT_NULL( wndClass );
-#endif
+# endif
 	}
 	SWndGlobInstance::~SWndGlobInstance()
 	{
-#if AX_OS_WINDOWS
+# if AX_OS_WINDOWS
 		UnregisterClassW( ( LPCWSTR )( UPtr )wndClass, GetModuleHandleW( NULL ) );
-#endif
+# endif
 	}
+#endif // __APPLE__
 
 	static SWndDelegate *duplicateDelegate_r( const SWndDelegate &Source, SWndDelegate *pTopDelegate = NULL )
 	{
@@ -718,17 +707,15 @@ namespace doll
 
 	DOLL_FUNC OSWindow DOLL_API wnd_open( const SWndCreateInfo &info )
 	{
-#if AX_OS_WINDOWS
 		SWindow *pWindow = new SWindow();
 		AX_EXPECT_NOT_NULL( pWindow );
-
-		//construct( *pWindow );
 
 		if( info.pDelegate != nullptr ) {
 			pWindow->pTopDelegate = duplicateDelegate_r( *info.pDelegate );
 		}
 		pWindow->pUserData = info.pData;
 
+#if AX_OS_WINDOWS
 		DWORD style;
 		DWORD exstyle;
 
@@ -763,6 +750,8 @@ namespace doll
 		}
 
 		return OSWindow( hWindow );
+#elif AX_OS_MACOSX
+		return OSWindow( macOS::wm::open( info, ( void * )pWindow ) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_close( OSWindow window )
@@ -771,6 +760,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		DestroyWindow( HWND(window) );
+#elif AX_OS_MACOSX
+		macOS::wm::close( macOS::wm::Window(window) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_minimize( OSWindow window )
@@ -779,6 +770,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		ShowWindow( HWND(window), SW_MINIMIZE );
+#elif AX_OS_MACOSX
+		macOS::wm::minimize( macOS::wm::Window(window) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_maximize( OSWindow window )
@@ -787,6 +780,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		ShowWindow( HWND(window), SW_MAXIMIZE );
+#elif AX_OS_MACOSX
+		macOS::wm::maximize( macOS::wm::Window(window) );
 #endif
 	}
 
@@ -831,38 +826,6 @@ namespace doll
 	{
 		AX_ASSERT_NOT_NULL(window);
 
-#if AX_OS_WINDOWS
-# if 0
-		static Async::CMutex BufferAccessor;
-		static TArray< wchar_t > UTF16Chars;
-		static MutStr Title;
-
-		if( !pszOutTitleUTF8 || !cMaxOutBytes ) {
-			return GetWindowTextLengthW( HWND(window) )*4;
-		}
-
-		*pszOutTitleUTF8 = '\0';
-
-		{
-			Async::MutexGuard Guard( BufferAccessor );
-
-			if( !AX_VERIFY( UTF16Chars.Reserve( GetWindowTextLengthW( HWND(window) ) ) ) ) {
-				return 0;
-			}
-
-			if( !AX_VERIFY( Title.Reserve( UTF16Chars.NumAllocated()*4 ) ) ) {
-				return 0;
-			}
-
-			GetWindowTextW( HWND(window), UTF16Chars.Pointer(), int( UTF16Chars.NumAllocated() ) );
-
-			Title.AssignUTF16( UTF16Chars.Pointer() );
-
-			StrCpy( pszOutTitleUTF8, cMaxOutBytes, Title.CString() );
-		}
-
-		return strlen( pszOutTitleUTF8 ) + 1;
-# else
 		SWindow &IntWindow = W(window);
 		if( !pszOutTitleUTF8 || !cMaxOutBytes ) {
 			return IntWindow.title.num();
@@ -876,8 +839,6 @@ namespace doll
 				IntWindow.title.get(),
 				IntWindow.title.len()
 			);
-# endif
-#endif
 	}
 
 	DOLL_FUNC Void DOLL_API wnd_setData( OSWindow window, Void *pData )
@@ -897,6 +858,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		SendMessageW( HWND(window), WM_SYSCOMMAND, SC_CLOSE, 0 );
+#elif AX_OS_MACOSX
+		macOS::wm::performClose( macOS::wm::Window(window) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_performMinimize( OSWindow window )
@@ -905,6 +868,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		SendMessageW( HWND(window), WM_SYSCOMMAND, SC_MINIMIZE, 0 );
+#elif AX_OS_MACOSX
+		macOS::wm::performMinimize( macOS::wm::Window(window) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_performMaximize( OSWindow window )
@@ -913,6 +878,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		SendMessageW( HWND(window), WM_SYSCOMMAND, SC_MAXIMIZE, 0 );
+#elif AX_OS_MACOSX
+		macOS::wm::performMaximize( macOS::wm::Window(window) );
 #endif
 	}
 
@@ -925,6 +892,8 @@ namespace doll
 		if( bIsVisible ) {
 			UpdateWindow( HWND(window) );
 		}
+#elif AX_OS_MACOSX
+		macOS::wm::setVisible( macOS::wm::Window(window), bIsVisible );
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API wnd_isVisible( OSWindow window )
@@ -933,6 +902,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		return IsWindowVisible( HWND(window) ) != FALSE;
+#elif AX_OS_MACOSX
+		return macOS::wm::isVisible( macOS::wm::Window(window) );
 #endif
 	}
 
@@ -942,6 +913,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		EnableWindow( HWND(window), bIsEnabled ? TRUE : FALSE );
+#elif AX_OS_MACOSX
+		macOS::wm::setEnabled( macOS::wm::Window(window), bIsEnabled );
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API wnd_isEnabled( OSWindow window )
@@ -950,6 +923,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		return IsWindowEnabled( HWND(window) ) != FALSE;
+#elif AX_OS_MACOSX
+		return macOS::wm::isEnabled( macOS::wm::Window(window) );
 #endif
 	}
 
@@ -972,6 +947,8 @@ namespace doll
 		const U32 clientResY = adjust.bottom - adjust.top;
 
 		SetWindowPos( HWND(window), NULL, 0, 0, clientResX, clientResY, SWP_NOMOVE|SWP_NOZORDER );
+#elif AX_OS_MACOSX
+		macOS::wm::resize( macOS::wm::Window(window), resX, resY );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_resizeFrame( OSWindow window, U32 resX, U32 resY )
@@ -980,6 +957,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		SetWindowPos( HWND(window), NULL, 0, 0, resX, resY, SWP_NOMOVE|SWP_NOZORDER );
+#elif AX_OS_MACOSX
+		macOS::wm::resizeFrame( macOS::wm::Window(window), resX, resY );
 #endif
 	}
 
@@ -989,6 +968,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		SetWindowPos( HWND(window), NULL, posX, posY, 0, 0, SWP_NOSIZE|SWP_NOZORDER );
+#elif AX_OS_MACOSX
+		macOS::wm::position( macOS::wm::Window(window), posX, posY );
 #endif
 	}
 
@@ -1008,6 +989,8 @@ namespace doll
 
 		outResX = client.right;
 		outResY = client.bottom;
+#elif AX_OS_MACOSX
+		macOS::wm::getSize( macOS::wm::Window(window), outResX, outResY );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_getFrameSize( OSWindow window, U32 &outResX, U32 &outResY )
@@ -1026,6 +1009,8 @@ namespace doll
 
 		outResX = screen.right - screen.left;
 		outResY = screen.bottom - screen.top;
+#elif AX_OS_MACOSX
+		macOS::wm::getFrameSize( macOS::wm::Window(window), outResX, outResY );
 #endif
 	}
 
@@ -1045,6 +1030,8 @@ namespace doll
 
 		outPosX = screen.left;
 		outPosY = screen.top;
+#elif AX_OS_MACOSX
+		macOS::wm::getPosition( macOS::wm::Window(window), outPosX, outPosY );
 #endif
 	}
 
@@ -1054,6 +1041,8 @@ namespace doll
 
 #if AX_OS_WINDOWS
 		InvalidateRect( HWND(window), NULL, TRUE );
+#elif AX_OS_MACOSX
+		macOS::wm::setNeedsDisplay( macOS::wm::Window(window) );
 #endif
 	}
 	DOLL_FUNC Void DOLL_API wnd_setRectNeedsDisplay( OSWindow window, S32 clientLeft, S32 clientTop, S32 clientRight, S32 clientBottom )
@@ -1063,6 +1052,8 @@ namespace doll
 #if AX_OS_WINDOWS
 		const RECT area = { clientLeft, clientTop, clientRight, clientBottom };
 		InvalidateRect( HWND(window), &area, TRUE );
+#elif AX_OS_MACOSX
+		macOS::wm::setRectNeedsDisplay( macOS::wm::Window(window), clientLeft, clientTop, clientRight, clientBottom );
 #endif
 	}
 
