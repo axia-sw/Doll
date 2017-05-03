@@ -94,7 +94,7 @@ namespace doll
 
 	DOLL_FUNC Bool DOLL_API core_readText( MutStr &outText, const Str &inFilename )
 	{
-		IFile *const fp = fs_open( inFilename, kFileOpenF_R | kFileOpenF_Sequential );
+		IFile *const fp = fs_open( inFilename, kFileOpenF_R );
 		if( !fp ) {
 			return false;
 		}
@@ -133,7 +133,7 @@ namespace doll
 		}
 
 		// Size of the file in bytes
-		const UPtr cBytes = UPtr( uFileSize ) - cBOMBytesRead;
+		const UPtr cBytes = UPtr( uFileSize ) - cBOMBytes;
 
 		// If the encoding is not UTF-8 then need to convert
 		if( enc != axstr_enc_utf8 ) {
