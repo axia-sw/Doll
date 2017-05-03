@@ -15,269 +15,6 @@
 # include <unistd.h>
 #endif
 
-#ifndef AX_SECURE_LIB_ENABLED
-# ifdef _MSC_VER
-#  define AX_SECURE_LIB_ENABLED 1
-# else
-#  define AX_SECURE_LIB_ENABLED 0
-# endif
-#endif
-
-/*
-===============================================================================
-
-	AXSDK/UTILITY/TEXT.HPP
-
-===============================================================================
-*/
-#ifndef AXSDK_UTILITY_TEXT_HPP
-#define AXSDK_UTILITY_TEXT_HPP
-
-#ifndef AX_PURE_FUNCTION
-# define AX_PURE_FUNCTION
-#endif
-
-namespace ax {
-
-	namespace Text {
-
-		using namespace doll;
-
-		inline Bool IsLower( char c ) AX_PURE_FUNCTION {
-			return ( c >= 'a' && c <= 'z' ) ? true : false;
-		}
-		inline Bool IsUpper( char c ) AX_PURE_FUNCTION {
-			return ( c >= 'A' && c <= 'Z' ) ? true : false;
-		}
-
-		inline char ToLower( char c ) AX_PURE_FUNCTION {
-			if( IsUpper( c ) ) {
-				return c - 'A' + 'a';
-			}
-
-			return c;
-		}
-		inline char ToUpper( char c ) AX_PURE_FUNCTION {
-			if( IsLower( c ) ) {
-				return c - 'a' + 'A';
-			}
-
-			return c;
-		}
-
-		UPtr Copy( char *dst, UPtr maxDst, const char *src );
-		UPtr CopyN( char *dst, UPtr maxDst, const char *src, UPtr n );
-
-		UPtr Append( char *dst, size_t maxDst, const char *src );
-		UPtr AppendN( char *dst, size_t maxDst, const char *src, UPtr n );
-
-		Void ConvertLower( char *buf );
-		Void ConvertUpper( char *buf );
-		Void ConvertLowerN( char *buf, UPtr n );
-		Void ConvertUpperN( char *buf, UPtr n );
-
-		Bool Compare( const char *a, const char *b );
-		Bool CompareInsensitive( const char *a, const char *b );
-
-		Bool CompareN( const char *a, const char *b, UPtr n );
-		Bool CompareInsensitiveN( const char *a, const char *b, UPtr n );
-
-		UPtr FormatV( char *dst, UPtr maxDst, const char *fmt, va_list args );
-		inline UPtr Format( char *dst, UPtr maxDst, const char *fmt, ... ) {
-			va_list args;
-
-			va_start( args, fmt );
-			const UPtr r = FormatV( dst, maxDst, fmt, args );
-			va_end( args );
-
-			return r;
-		}
-
-		template< UPtr _size_ >
-		inline UPtr Copy( char ( &dst )[ _size_ ], const char *src ) {
-			return Copy( &dst[ 0 ], _size_, src );
-		}
-		template< UPtr _size_ >
-		inline UPtr CopyN( char ( &dst )[ _size_ ], const char *src,
-		UPtr n ) {
-			return CopyN( &dst[ 0 ], _size_, src, n );
-		}
-
-		template< UPtr _size_ >
-		inline UPtr Append( char ( &dst )[ _size_ ], const char *src ) {
-			return Append( &dst[ 0 ], _size_, src );
-		}
-		template< UPtr _size_ >
-		inline UPtr AppendN( char ( &dst )[ _size_ ], const char *src,
-		UPtr n ) {
-			return AppendN( &dst[ 0 ], _size_, src, n );
-		}
-
-		template< UPtr _size_ >
-		inline UPtr FormatV( char ( &dst )[ _size_ ], const char *fmt,
-		va_list args ) {
-			return FormatV( &dst[ 0 ], _size_, fmt, args );
-		}
-		template< UPtr _size_ >
-		inline UPtr Format( char ( &dst )[ _size_ ], const char *fmt, ... ) {
-			va_list args;
-
-			va_start( args, fmt );
-			const UPtr r = FormatV( &dst[ 0 ], _size_, fmt, args );
-			va_end( args );
-
-			return r;
-		}
-
-	}
-
-}
-
-#endif //AXSDK_UTILITY_TEXT_HPP
-
-
-#ifndef SECURE_LIB_ENABLED
-# if defined( _MSC_VER ) && defined( __STDC_WANT_SECURE_LIB__ )
-#  define SECURE_LIB_ENABLED 1
-# else
-#  define SECURE_LIB_ENABLED 0
-# endif
-#endif
-
-namespace ax {
-
-	namespace Text {
-
-		UPtr Copy( char *dst, UPtr maxDst, const char *src ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				*dst = '\0';
-				return 0;
-			}
-			
-			return axstr_cpy( dst, maxDst, src );
-		}
-		UPtr CopyN( char *dst, UPtr maxDst, const char *src, UPtr n ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				*dst = '\0';
-				return 0;
-			}
-
-			return axstr_cpyn( dst, maxDst, src, n );
-		}
-
-		UPtr Append( char *dst, UPtr maxDst, const char *src ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				return strlen( dst );
-			}
-			
-			return axstr_cat( dst, maxDst, src );
-		}
-		UPtr AppendN( char *dst, size_t maxDst, const char *src, UPtr n ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT( maxDst > 0 );
-
-			if( !src ) {
-				return strlen( dst );
-			}
-
-			return axstr_catn( dst, maxDst, src, n );
-		}
-
-		Void ConvertLower( char *buf ) {
-			AX_ASSERT_NOT_NULL( buf );
-
-			while( *buf != '\0' ) {
-				*buf = ToLower( *buf );
-				++buf;
-			}
-		}
-		Void ConvertUpper( char *buf ) {
-			AX_ASSERT_NOT_NULL( buf );
-
-			while( *buf != '\0' ) {
-				*buf = ToUpper( *buf );
-				++buf;
-			}
-		}
-		Void ConvertLowerN( char *buf, UPtr n ) {
-			AX_ASSERT_NOT_NULL( buf );
-
-			while( *buf != '\0' && n > 0 ) {
-				*buf = ToLower( *buf );
-				++buf;
-				--n;
-			}
-		}
-		Void ConvertUpperN( char *buf, UPtr n ) {
-			AX_ASSERT_NOT_NULL( buf );
-
-			while( *buf != '\0' && n > 0 ) {
-				*buf = ToUpper( *buf );
-				++buf;
-				--n;
-			}
-		}
-
-		Bool Compare( const char *a, const char *b ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-
-			return strcmp( a, b ) == 0;
-		}
-		Bool CompareInsensitive( const char *a, const char *b ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-#if defined( _WIN32 )
-			return _stricmp( a, b ) == 0;
-#else
-			return strcasecmp( a, b ) == 0;
-#endif
-		}
-
-		Bool CompareN( const char *a, const char *b, UPtr n ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-			return strncmp( a, b, n ) == 0;
-		}
-		Bool CompareInsensitiveN( const char *a, const char *b, UPtr n ) {
-			AX_ASSERT_NOT_NULL( a );
-			AX_ASSERT_NOT_NULL( b );
-			
-#if defined( _WIN32 )
-			return _strnicmp( a, b, n ) == 0;
-#else
-			return strncasecmp( a, b, n ) == 0;
-#endif
-		}
-
-		UPtr FormatV( char *dst, UPtr maxDst, const char *fmt, va_list args ) {
-			AX_ASSERT_NOT_NULL( dst );
-			AX_ASSERT_NOT_NULL( fmt );
-			AX_ASSERT( maxDst > 0 );
-
-			auto r = axspfv( dst, maxDst, fmt, args );
-
-			if( r < 0 ) {
-				return 0;
-			}
-
-			return ( UPtr )r;
-		}
-
-	}
-
-}
 
 /*
 ===============================================================================
@@ -291,66 +28,6 @@ namespace Parsing {
 
 	using namespace ax;
 	using namespace doll;
-
-	UPtr SkipSpaces( const char *&p ) {
-		AX_ASSERT_NOT_NULL( p );
-
-		const char *const base = p;
-
-		while( *( const U8 * )p <= ' ' && *p != '\n' && *p != '\0' ) {
-			++p;
-		}
-
-		return p - base;
-	}
-
-	UPtr SkipLine( const char *&p ) {
-		AX_ASSERT_NOT_NULL( p );
-
-		const char *const base = p;
-
-		while( *p != '\n' && *p != '\0' ) {
-			if( *p == '\r' ) {
-				++p;
-				break;
-			}
-
-			++p;
-		}
-
-		if( *p == '\n' ) {
-			++p;
-		}
-
-		return p - base;
-	}
-
-	UPtr SkipNonwhite( const char *&p ) {
-		AX_ASSERT_NOT_NULL( p );
-
-		const char *const base = p;
-
-		while( *( const U8 * )p > ' ' ) {
-			++p;
-		}
-
-		return p - base;
-	}
-	UPtr SkipQuote( const char *&p ) {
-		AX_ASSERT_NOT_NULL( p );
-
-		if( *p != '\"' ) {
-			return 0;
-		}
-
-		const char *const base = p;
-		
-		do {
-			++p;
-		} while( *p != '\"' && *p != '\0' );
-
-		return p - base;
-	}
 
 	Void CalculateLineInfo( SConfigLineInfo &dst, Str src, const char *ptr )
 	{
@@ -463,7 +140,7 @@ namespace doll
 			}
 
 			// skip comments and blank lines
-			if( *p == ';' || *p == '\r' || *p == '\n' ) {
+			if( *p == ';' || ( p[0]=='/' && p[1]=='/' ) || *p == '\r' || *p == '\n' ) {
 				p = axstr_skip_line_e( p + 1, fe );
 				continue;
 			}
@@ -509,7 +186,7 @@ namespace doll
 				}
 
 				// ensure the section name wasn't entirely whitespace
-				if( e - s == 0 ) {
+				if( s == e ) {
 					warnRaw( filename, buffer, p, "Expected section name" );
 
 					p = axstr_skip_line_e( p, fe );
@@ -547,7 +224,7 @@ namespace doll
 				// are whitespace (or comment)
 				while( p < next_nl ) {
 					// comment?
-					if( *p == ';' ) {
+					if( *p == ';' || ( p[0]=='/' && p[1]=='/' ) ) {
 						p = next_nl;
 						break;
 					}
@@ -595,7 +272,13 @@ namespace doll
 
 			// find the range of the key
 			const char *key_s = axstr_skip_whitespace_e( p, fe );
-			if( p == fe || *p == ';' ) {
+			if( !key_s || key_s == fe ) {
+				p = fe;
+				continue;
+			}
+
+			p = key_s;
+			if( *p == ';' || ( p[0]=='/' && p[1]=='/' ) ) {
 				p = axstr_skip_line_e( p, fe );
 				continue;
 			}
@@ -625,14 +308,14 @@ namespace doll
 			}
 
 			// check for an invalid value
-			if( key_e - key_s == 0 ) {
+			if( key_s == key_e ) {
 				if( p < fe && *p == '=' ) {
 					warnRaw( filename, buffer, p, "Expected key before '='" );
 				} else {
 					warnRaw( filename, buffer, p, "Expected key" );
 				}
 
-				( Void )Parsing::SkipLine( p );
+				p = axstr_skip_line_e( p, fe );
 				continue;
 			}
 
@@ -646,14 +329,12 @@ namespace doll
 			Str value;
 
 			// read the value
-			if( p + 1 < fe && *p == '=' ) {
+			if( p < fe && *p == '=' ) {
 				++p;
 
 				const char *value_s = p;
-				while( p < fe && *p != '\n' ) {
-					++p;
-				}
-				const char *value_e = p;
+				const char *value_e = axstr_skip_line_e( p, fe );
+				p = value_e;
 
 				// trim spaces
 				while( value_e > value_s && *( const U8 * )( value_e - 1 ) <= ' ' ) {
@@ -676,16 +357,6 @@ namespace doll
 	}
 	Bool CConfiguration::loadFromFile( Str filename )
 	{
-#if 0
-		U8 *pMem = nullptr;
-		UPtr cMem = 0;
-
-		if( !core_loadFile( filename, pMem, cMem ) ) {
-			return false;
-		}
-
-		return loadFromMemory( filename, Str( ( const char * )pMem, cMem ) );
-#else
 		MutStr txt;
 
 		if( !core_readText( txt, filename ) ) {
@@ -693,7 +364,6 @@ namespace doll
 		}
 
 		return loadFromMemory( filename, txt );
-#endif
 	}
 
 	Void CConfiguration::printVars()
@@ -715,14 +385,14 @@ namespace doll
 			pre[ 0 ] = '\0';
 			const SConfigVar *prnt = var.parent->parent;
 			while( prnt != nullptr ) {
-				ax::Text::Append( pre, "  " );
+				axstr_cat( pre, "  " );
 				prnt = prnt->parent;
 			}
 
 			const SConfigValue *val = var.values.head();
 
 			if( val != var.values.tail() ) {
-				ax::Text::Format( buf, "%s%.*s:", pre, nn,np );
+				axspf( buf, "%s%.*s:", pre, nn,np );
 
 				char tmp[ 512 ];
 				while( val != nullptr ) {
@@ -733,18 +403,18 @@ namespace doll
 						continue;
 					}
 
-					ax::Text::Format( tmp, "\n%s  %.*s", pre, val->value.len(), val->value.get() );
-					ax::Text::Append( buf, tmp );
+					axspf( tmp, "\n%s  %.*s", pre, val->value.len(), val->value.get() );
+					axstr_cat( buf, tmp );
 
 					val = next;
 				}
 			} else if( val != nullptr && val->value.isUsed() ) {
-				ax::Text::Format( buf, "%s%.*s = %.*s", pre, nn,np, val->value.len(), val->value.get() );
+				axspf( buf, "%s%.*s = %.*s", pre, nn,np, val->value.len(), val->value.get() );
 			} else {
-				ax::Text::Format( buf, "%s%.*s", pre, nn,np );
+				axspf( buf, "%s%.*s", pre, nn,np );
 			}
 		} else {
-			ax::Text::Format( buf, "[%.*s]", nn,np );
+			axspf( buf, "[%.*s]", nn,np );
 		}
 
 		g_InfoLog += buf;
@@ -887,7 +557,7 @@ namespace doll
 
 		// special handling
 		if( !parent ) {
-			if( name.caseCmp( "BasedOn" ) == 0 ) {
+			if( name.caseCmp( "BasedOn" ) ) {
 				if( mIncludeDepth == 16 ) {
 					warnRaw( filename, buffer, ptr, "Include depth too deep" );
 					return;
@@ -900,7 +570,7 @@ namespace doll
 				}
 
 				Str relDir( filename.getDirectory() );
-				wchar_t wszRelDir[ 512 ];
+				wchar_t wszRelDir[ 512 ] = { L'\0' };
 
 				if( filename.getDirectory().toWStr( wszRelDir ) != nullptr ) {
 					SetCurrentDirectoryW( wszRelDir );
@@ -945,7 +615,7 @@ namespace doll
 				return;
 			}
 
-			warnRaw( filename, buffer, ptr, "Unrecognized command in special section 'Configuration'" );
+			warnRaw( filename, buffer, ptr, axf( "Unrecognized command \"%.*s\" in special section 'Configuration'", name.lenInt(), name.get() ) );
 			return;
 		}
 
