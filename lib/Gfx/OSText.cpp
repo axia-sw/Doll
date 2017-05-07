@@ -2,6 +2,7 @@
 
 #include "doll/Core/Defs.hpp"
 #include "doll/Core/Logger.hpp"
+#include "doll/Core/Engine.hpp"
 
 #define DOLL_OSTEXT_GDIPLUS 0
 #define DOLL_OSTEXT_DWRITE  0
@@ -193,9 +194,15 @@ namespace doll
 		STextItem *newText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor );
 		Void drawText( STextItem &item );
 
+		Void addRenderedText( RTexture *texture );
+		Void clearRenderedTexts();
+
 	private:
-		STextStyle *         m_pDefStyle;
-		TMutArr<STextItem *> m_items;
+		STextStyle *              m_pDefStyle;
+		TSmallArr<STextItem *, 8> m_items;
+
+		TSmallArr<RTexture *, 8>  m_renderCache;
+		U32                       m_lastCacheFrameId;
 
 		MOSText();
 		~MOSText();
@@ -211,6 +218,8 @@ namespace doll
 	MOSText::MOSText()
 	: m_pDefStyle( nullptr )
 	, m_items()
+	, m_renderCache()
+	, m_lastCacheFrameId(0)
 	{
 		DOLL_TRACE( "MOSText::MOSText()" );
 #if DOLL_OSTEXT_GDIPLUS
@@ -222,6 +231,7 @@ namespace doll
 	MOSText::~MOSText()
 	{
 		DOLL_TRACE( "MOSText::~MOSText()" );
+		clearRenderedTexts();
 	}
 
 	Bool MOSText::setDefStyle( Str fontFamily, U32 fontSize )
@@ -402,6 +412,23 @@ namespace doll
 		item.uResY = item.drawSize.y;
 	}
 
+	Void MOSText::addRenderedText( RTexture *texture ) {
+		const U32 currentCacheFrameId = DOLL__CORESTRUC.frame.uRenderId;
+		if( m_lastCacheFrameId != currentCacheFrameId ) {
+			m_lastCacheFrameId = currentCacheFrameId;
+			clearRenderedTexts();
+		}
+
+		AX_EXPECT_MEMORY( m_renderCache.append( texture ) );
+	}
+	Void MOSText::clearRenderedTexts() {
+		for( SizeType n = m_renderCache.len(); n != 0; --n ) {
+			const SizeType i = n - 1;
+			m_renderCache[ i ] = gfx_deleteTexture( m_renderCache[ i ] );
+		}
+		m_renderCache.clear();
+	}
+
 	DOLL_FUNC STextItem *DOLL_API gfx_newOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
 	{
 		return g_osTextMgr->newText( text, size, lineColor, fillColor );
@@ -467,17 +494,14 @@ namespace doll
 
 	DOLL_FUNC void DOLL_API gfx_drawOSText( Str text, const SRect &area )
 	{
-		static RTexture *oldTex = nullptr;
-
-		if( oldTex != nullptr ) {
-			gfx_deleteTexture( oldTex );
-		}
-
-		if( !( oldTex = gfx_renderOSText( text, area.size() ) ) ) {
+		RTexture *const tex = gfx_renderOSText( text, area.size() );
+		if( !tex ) {
 			return;
 		}
 
-		gfx_queDrawImage( area.x1, area.y1, area.resX(), area.resY(), 0, 0, area.resX(), area.resY(), ~0U, ~0U, ~0U, ~0U, oldTex );
+		g_osTextMgr->addRenderedText( tex );
+
+		gfx_queDrawImage( area.x1, area.y1, area.resX(), area.resY(), 0, 0, area.resX(), area.resY(), ~0U, ~0U, ~0U, ~0U, tex );
 	}
 
 }
