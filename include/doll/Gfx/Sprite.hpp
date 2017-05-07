@@ -284,7 +284,7 @@ namespace doll
 			return getFrameCornerDiffuse( 0 );
 		}
 
-		inline Void setTexture( RTexture *newTexture )
+		inline Void setTexture( const RTexture *newTexture )
 		{
 			setTexture_raw( newTexture );
 			if( !newTexture ) {
@@ -297,13 +297,9 @@ namespace doll
 				frames[ i ].sourceRect.res.y = resolution.y;
 			}
 		}
-		inline Void setTexture_raw( RTexture *newTexture )
+		inline Void setTexture_raw( const RTexture *newTexture )
 		{
 			texture = newTexture;
-		}
-		inline RTexture *getTexture()
-		{
-			return texture;
 		}
 		inline const RTexture *getTexture_const() const
 		{
@@ -352,7 +348,7 @@ namespace doll
 		{
 			return getFramePointer_const();
 		}
-	
+
 		inline SSpriteFrame *getFramePointerByIndex( size_t index )
 		{
 			return const_cast< SSpriteFrame * >( getFramePointerByIndex_const(
@@ -377,7 +373,7 @@ namespace doll
 			if( !frame ) {
 				return SSpriteTransform::identity;
 			}
-		
+
 			if( isAnimationPlaying() ) {
 				return currentInterpolatedFrame.transform;
 			}
@@ -555,13 +551,13 @@ namespace doll
 		} bind_flags;
 
 		Bool flip[ 2 ];
-	
+
 #if DOLL_HAS_SPRITE_ACTIONS
 		TIntrList< ActiveAction > activeActions;
 #endif
 
 	private:
-		RTexture *texture;
+		const RTexture *texture;
 
 		//
 		//	TODO: Use CArray<> for this.
@@ -608,7 +604,7 @@ namespace doll
 		Void update();
 
 		RSprite *newSprite();
-		RSprite *loadAnimSprite( RTexture *texture, S32 cellResX, S32 cellResY,
+		RSprite *loadAnimSprite( const RTexture *texture, S32 cellResX, S32 cellResY,
 			S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY );
 
 		inline Void setVisible( Bool newVisibility )
@@ -819,18 +815,18 @@ namespace doll
 	DOLL_FUNC RSprite *DOLL_API gfx_newSprite();
 	DOLL_FUNC RSprite *DOLL_API gfx_newSpriteInGroup( RSpriteGroup *group );
 	DOLL_FUNC RSprite *DOLL_API gfx_deleteSprite( RSprite *spr );
-	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSprite( U16 img, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY );
-	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSpriteInGroup( RSpriteGroup *group, RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY );
+	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSprite( const RTexture *img, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY );
+	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSpriteInGroup( RSpriteGroup *group, const RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY );
 
 	DOLL_FUNC RSpriteGroup *DOLL_API gfx_newSpriteGroup();
 	DOLL_FUNC RSpriteGroup *DOLL_API gfx_deleteSpriteGroup( RSpriteGroup *group );
 	DOLL_FUNC RSpriteGroup *DOLL_API gfx_getDefaultSpriteGroup();
 	DOLL_FUNC Void DOLL_API gfx_showSpriteGroup( RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_hideSpriteGroup( RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupVisible( const RSpriteGroup *group );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupVisible( const RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteGroupScissor( RSpriteGroup *group, S32 posX, S32 posY, S32 resX, S32 resY );
 	DOLL_FUNC Void DOLL_API gfx_disableSpriteGroupScissor( RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupScissorEnabled( const RSpriteGroup *group );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupScissorEnabled( const RSpriteGroup *group );
 	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupScissorPositionX( const RSpriteGroup *group );
 	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupScissorPositionY( const RSpriteGroup *group );
 	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupScissorResolutionX( const RSpriteGroup *group );
@@ -856,18 +852,18 @@ namespace doll
 	DOLL_FUNC S32 DOLL_API gfx_addSpriteFrame( RSprite *sprite );
 	DOLL_FUNC SSpriteFrame *DOLL_API gfx_duplicateCurrentSpriteFrame( RSprite *sprite );
 
-	DOLL_FUNC S32 DOLL_API gfx_getSpritePosition( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpritePosition( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpritePositionX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpritePositionY( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteRotation( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteScale( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteScale( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteScaleX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteScaleY( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteFramePosition( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteFramePosition( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFramePositionX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFramePositionY( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFrameRotation( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteFrameScale( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteFrameScale( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFrameScaleX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFrameScaleY( const RSprite *sprite );
 	DOLL_FUNC U32 DOLL_API gfx_getSpriteFrameCornerColor( const RSprite *sprite, U32 index );
@@ -875,8 +871,8 @@ namespace doll
 	DOLL_FUNC U32 DOLL_API gfx_getSpriteFrameColor( const RSprite *sprite );
 	DOLL_FUNC U32 DOLL_API gfx_getSpriteFrameAlpha( const RSprite *sprite );
 
-	DOLL_FUNC Void DOLL_API gfx_setSpriteTexture( RSprite *sprite, U32 textureId );
-	DOLL_FUNC U32 DOLL_API gfx_getSpriteTexture( const RSprite *sprite );
+	DOLL_FUNC Void DOLL_API gfx_setSpriteTexture( RSprite *sprite, const RTexture *texture );
+	DOLL_FUNC const RTexture *DOLL_API gfx_getSpriteTexture( const RSprite *sprite );
 
 	DOLL_FUNC U32 DOLL_API gfx_getSpriteFrameCount( const RSprite *sprite );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteCurrentFrame( RSprite *sprite, U32 frameIndex );
@@ -889,8 +885,8 @@ namespace doll
 	DOLL_FUNC Void DOLL_API gfx_loopSpriteAnimation( RSprite *sprite, U32 beginFrame, U32 endFrame );
 	DOLL_FUNC Void DOLL_API gfx_playSpriteAnimationWithDeath( RSprite *sprite, U32 beginFrame, U32 endFrame );
 	DOLL_FUNC Void DOLL_API gfx_stopSpriteAnimation( RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAnimationPlaying( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAnimationLooping( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAnimationPlaying( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAnimationLooping( const RSprite *sprite );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroup( RSprite *sprite, RSpriteGroup *group );
 	DOLL_FUNC RSpriteGroup *DOLL_API gfx_getSpriteGroup( RSprite *sprite );
@@ -900,25 +896,25 @@ namespace doll
 	DOLL_FUNC Void DOLL_API gfx_selectivelyBindSprite( RSprite *sprite, RSprite *master, S32 bindTranslation, S32 bindRotation, S32 bindScale );
 	DOLL_FUNC Void DOLL_API gfx_unbindSprite( RSprite *sprite );
 	DOLL_FUNC RSprite *DOLL_API gfx_getSpriteBindMaster( RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToTranslation( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToRotation( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToScale( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToTranslation( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToRotation( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToScale( const RSprite *sprite );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteOffset( RSprite *sprite, F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteOffset( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteOffset( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteOffsetX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteOffsetY( const RSprite *sprite );
 
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteGroupAutoupdating( RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_disableSpriteGroupAutoupdating( RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupAutoupdatingEnabled( const RSpriteGroup *group );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupAutoupdatingEnabled( const RSpriteGroup *group );
 
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteAutoupdating( RSprite *sprite );
 	DOLL_FUNC Void DOLL_API gfx_disableSpriteAutoupdating( RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAutoupdatingEnabled( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAutoupdatingEnabled( const RSprite *sprite );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupPosition( RSpriteGroup *group, F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupPosition( const RSpriteGroup *group, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupPosition( const RSpriteGroup *group, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupPositionX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupPositionY( const RSpriteGroup *group );
 
@@ -927,47 +923,47 @@ namespace doll
 
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteGroupFollow( RSpriteGroup *group, const RSprite *follow );
 	DOLL_FUNC Void DOLL_API gfx_disableSpriteGroupFollow( RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupFollowEnabled( const RSpriteGroup *group );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupFollowEnabled( const RSpriteGroup *group );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupFollowMinimumDistance( RSpriteGroup *group, F32 x, F32 y );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupFollowMaximumDistance( RSpriteGroup *group, F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowMinimumDistance( const RSpriteGroup *group, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowMinimumDistance( const RSpriteGroup *group, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMinimumDistanceX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMinimumDistanceY( const RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowMaximumDistance( const RSpriteGroup *group, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowMaximumDistance( const RSpriteGroup *group, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMaximumDistanceX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMaximumDistanceY( const RSpriteGroup *group );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupFollowSpeed( RSpriteGroup *group, F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowSpeed( const RSpriteGroup *group, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowSpeed( const RSpriteGroup *group, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowSpeedX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowSpeedY( const RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_flipSpriteHorizontal( RSprite *sprite );
 	DOLL_FUNC Void DOLL_API gfx_flipSpriteVertical( RSprite *sprite );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteMirrorHorizontal( RSprite *sprite, Bool mirror );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteMirrorVertical( RSprite *sprite, Bool mirror );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteMirrorHorizontal( const RSprite *sprite );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteMirrorVertical( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteMirrorHorizontal( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteMirrorVertical( const RSprite *sprite );
 
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteSize( const RSprite *sprite, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteSize( const RSprite *sprite, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteSizeX( const RSprite *sprite );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteSizeY( const RSprite *sprite );
 
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteGroupVirtualResolution( RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_disableSpriteGroupVirtualResolution( RSpriteGroup *group );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupVirtualResolutionEnabled( const RSpriteGroup *group );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupVirtualResolutionEnabled( const RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupVirtualResolution( RSpriteGroup *group,
 													  F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupVirtualResolution( const RSpriteGroup *group,
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupVirtualResolution( const RSpriteGroup *group,
 													 F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualResolutionX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualResolutionY( const RSpriteGroup *group );
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupVirtualOrigin( RSpriteGroup *group, F32 x, F32 y );
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupVirtualOrigin( const RSpriteGroup *group, F32 *x, F32 *y );
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupVirtualOrigin( const RSpriteGroup *group, F32 *x, F32 *y );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualOriginX( const RSpriteGroup *group );
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualOriginY( const RSpriteGroup *group );
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteVisible( RSprite *sprite, S32 visible );
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteVisible( const RSprite *sprite );
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteVisible( const RSprite *sprite );
 
 }

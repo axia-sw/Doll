@@ -208,7 +208,7 @@ namespace doll
 
 			return atlas->getBackingTexture();
 		}
-	
+
 		inline U16 getIdentifier() const
 		{
 			return ident;
@@ -250,7 +250,7 @@ namespace doll
 		static const UPtr MAX_TEXTURES = 65536;
 
 		static MTextures instance;
-	
+
 		RTexture *makeTexture( U16 width, U16 height, const Void *data, ETextureFormat format = kTexFmtRGBA8, CTextureAtlas *specificAtlas = nullptr );
 		RTexture *loadTexture( Str filename, CTextureAtlas *specificAtlas = nullptr );
 
@@ -292,14 +292,14 @@ namespace doll
 	DOLL_FUNC CTextureAtlas *DOLL_API gfx_newTextureAtlas( U16 resX, U16 resY, U16 format );
 	DOLL_FUNC CTextureAtlas *DOLL_API gfx_deleteTextureAtlas( CTextureAtlas *atlas );
 
-	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format );
-	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas );
+	DOLL_FUNC RTexture *DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format );
+	DOLL_FUNC RTexture *DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas );
 
-	DOLL_FUNC U16 DOLL_API gfx_loadTexture( Str filename );
-	DOLL_FUNC U16 DOLL_API gfx_loadTextureInAtlas( Str filename, CTextureAtlas *atlas );
+	DOLL_FUNC RTexture *DOLL_API gfx_loadTexture( Str filename );
+	DOLL_FUNC RTexture *DOLL_API gfx_loadTextureInAtlas( Str filename, CTextureAtlas *atlas );
 
-	DOLL_FUNC U16 DOLL_API gfx_deleteTexture( U16 textureId );
-	DOLL_FUNC U32 DOLL_API gfx_getTextureResX( U16 textureId );
-	DOLL_FUNC U32 DOLL_API gfx_getTextureResY( U16 textureId );
+	DOLL_FUNC RTexture *DOLL_API gfx_deleteTexture( RTexture *textureId );
+	DOLL_FUNC U32 DOLL_API gfx_getTextureResX( const RTexture *textureId );
+	DOLL_FUNC U32 DOLL_API gfx_getTextureResY( const RTexture *textureId );
 
 }

@@ -371,7 +371,7 @@ namespace doll
 
 		return spr;
 	}
-	RSprite *RSpriteGroup::loadAnimSprite( RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
+	RSprite *RSpriteGroup::loadAnimSprite( const RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
 	{
 		if( !AX_VERIFY_NOT_NULL( texture ) ) {
 			return nullptr;
@@ -789,7 +789,7 @@ namespace doll
 		if( !grp_updateLink.list() ) {
 			return;
 		}
-	
+
 		AX_ASSERT_NOT_NULL( grp_parent );
 		grp_parent->grp_updateList.unlink( grp_updateLink );
 	}
@@ -823,11 +823,11 @@ namespace doll
 		delete spr;
 		return nullptr;
 	}
-	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSprite( U16 img, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
+	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSprite( const RTexture *img, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
 	{
-		return g_spriteMgr.getDefaultSpriteGroup()->loadAnimSprite( g_textureMgr.getTextureById( img ), cellResX, cellResY, startFrame, numFrames, offX, offY, padX, padY );
+		return g_spriteMgr.getDefaultSpriteGroup()->loadAnimSprite( img, cellResX, cellResY, startFrame, numFrames, offX, offY, padX, padY );
 	}
-	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSpriteInGroup( RSpriteGroup *group, RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
+	DOLL_FUNC RSprite *DOLL_API gfx_loadAnimSpriteInGroup( RSpriteGroup *group, const RTexture *texture, S32 cellResX, S32 cellResY, S32 startFrame, S32 numFrames, S32 offX, S32 offY, S32 padX, S32 padY )
 	{
 		if( !group ) {
 			group = g_spriteMgr.getDefaultSpriteGroup();
@@ -866,13 +866,13 @@ namespace doll
 
 		group->setVisible( false );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupVisible( const RSpriteGroup *group )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupVisible( const RSpriteGroup *group )
 	{
 		if( !group ) {
 			group = g_spriteMgr.getDefaultSpriteGroup_const();
 		}
 
-		return +group->isVisible();
+		return group->isVisible();
 	}
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteGroupScissor( RSpriteGroup *group, S32 posX, S32 posY, S32 resX, S32 resY )
 	{
@@ -895,13 +895,13 @@ namespace doll
 
 		group->disableScissor();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupScissorEnabled( const RSpriteGroup *group )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupScissorEnabled( const RSpriteGroup *group )
 	{
 		if( !group ) {
 			group = g_spriteMgr.getDefaultSpriteGroup_const();
 		}
 
-		return +group->isScissorEnabled();
+		return group->isScissorEnabled();
 	}
 	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupScissorPositionX( const RSpriteGroup *group )
 	{
@@ -1061,7 +1061,7 @@ namespace doll
 		U32 diffuseTR = sprite->getFrameCornerDiffuse( 1 ) & 0x00FFFFFF;
 		U32 diffuseBL = sprite->getFrameCornerDiffuse( 2 ) & 0x00FFFFFF;
 		U32 diffuseBR = sprite->getFrameCornerDiffuse( 3 ) & 0x00FFFFFF;
-	
+
 		diffuseTL |= ( alphaTL & 0x000000FF )<<24;
 		diffuseTR |= ( alphaTR & 0x000000FF )<<24;
 		diffuseBL |= ( alphaBL & 0x000000FF )<<24;
@@ -1115,20 +1115,20 @@ namespace doll
 	DOLL_FUNC SSpriteFrame *DOLL_API gfx_duplicateCurrentSpriteFrame( RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return nullptr;
 		}
 
 		if( !sprite->duplicateCurrentFrame() ) {
-			return 0;
+			return nullptr;
 		}
 
 		return sprite->duplicateCurrentFrame();
 	}
 
-	DOLL_FUNC S32 DOLL_API gfx_getSpritePosition( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpritePosition( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &pos = sprite->getPosition();
@@ -1140,7 +1140,7 @@ namespace doll
 			*y = pos.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpritePositionX( const RSprite *sprite )
 	{
@@ -1166,10 +1166,10 @@ namespace doll
 
 		return sprite->getRotation();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteScale( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteScale( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &scale = sprite->getScale();
@@ -1181,7 +1181,7 @@ namespace doll
 			*y = scale.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteScaleX( const RSprite *sprite )
 	{
@@ -1199,10 +1199,10 @@ namespace doll
 
 		return sprite->getScale().y;
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteFramePosition( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteFramePosition( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &pos = sprite->getFramePosition();
@@ -1214,7 +1214,7 @@ namespace doll
 			*y = pos.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFramePositionX( const RSprite *sprite )
 	{
@@ -1240,10 +1240,10 @@ namespace doll
 
 		return sprite->getFrameRotation();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteFrameScale( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteFrameScale( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &scale = sprite->getFrameScale();
@@ -1255,7 +1255,7 @@ namespace doll
 			*y = scale.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteFrameScaleX( const RSprite *sprite )
 	{
@@ -1306,26 +1306,21 @@ namespace doll
 		return ( sprite->getFrameDiffuse() & 0xFF000000 )>>24;
 	}
 
-	DOLL_FUNC Void DOLL_API gfx_setSpriteTexture( RSprite *sprite, U32 textureId )
+	DOLL_FUNC Void DOLL_API gfx_setSpriteTexture( RSprite *sprite, const RTexture *texture )
 	{
 		EXPECT_SPRITE( sprite ) {
 			return;
 		}
 
-		sprite->setTexture( g_textureMgr.getTextureById( ( U16 )textureId ) );
+		sprite->setTexture( texture );
 	}
-	DOLL_FUNC U32 DOLL_API gfx_getSpriteTexture( const RSprite *sprite )
+	DOLL_FUNC const RTexture *DOLL_API gfx_getSpriteTexture( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
 			return 0;
 		}
 
-		const RTexture *texture = sprite->getTexture_const();
-		if( !texture ) {
-			return 0;
-		}
-
-		return ( U32 )texture->getIdentifier();
+		return sprite->getTexture_const();
 	}
 
 	DOLL_FUNC U32 DOLL_API gfx_getSpriteFrameCount( const RSprite *sprite )
@@ -1401,21 +1396,21 @@ namespace doll
 
 		sprite->stopAnimation();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAnimationPlaying( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAnimationPlaying( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isAnimationPlaying();
+		return sprite->isAnimationPlaying();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAnimationLooping( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAnimationLooping( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isAnimationLooping();
+		return sprite->isAnimationLooping();
 	}
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroup( RSprite *sprite, RSpriteGroup *group )
@@ -1484,29 +1479,29 @@ namespace doll
 
 		return sprite->getBindMaster();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToTranslation( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToTranslation( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isBoundToTranslation();
+		return sprite->isBoundToTranslation();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToRotation( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToRotation( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isBoundToRotation();
+		return sprite->isBoundToRotation();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteBoundToScale( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteBoundToScale( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isBoundToScale();
+		return sprite->isBoundToScale();
 	}
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteOffset( RSprite *sprite, F32 x, F32 y )
@@ -1517,10 +1512,10 @@ namespace doll
 
 		sprite->setOffset( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteOffset( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteOffset( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &off = sprite->getOffset();
@@ -1532,7 +1527,7 @@ namespace doll
 			*y = off.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteOffsetX( const RSprite *sprite )
 	{
@@ -1567,13 +1562,13 @@ namespace doll
 
 		group->setAutoupdates( false );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupAutoupdatingEnabled( const RSpriteGroup *group )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupAutoupdatingEnabled( const RSpriteGroup *group )
 	{
 		if( !AX_VERIFY_MSG( group != nullptr, "Group is invalid" ) ) {
-			return 0;
+			return false;
 		}
 
-		return +group->areAutoupdatesEnabled();
+		return group->areAutoupdatesEnabled();
 	}
 
 	DOLL_FUNC Void DOLL_API gfx_enableSpriteAutoupdating( RSprite *sprite )
@@ -1592,13 +1587,13 @@ namespace doll
 
 		sprite->disableAutoupdate();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteAutoupdatingEnabled( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteAutoupdatingEnabled( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isAutoupdateEnabled();
+		return sprite->isAutoupdateEnabled();
 	}
 
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupPosition( RSpriteGroup *group, F32 x, F32 y )
@@ -1609,10 +1604,10 @@ namespace doll
 
 		group->setTranslation( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupPosition( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupPosition( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &pos = group->getTranslation();
@@ -1624,7 +1619,7 @@ namespace doll
 			*y = pos.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupPositionX( const RSpriteGroup *group )
 	{
@@ -1679,10 +1674,10 @@ namespace doll
 
 		group->disableAutofollow();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupFollowEnabled( const RSpriteGroup *group )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupFollowEnabled( const RSpriteGroup *group )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		return group->isAutofollowEnabled();
@@ -1704,10 +1699,10 @@ namespace doll
 
 		group->setAutofollowMaximumDistance( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowMinimumDistance( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowMinimumDistance( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &dist = group->getAutofollowMinimumDistance();
@@ -1719,7 +1714,7 @@ namespace doll
 			*y = dist.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMinimumDistanceX( const RSpriteGroup *group )
 	{
@@ -1737,10 +1732,10 @@ namespace doll
 
 		return group->getAutofollowMinimumDistance().y;
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowMaximumDistance( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowMaximumDistance( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &dist = group->getAutofollowMaximumDistance();
@@ -1752,7 +1747,7 @@ namespace doll
 			*y = dist.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowMaximumDistanceX( const RSpriteGroup *group )
 	{
@@ -1779,10 +1774,10 @@ namespace doll
 
 		group->setAutofollowSpeed( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupFollowSpeed( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupFollowSpeed( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &speed = group->getAutofollowSpeed();
@@ -1794,7 +1789,7 @@ namespace doll
 			*y = speed.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupFollowSpeedX( const RSpriteGroup *group )
 	{
@@ -1846,27 +1841,27 @@ namespace doll
 
 		sprite->setMirrorVertical( mirror );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteMirrorHorizontal( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteMirrorHorizontal( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->getMirrorHorizontal();
+		return sprite->getMirrorHorizontal();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteMirrorVertical( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteMirrorVertical( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->getMirrorVertical();
+		return sprite->getMirrorVertical();
 	}
 
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteSize( const RSprite *sprite, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteSize( const RSprite *sprite, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
 		Vec2f size = sprite->getSize();
@@ -1878,7 +1873,7 @@ namespace doll
 			*y = size.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteSizeX( const RSprite *sprite )
 	{
@@ -1913,13 +1908,13 @@ namespace doll
 
 		group->disableVirtualResolution();
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteGroupVirtualResolutionEnabled( const RSpriteGroup *group )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteGroupVirtualResolutionEnabled( const RSpriteGroup *group )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
-		return +group->isVirtualResolutionEnabled();
+		return group->isVirtualResolutionEnabled();
 	}
 	DOLL_FUNC Void DOLL_API gfx_setSpriteGroupVirtualResolution( RSpriteGroup *group, F32 x, F32 y )
 	{
@@ -1929,10 +1924,10 @@ namespace doll
 
 		group->setVirtualResolution( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupVirtualResolution( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupVirtualResolution( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &res = group->getVirtualResolution();
@@ -1944,7 +1939,7 @@ namespace doll
 			*y = res.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualResolutionX( const RSpriteGroup *group )
 	{
@@ -1970,10 +1965,10 @@ namespace doll
 
 		group->setVirtualOrigin( Vec2f( x, y ) );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_getSpriteGroupVirtualOrigin( const RSpriteGroup *group, F32 *x, F32 *y )
+	DOLL_FUNC Bool DOLL_API gfx_getSpriteGroupVirtualOrigin( const RSpriteGroup *group, F32 *x, F32 *y )
 	{
 		EXPECT_SPRITE_GROUP( group ) {
-			return 0;
+			return false;
 		}
 
 		const Vec2f &org = group->getVirtualOrigin();
@@ -1985,7 +1980,7 @@ namespace doll
 			*y = org.y;
 		}
 
-		return 1;
+		return true;
 	}
 	DOLL_FUNC F32 DOLL_API gfx_getSpriteGroupVirtualOriginX( const RSpriteGroup *group )
 	{
@@ -2012,13 +2007,13 @@ namespace doll
 
 		sprite->setVisible( !!visible );
 	}
-	DOLL_FUNC S32 DOLL_API gfx_isSpriteVisible( const RSprite *sprite )
+	DOLL_FUNC Bool DOLL_API gfx_isSpriteVisible( const RSprite *sprite )
 	{
 		EXPECT_SPRITE( sprite ) {
-			return 0;
+			return false;
 		}
 
-		return +sprite->isVisible();
+		return sprite->isVisible();
 	}
 
 }

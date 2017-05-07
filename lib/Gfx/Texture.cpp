@@ -1335,83 +1335,48 @@ namespace doll
 		return nullptr;
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format )
+	DOLL_FUNC RTexture *DOLL_API gfx_newTexture( U16 width, U16 height, const void *data, ETextureFormat format )
 	{
-		RTexture *const tex = g_textureMgr.makeTexture( width, height, data, format );
-		if( !tex ) {
-			return 0;
-		}
-
-		return tex->getIdentifier();
+		return g_textureMgr.makeTexture( width, height, data, format );
 	}
-	DOLL_FUNC U16 DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas )
+	DOLL_FUNC RTexture *DOLL_API gfx_newTextureInAtlas( U16 width, U16 height, const void *data, ETextureFormat format, CTextureAtlas *atlas )
 	{
 		AX_ASSERT_NOT_NULL( atlas );
 
-		RTexture *const tex = g_textureMgr.makeTexture( width, height, data, format, atlas );
-		if( !tex ) {
-			return 0;
-		}
-
-		return tex->getIdentifier();
+		return g_textureMgr.makeTexture( width, height, data, format, atlas );
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_loadTexture( Str filename )
+	DOLL_FUNC RTexture *DOLL_API gfx_loadTexture( Str filename )
 	{
 		AX_ASSERT( filename.isUsed() );
 
-		RTexture *const tex = g_textureMgr.loadTexture( filename );
-		if( !tex ) {
-			return 0;
-		}
-
-		return tex->getIdentifier();
+		return g_textureMgr.loadTexture( filename );
 	}
-	DOLL_FUNC U16 DOLL_API gfx_loadTextureInAtlas( Str filename, CTextureAtlas *atlas )
+	DOLL_FUNC RTexture *DOLL_API gfx_loadTextureInAtlas( Str filename, CTextureAtlas *atlas )
 	{
 		AX_ASSERT( filename.isUsed() );
 		AX_ASSERT_NOT_NULL( atlas );
 
-		RTexture *const tex = g_textureMgr.loadTexture( filename, atlas );
-		if( !tex ) {
-			return 0;
-		}
-
-		return tex->getIdentifier();
+		return g_textureMgr.loadTexture( filename, atlas );
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_deleteTexture( U16 textureId )
+	DOLL_FUNC RTexture *DOLL_API gfx_deleteTexture( RTexture *texture )
 	{
-		if( !textureId ) {
-			return 0;
+		if( texture != nullptr ) {
+			delete texture;
 		}
 
-		RTexture *const tex = g_textureMgr.getTextureById( textureId );
-		delete tex;
-
-		return 0;
+		return nullptr;
 	}
-	DOLL_FUNC U32 DOLL_API gfx_getTextureResX( U16 textureId )
+	DOLL_FUNC U32 DOLL_API gfx_getTextureResX( const RTexture *texture )
 	{
-		AX_ASSERT_NOT_NULL( textureId );
-
-		const RTexture *const tex = g_textureMgr.getTextureById( textureId );
-		if( !tex ) {
-			return 0;
-		}
-
-		return ( U32 )tex->getResolution().x;
+		AX_ASSERT_NOT_NULL( texture );
+		return ( U32 )texture->getResolution().x;
 	}
-	DOLL_FUNC U32 DOLL_API gfx_getTextureResY( U16 textureId )
+	DOLL_FUNC U32 DOLL_API gfx_getTextureResY( const RTexture *texture )
 	{
-		AX_ASSERT_NOT_NULL( textureId );
-
-		const RTexture *const tex = g_textureMgr.getTextureById( textureId );
-		if( !tex ) {
-			return 0;
-		}
-
-		return ( U32 )tex->getResolution().y;
+		AX_ASSERT_NOT_NULL( texture );
+		return ( U32 )texture->getResolution().y;
 	}
 
 }

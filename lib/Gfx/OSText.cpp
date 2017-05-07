@@ -438,19 +438,19 @@ namespace doll
 #endif
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_ostext_makeTexture( const STextItem *pText, CTextureAtlas *pDefAtlas )
+	DOLL_FUNC RTexture *DOLL_API gfx_ostext_makeTexture( const STextItem *pText, CTextureAtlas *pDefAtlas )
 	{
 		AX_ASSERT_NOT_NULL( pText );
 
 		RTexture *const pTex = g_textureMgr.makeTexture( pText->uResX, pText->uResY, gfx_ostext_getBits( pText ), kTexFmtRGBA8, pDefAtlas );
 		if( !AX_VERIFY_MEMORY( pTex ) ) {
-			return 0;
+			return nullptr;
 		}
 
-		return pTex->getIdentifier();
+		return pTex;
 	}
 
-	DOLL_FUNC U16 DOLL_API gfx_renderOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor, CTextureAtlas *pDefAtlas )
+	DOLL_FUNC RTexture *DOLL_API gfx_renderOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor, CTextureAtlas *pDefAtlas )
 	{
 		STextItem *const pTextItem = gfx_newOSText( text, size, lineColor, fillColor );
 		if( !AX_VERIFY_MEMORY( pTextItem ) ) {
@@ -459,7 +459,7 @@ namespace doll
 
 		gfx_ostext_fillCache( pTextItem );
 
-		const U16 tex = gfx_ostext_makeTexture( pTextItem, pDefAtlas );
+		RTexture *const tex = gfx_ostext_makeTexture( pTextItem, pDefAtlas );
 		gfx_deleteOSText( pTextItem );
 
 		return tex;
@@ -467,9 +467,9 @@ namespace doll
 
 	DOLL_FUNC void DOLL_API gfx_drawOSText( Str text, const SRect &area )
 	{
-		static U16 oldTex = 0;
+		static RTexture *oldTex = nullptr;
 
-		if( oldTex != 0 ) {
+		if( oldTex != nullptr ) {
 			gfx_deleteTexture( oldTex );
 		}
 

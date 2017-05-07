@@ -134,7 +134,7 @@ namespace doll
 		cmd.origin.y = y;
 		cmd.extents.x = rx;
 		cmd.extents.y = ry;
-	
+
 		cmd.outer = outerColor;
 
 		cmd.inner[ 0 ] = innerColorO;
@@ -615,7 +615,7 @@ namespace doll
 		}
 #endif
 
-		RTexture *const tex = g_textureMgr.getTextureById( cmd->diffuseImg );
+		const RTexture *const tex = cmd->diffuseImg;
 		if( !tex ) {
 			return;
 		}
@@ -751,7 +751,7 @@ namespace doll
 # pragma warning(disable:6011)
 #endif
 		g_pRenderPrims->submit();
-	
+
 		RECT rc;
 		getRect( &rc, &cmd->tl, &cmd->br );
 
@@ -984,45 +984,35 @@ namespace doll
 		return gfx_queDrawRoundRect( l, t, r, b, radius, radius, radius, radius, 0, 0, 0, 0, g_curInk, g_curInk, g_curInk, g_curInk );
 	}
 
-	DOLL_FUNC EResult DOLL_API gfx_blitImage( U16 img, S32 x, S32 y )
+	DOLL_FUNC EResult DOLL_API gfx_blitImage( const RTexture *img, S32 x, S32 y )
 	{
-		const RTexture *tex;
-
-		if( !AX_VERIFY_MSG( img != 0, "Invalid image" ) )
+		if( !AX_VERIFY_MSG( img != nullptr, "Invalid image" ) ) {
 			return kError_InvalidParameter;
+		}
 
-		tex = g_textureMgr.getTextureById( img );
-
-		const SPixelVec2 res = tex->getResolution();
+		const SPixelVec2 res = img->getResolution();
 
 		return gfx_queDrawImage( x, y, res.x, res.y, 0, 0, res.x, res.y, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, img );
 	}
 
-	DOLL_FUNC EResult DOLL_API gfx_stretchImage( U16 img, S32 x, S32 y, S32 w, S32 h )
+	DOLL_FUNC EResult DOLL_API gfx_stretchImage( const RTexture *img, S32 x, S32 y, S32 w, S32 h )
 	{
-		const RTexture *tex;
-
-		if( !AX_VERIFY_MSG( img != 0, "Invalid image" ) )
+		if( !AX_VERIFY_MSG( img != nullptr, "Invalid image" ) ) {
 			return kError_InvalidParameter;
+		}
 
-		tex = g_textureMgr.getTextureById( img );
-
-		const SPixelVec2 res = tex->getResolution();
+		const SPixelVec2 res = img->getResolution();
 
 		return gfx_queDrawImage( x, y, w, h, 0, 0, res.x, res.y, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, img );
 	}
 
-	DOLL_FUNC EResult DOLL_API gfx_blitSubimage( U16 img, S32 dstX, S32 dstY, S32 srcX, S32 srcY, S32 w, S32 h )
+	DOLL_FUNC EResult DOLL_API gfx_blitSubimage( const RTexture *img, S32 dstX, S32 dstY, S32 srcX, S32 srcY, S32 w, S32 h )
 	{
-		const RTexture *tex;
-
-		if( !AX_VERIFY_MSG( img != 0, "Invalid image" ) ) {
+		if( !AX_VERIFY_MSG( img != nullptr, "Invalid image" ) ) {
 			return kError_InvalidParameter;
 		}
 
-		tex = g_textureMgr.getTextureById( img );
-
-		SPixelVec2 res = tex->getResolution();
+		const SPixelVec2 res = img->getResolution();
 		if( !w ) {
 			w = res.x;
 		}
@@ -1033,25 +1023,21 @@ namespace doll
 		return gfx_queDrawImage( dstX, dstY, w, h, srcX, srcY, w, h, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, img );
 	}
 
-	DOLL_FUNC EResult DOLL_API gfx_stretchSubimage( U16 img, S32 dstX, S32 dstY, S32 dstW, S32 dstH, S32 srcX, S32 srcY, S32 srcW, S32 srcH )
+	DOLL_FUNC EResult DOLL_API gfx_stretchSubimage( const RTexture *img, S32 dstX, S32 dstY, S32 dstW, S32 dstH, S32 srcX, S32 srcY, S32 srcW, S32 srcH )
 	{
-		if( !AX_VERIFY_MSG( img != 0, "Invalid image" ) ) {
+		if( !AX_VERIFY_MSG( img != nullptr, "Invalid image" ) ) {
 			return kError_InvalidParameter;
 		}
 
 		return gfx_queDrawImage( dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, img );
 	}
 
-	DOLL_FUNC EResult DOLL_API gfx_blitImageColored( U16 img, S32 x, S32 y, U32 tlcol, U32 trcol, U32 blcol, U32 brcol )
+	DOLL_FUNC EResult DOLL_API gfx_blitImageColored( const RTexture *img, S32 x, S32 y, U32 tlcol, U32 trcol, U32 blcol, U32 brcol )
 	{
-		const RTexture *tex;
-
-		if( !AX_VERIFY_MSG( img != 0, "Invalid image" ) )
+		if( !AX_VERIFY_MSG( img != nullptr, "Invalid image" ) )
 			return kError_InvalidParameter;
 
-		tex = g_textureMgr.getTextureById( img );
-
-		const SPixelVec2 res = tex->getResolution();
+		const SPixelVec2 res = img->getResolution();
 
 		return gfx_queDrawImage( x, y, res.x, res.y, 0, 0, res.x, res.y, tlcol, trcol, blcol, brcol, img );
 	}

@@ -14,6 +14,7 @@ namespace doll
 	struct STextItem;
 
 	class CTextureAtlas;
+	class RTexture;
 
 	DOLL_FUNC STextItem *DOLL_API gfx_newOSText( Str text, const SIntVector2 &size, U32 lineColor = DOLL_OSTEXT_LINE_COLOR, U32 fillColor = DOLL_OSTEXT_FILL_COLOR );
 	DOLL_FUNC STextItem *DOLL_API gfx_deleteOSText( STextItem *pText );
@@ -21,9 +22,9 @@ namespace doll
 	DOLL_FUNC U32 DOLL_API gfx_ostext_resX( const STextItem *pText );
 	DOLL_FUNC U32 DOLL_API gfx_ostext_resY( const STextItem *pText );
 	DOLL_FUNC const Void *DOLL_API gfx_ostext_getBits( const STextItem *pText );
-	DOLL_FUNC U16 DOLL_API gfx_ostext_makeTexture( const STextItem *pText, CTextureAtlas *pDefAtlas = nullptr );
+	DOLL_FUNC RTexture *DOLL_API gfx_ostext_makeTexture( const STextItem *pText, CTextureAtlas *pDefAtlas = nullptr );
 
-	DOLL_FUNC U16 DOLL_API gfx_renderOSText( Str text, const SIntVector2 &size, U32 lineColor = DOLL_OSTEXT_LINE_COLOR, U32 fillColor = DOLL_OSTEXT_FILL_COLOR, CTextureAtlas *pDefAtlas = nullptr );
+	DOLL_FUNC RTexture *DOLL_API gfx_renderOSText( Str text, const SIntVector2 &size, U32 lineColor = DOLL_OSTEXT_LINE_COLOR, U32 fillColor = DOLL_OSTEXT_FILL_COLOR, CTextureAtlas *pDefAtlas = nullptr );
 	DOLL_FUNC void DOLL_API gfx_drawOSText( Str text, const SRect &area );
 
 }

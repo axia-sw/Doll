@@ -10,6 +10,7 @@ namespace doll
 {
 
 	class RLayer;
+	class RTexture;
 	class CGfxFrame;
 
 	static const U32 INVALID_VALUE = 0xFFFFFFFFUL;
@@ -69,8 +70,7 @@ namespace doll
 	{
 		F32 m[4][4];
 	};
-	typedef U16 HRenderImageId;
-	typedef U16 HRenderFont;
+	typedef const RTexture *HRenderImageId;
 
 	struct SRenderCmd_DrawDot
 	{
@@ -193,12 +193,12 @@ namespace doll
 	DOLL_FUNC EResult DOLL_API gfx_circle( S32 x, S32 y, S32 radius );
 	DOLL_FUNC EResult DOLL_API gfx_roundedBox( S32 l, S32 t, S32 r, S32 b, S32 radius );
 
-	DOLL_FUNC EResult DOLL_API gfx_blitImage( U16 img, S32 x, S32 y );
-	DOLL_FUNC EResult DOLL_API gfx_stretchImage( U16 img, S32 x, S32 y, S32 w, S32 h );
-	DOLL_FUNC EResult DOLL_API gfx_blitSubimage( U16 img, S32 dstX, S32 dstY, S32 srcX, S32 srcY, S32 w, S32 h );
-	DOLL_FUNC EResult DOLL_API gfx_stretchSubimage( U16 img, S32 dstX, S32 dstY, S32 dstW, S32 dstH, S32 srcX, S32 srcY, S32 srcW, S32 srcH );
+	DOLL_FUNC EResult DOLL_API gfx_blitImage( const RTexture *img, S32 x, S32 y );
+	DOLL_FUNC EResult DOLL_API gfx_stretchImage( const RTexture *img, S32 x, S32 y, S32 w, S32 h );
+	DOLL_FUNC EResult DOLL_API gfx_blitSubimage( const RTexture *img, S32 dstX, S32 dstY, S32 srcX, S32 srcY, S32 w, S32 h );
+	DOLL_FUNC EResult DOLL_API gfx_stretchSubimage( const RTexture *img, S32 dstX, S32 dstY, S32 dstW, S32 dstH, S32 srcX, S32 srcY, S32 srcW, S32 srcH );
 
-	DOLL_FUNC EResult DOLL_API gfx_blitImageColored( U16 img, S32 x, S32 y, U32 tlcol, U32 trcol, U32 blcol, U32 brcol );
+	DOLL_FUNC EResult DOLL_API gfx_blitImageColored( const RTexture *img, S32 x, S32 y, U32 tlcol, U32 trcol, U32 blcol, U32 brcol );
 
 	DOLL_FUNC EResult DOLL_API gfx_light( S32 l, S32 t, S32 r, S32 b, float levelSnorm );
 
@@ -242,23 +242,23 @@ namespace doll
 	{
 		return gfx_roundedBox( r.x1, r.y1, r.x2, r.y2, radius );
 	}
-	inline EResult DOLL_API gfx_blitImage( U16 img, const SIntVector2 &pos )
+	inline EResult DOLL_API gfx_blitImage( const RTexture *img, const SIntVector2 &pos )
 	{
 		return gfx_blitImage( img, pos.x, pos.y );
 	}
-	inline EResult DOLL_API gfx_stretchImage( U16 img, const SRect &r )
+	inline EResult DOLL_API gfx_stretchImage( const RTexture *img, const SRect &r )
 	{
 		return gfx_stretchImage( img, r.x1, r.y1, r.resX(), r.resY() );
 	}
-	inline EResult DOLL_API gfx_blitSubimage( U16 img, const SIntVector2 &dstPos, const SRect &srcBox )
+	inline EResult DOLL_API gfx_blitSubimage( const RTexture *img, const SIntVector2 &dstPos, const SRect &srcBox )
 	{
 		return gfx_blitSubimage( img, dstPos.x, dstPos.y, srcBox.x1, srcBox.y1, srcBox.resX(), srcBox.resY() );
 	}
-	inline EResult DOLL_API gfx_stretchSubimage( U16 img, const SRect &dstBox, const SRect &srcBox )
+	inline EResult DOLL_API gfx_stretchSubimage( const RTexture *img, const SRect &dstBox, const SRect &srcBox )
 	{
 		return gfx_stretchSubimage( img, dstBox.x1, dstBox.y1, dstBox.resX(), dstBox.resY(), srcBox.x1, srcBox.y1, srcBox.resX(), srcBox.resY() );
 	}
-	inline EResult DOLL_API gfx_blitImageColored( U16 img, const SIntVector2 &pos, U32 tlcol, U32 trcol, U32 blcol, U32 brcol )
+	inline EResult DOLL_API gfx_blitImageColored( const RTexture *img, const SIntVector2 &pos, U32 tlcol, U32 trcol, U32 blcol, U32 brcol )
 	{
 		return gfx_blitImageColored( img, pos.x, pos.y, tlcol, trcol, blcol, brcol );
 	}
