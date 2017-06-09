@@ -247,15 +247,81 @@ namespace doll
 		(void)in_onMouseWheel_f( OSWindow(0), delta, clientPosX, clientPosY, mods );
 	}
 
+	static EKey glfw_keyFromScancode( int scancode )
+	{
+#if AX_OS_LINUX
+		return EKey( scancode - 1 ); // X11 just maps to +1
+#elif AX_OS_MACOSX
+		//axpf( "scancode -> %i\n", scancode );
+		// http://boredzo.org/blog/wp-content/uploads/2007/05/IMTx-virtual-keycodes.pdf
+		switch( scancode ) {
+# define MAP(MacOSKeyCode_,DollKeyName_) case MacOSKeyCode_: return EKey::DollKeyName_
+		MAP( 53, Escape ); MAP( 50, Grave );
+		MAP( 18, One ); MAP( 19, Two ); MAP( 20, Three ); MAP( 21, Four );
+		MAP( 23, Five ); MAP( 22, Six ); MAP( 26, Seven ); MAP( 28, Eight );
+		MAP( 25, Nine ); MAP( 29, Zero );
+		MAP( 27, Minus );
+		MAP( 24, Equals );
+		MAP( 51, Delete );
+		MAP( 48, Tab );
+
+		MAP( 12, Q ); MAP( 13, W ); MAP( 14, E ); MAP( 15, R );
+		MAP( 17, T ); MAP( 16, Y ); MAP( 32, U ); MAP( 34, I );
+		MAP( 31, O ); MAP( 35, P ); MAP( 33, LBracket ); MAP( 30, RBracket );
+		MAP( 42, Backslash );
+
+		MAP( 57, CapsLock );
+		MAP( 0, A ); MAP( 1, S ); MAP( 2, D ); MAP( 3, F );
+		MAP( 5, G ); MAP( 4, H ); MAP( 38, J ); MAP( 40, K );
+		MAP( 37, L ); MAP( 41, Semicolon ); MAP( 39, Apostrophe ); MAP( 36, Return );
+
+		MAP( 56, LShift );
+		MAP( 6, G ); MAP( 7, X ); MAP( 8, C ); MAP( 9, V );
+		MAP( 11, B ); MAP( 45, N ); MAP( 46, M ); MAP( 43, Comma );
+		MAP( 47, Period ); MAP( 44, Slash );
+
+		MAP( 59, LControl );
+		MAP( 58, LAlt );
+		MAP( 55, LSuper );
+		MAP( 49, Space );
+
+		MAP( 123, Left ); MAP( 125, Down ); MAP( 124, Right ); MAP( 126, Up );
+
+		MAP( 114, Insert ); MAP( 115, Home ); MAP( 116, Prior );
+		MAP( 117, Delete ); MAP( 119, End ); MAP( 121, Next );
+
+		MAP( 122, F1 ); MAP( 120, F2 ); MAP( 99, F3 ); MAP( 118, F4 );
+		MAP( 96, F5 ); MAP( 97, F6 ); MAP( 98, F7 ); MAP( 100, F8 );
+		MAP( 101, F9 ); MAP( 109, F10 ); MAP( 103, F11 ); MAP( 111, F12 );
+		MAP( 105, F13 ); MAP( 107, F14 ); MAP( 113, F15 );
+
+		MAP( 71, NumLock );
+		MAP( 81, NumPadEquals );
+		MAP( 75, Divide );
+		MAP( 67, Multiply );
+		MAP( 78, Subtract );
+		MAP( 69, Add );
+		MAP( 76, NumPadEnter );
+		MAP( 65, Decimal );
+
+		MAP( 89, NumPad7 ); MAP( 91, NumPad8 ); MAP( 92, NumPad9 );
+		MAP( 86, NumPad4 ); MAP( 87, NumPad5 ); MAP( 88, NumPad6 );
+		MAP( 83, NumPad1 ); MAP( 84, NumPad2 ); MAP( 85, NumPad3 );
+		MAP( 82, NumPad0 );
+# undef MAP
+
+		default:
+			break;
+		}
+
+		return EKey::None;
+#else
+		return EKey( scancode );
+#endif
+	}
 	static void glfw_keyButton_f( GLFWwindow *, int, int scancode, int action, int inmods )
 	{
-		const EKey key =
-#if AX_OS_LINUX
-			EKey( scancode - 1 ) // X11 just maps to +1
-#else
-			EKey( scancode )
-#endif
-			;
+		const EKey key = glfw_keyFromScancode( scancode );
 		const U32 mods = glfw_cvtmods( inmods );
 		const Bool isRepeat = action == GLFW_REPEAT;
 
