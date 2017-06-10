@@ -40,8 +40,6 @@ DOLL_ENGINE__DIR(W,Logs            , Log    , "$AppData:log"   ) // core_getLogD
 DOLL_ENGINE__DIR(R,Data            , Dat    , "$Root:dat"      ) // core_getDatDir()
 // Fonts and font data folder
 DOLL_ENGINE__DIR(R,Fonts           , Fon    , "$Dat:"          ) // core_getFonDir()
-// Character descriptors folder
-DOLL_ENGINE__DIR(R,Characters      , Chr    , "$Dat:chr"       ) // core_getChrDir()
 // Scripts/scenes folder
 DOLL_ENGINE__DIR(R,Scripts         , Scr    , "$Dat:scn"       ) // core_getScrDir()
 
@@ -53,6 +51,8 @@ DOLL_ENGINE__DIR(R,Movies          , Mov    , "$Gfx:av"        ) // core_getMovD
 DOLL_ENGINE__DIR(R,Backgrounds     , BG     , "$Gfx:bg"        ) // core_getBGDir()
 // Gallery-enabled background images
 DOLL_ENGINE__DIR(R,ComputerGraphics, CG     , "$Gfx:cg"        ) // core_getCGDir()
+// Character descriptors folder
+DOLL_ENGINE__DIR(R,Characters      , Chr    , "$Gfx:chr"       ) // core_getChrDir()
 
 // Top-level sounds folder
 DOLL_ENGINE__DIR(R,Sounds          , Snd    , "$Root:snd"      ) // core_getSndDir()
