@@ -180,19 +180,12 @@ namespace doll
 		const U32 w = pView->getResX();
 		const U32 h = pView->getResY();
 
-#if 0
-		//SetDefaultState( pView );
-		const HRESULT hr = pDevice->SetFVF( SVertex2DSprite::FVF_DEFAULT );
-		ASSERT( SUCCEEDED( hr ), "Invalid D3D op" );
-#endif
-
 		for( detail::SGroupNode *p = List.list.head(); p != nullptr; p = p->link.next() ) {
-			if( !p->pGroup ) {
+			if( !p->pGroup || !p->pGroup->isVisible() ) {
 				continue;
 			}
 
 			p->pGroup->render_gl( w, h );
-			//p->pGroup->render_d3d9( pDevice, w, h );
 		}
 	}
 
