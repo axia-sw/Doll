@@ -66,7 +66,7 @@ namespace doll
 	{
 		push( m_sizeStack, Size );
 	}
-	Void MMetrics::PopSize()
+	Void MMetrics::popSize()
 	{
 		pop( m_sizeStack );
 	}
@@ -263,13 +263,23 @@ namespace doll
 		return dpi.x;
 	}
 
-	DOLL_FUNC S32 DOLL_API util_unitsToPixels( Str input, S32 axis )
+	DOLL_FUNC S32 DOLL_API util_measurementToPixels( F64 value, EUnit type, EAxis axis ) {
+		return g_metrics->measurementToPixels( value, type, axis );
+	}
+	DOLL_FUNC S32 DOLL_API util_measurementToPixelsX( F64 value, EUnit type ) {
+		return g_metrics->measurementToPixels( value, type, EAxis::X );
+	}
+	DOLL_FUNC S32 DOLL_API util_measurementToPixelsY( F64 value, EUnit type ) {
+		return g_metrics->measurementToPixels( value, type, EAxis::Y );
+	}
+
+	DOLL_FUNC S32 DOLL_API util_unitsToPixels( Str input, EAxis axis )
 	{
-		if( !AX_VERIFY( input.isUsed() ) || !AX_VERIFY_MSG( axis >= 0 && axis <= 1, "Invalid axis" ) ) {
+		if( !AX_VERIFY( input.isUsed() ) ) {
 			return 0;
 		}
 
-		return g_metrics->textToPixels( input, ( axis == 0 ? EAxis::X : EAxis::Y ) );
+		return g_metrics->textToPixels( input, axis );
 	}
 	DOLL_FUNC S32 DOLL_API util_unitsToPixelsX( Str input )
 	{
@@ -294,7 +304,7 @@ namespace doll
 	}
 	DOLL_FUNC Void DOLL_API util_popPercentageSize()
 	{
-		g_metrics->PopSize();
+		g_metrics->popSize();
 	}
 	DOLL_FUNC S32 DOLL_API util_getPercentageSize( S32 *pOutResX, S32 *pOutResY )
 	{

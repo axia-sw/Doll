@@ -63,7 +63,7 @@ namespace doll
 
 		// Size in pixels
 		Void pushSize( const SIntVector2 &Size );
-		Void PopSize();
+		Void popSize();
 
 		// Font height in points
 		Void pushFontSize( F64 fSize );
@@ -112,7 +112,11 @@ namespace doll
 	DOLL_FUNC S32 DOLL_API util_getDpiY();
 	DOLL_FUNC S32 DOLL_API util_getDpi( S32 *pOutX, S32 *pOutY );
 
-	DOLL_FUNC S32 DOLL_API util_unitsToPixels( Str input, S32 axis );
+	DOLL_FUNC S32 DOLL_API util_measurementToPixels( F64 value, EUnit type, EAxis axis );
+	DOLL_FUNC S32 DOLL_API util_measurementToPixelsX( F64 value, EUnit type );
+	DOLL_FUNC S32 DOLL_API util_measurementToPixelsY( F64 value, EUnit type );
+
+	DOLL_FUNC S32 DOLL_API util_unitsToPixels( Str input, EAxis axis );
 	DOLL_FUNC S32 DOLL_API util_unitsToPixelsX( Str input );
 	DOLL_FUNC S32 DOLL_API util_unitsToPixelsY( Str input );
 
