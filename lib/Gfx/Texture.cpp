@@ -354,15 +354,15 @@ namespace doll
 			break;
 
 		default:
-			g_ErrorLog( filename ) += axspf( buf, "Unknown color type: %i", int( png_get_color_type( pngptr, infoptr ) ) );
+			g_ErrorLog( filename ) += ( axspf( buf, "Unknown color type: %i", int( png_get_color_type( pngptr, infoptr ) ) ), buf );
 			longjmp( png_jmpbuf( pngptr ), 1 );
 		}
 
-		g_VerboseLog( filename ) += axspf( buf, "PNG resolution: %ux%u", pngresx, pngresy );
+		g_VerboseLog( filename ) += ( axspf( buf, "PNG resolution: %ux%u", pngresx, pngresy ), buf );
 		g_DebugLog += buf;
 
 		if( pngresx > kMaxPNGRes || pngresy > kMaxPNGRes ) {
-			g_ErrorLog( filename ) += axspf( buf, "PNG is too large (%ux%u exceeds maximum of %u on any axis)", pngresx, pngresy, kMaxPNGRes );
+			g_ErrorLog( filename ) += ( axspf( buf, "PNG is too large (%ux%u exceeds maximum of %u on any axis)", pngresx, pngresy, kMaxPNGRes ), buf );
 			longjmp( png_jmpbuf( pngptr ), 1 );
 		}
 

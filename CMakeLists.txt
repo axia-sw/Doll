@@ -1,6 +1,13 @@
 project(Doll LANGUAGES C CXX)
 cmake_minimum_required(VERSION 3.4)
 
+set(EXTDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext")
+
+set(GLEWDIR "${EXTDIR}/glew")
+set(PNGDIR "${EXTDIR}/libpng")
+set(ZLIBDIR "${EXTDIR}/zlib")
+set(AXLIBDIR "${CMAKE_CURRENT_SOURCE_DIR}/../axlib")
+
 set(DollBuildVariantsList_ "DEVELOPMENT;DEBUG;PROFILE;RELEASE")
 
 set(DollDefaultVariant_ "DEBUG")
@@ -54,6 +61,19 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
 	endif()
 	message(WARNING "Build type (CMAKE_BUILD_TYPE) not specified; defaulting to ${BuildTy_}")
 	set(CMAKE_BUILD_TYPE "${BuildTy_}")
+endif()
+
+set(DollLinksToStaticDefault_ OFF)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	set(DollLinksToStaticDefault_ ON)
+endif()
+
+set(DOLL_LINKS_TO_STATIC_LIBS ${DollLinksToStaticDefault_} CACHE BOOL "Whether Doll links to external libraries statically")
+if(DOLL_LINKS_TO_STATIC_LIBS)
+	if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC"))
+		set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+	endif()
+	set(BUILD_SHARED_LIBS OFF)
 endif()
 
 find_package(Git)
@@ -144,67 +164,91 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	)
 endif()
 
-add_library(Doll
-	ext/glew/src/glew.c
-	lib/DollAxlib.cpp
-	lib/Core/Config.cpp
-	lib/Core/Defs.cpp
-	lib/Core/Engine.cpp
-	lib/Core/Logger.cpp
-	lib/Core/Memory.cpp
-	lib/Front/Frontend.cpp
-	lib/Front/Input.cpp
-	lib/Front/Setup.cpp
-	lib/Gfx/Action.cpp
-	lib/Gfx/API.cpp
-	lib/Gfx/API-D3D11.cpp
-	lib/Gfx/API-GL.cpp
-	lib/Gfx/Layer.cpp
-	lib/Gfx/OSText.cpp
-	lib/Gfx/PrimitiveBuffer.cpp
-	lib/Gfx/RenderCommands.cpp
-	lib/Gfx/Sprite.cpp
-	lib/Gfx/Texture.cpp
-	lib/IO/AsyncIO.cpp
-	lib/IO/File.cpp
-	lib/IO/SysFS.cpp
-	lib/IO/VFS.cpp
-	lib/IO/VFS-SysFS.cpp
-	lib/Math/Matrix.cpp
-	lib/Math/Vector.cpp
-	lib/OS/App.cpp
-	lib/OS/Monitor.cpp
-	lib/OS/OpenGL.cpp
-	lib/OS/Window.cpp
-	lib/Script/AST.cpp
-	lib/Script/Compiler.cpp
-	lib/Script/CompilerMemory.cpp
-	lib/Script/Diagnostics.cpp
-	lib/Script/DiagnosticsFmt.cpp
-	lib/Script/Ident.cpp
-	lib/Script/LanguageVersion.cpp
-	lib/Script/Lexer.cpp
-	lib/Script/Parser.cpp
-	lib/Script/ProgramData.cpp
-	lib/Script/Scripting.cpp
-	lib/Script/Source.cpp
-	lib/Script/Token.cpp
-	lib/Script/Type.cpp
-	lib/Snd/API-XA2.cpp
-	lib/Snd/ChannelUtil.cpp
-	lib/Snd/SoundCore.cpp
-	lib/Snd/SoundMgr.cpp
-	lib/Snd/WaveFile.cpp
-	lib/Snd/WaveFmt.cpp
-	lib/Util/Counter.cpp
-	lib/Util/FuncMgr.cpp
-	lib/Util/Hash.cpp
-	lib/Util/Messages.cpp
-	lib/Util/Metrics.cpp
-	lib/UX/DialogueWidget.cpp
-	lib/UX/Widget.cpp
-	${Doll_OS_SPECIFIC_SOURCES}
+set(PNGHEADERS
+	${PNGDIR}/png.h
+	${PNGDIR}/pngconf.h
+	${PNGDIR}/pnglibconf.h
+)
+set(PNGHEADERS_PRIVATE
+	${PNGDIR}/pngpriv.h
+	${PNGDIR}/pngdebug.h
+	${PNGDIR}/pnginfo.h
+	${PNGDIR}/pngstruct.h
+)
+set(PNGSOURCES
+	${PNGDIR}/png.c
+	${PNGDIR}/pngerror.c
+	${PNGDIR}/pngget.c
+	${PNGDIR}/pngmem.c
+	${PNGDIR}/pngpread.c
+	${PNGDIR}/pngread.c
+	${PNGDIR}/pngrio.c
+	${PNGDIR}/pngrtran.c
+	${PNGDIR}/pngrutil.c
+	${PNGDIR}/pngset.c
+	${PNGDIR}/pngtrans.c
+	${PNGDIR}/pngwio.c
+	${PNGDIR}/pngwrite.c
+	${PNGDIR}/pngwtran.c
+	${PNGDIR}/pngwutil.c
+)
+
+set(PNGFILES
+	${PNGHEADERS}
+	${PNGHEADERS_PRIVATE}
+	${PNGSOURCES}
+)
+
+set(ZLIBHEADERS
+	${ZLIBDIR}/zconf.h
+	${ZLIBDIR}/zlib.h
+)
+set(ZLIBHEADERS_PRIVATE
+	${ZLIBDIR}/crc32.h
+	${ZLIBDIR}/deflate.h
+	${ZLIBDIR}/gzguts.h
+	${ZLIBDIR}/inffast.h
+	${ZLIBDIR}/inffixed.h
+	${ZLIBDIR}/inflate.h
+	${ZLIBDIR}/inftrees.h
+	${ZLIBDIR}/trees.h
+	${ZLIBDIR}/zutil.h
+)
+set(ZLIBSOURCES
+	${ZLIBDIR}/adler32.c
+	${ZLIBDIR}/compress.c
+	${ZLIBDIR}/crc32.c
+	${ZLIBDIR}/deflate.c
+	${ZLIBDIR}/gzclose.c
+	${ZLIBDIR}/gzlib.c
+	${ZLIBDIR}/gzread.c
+	${ZLIBDIR}/gzwrite.c
+	${ZLIBDIR}/inflate.c
+	${ZLIBDIR}/infback.c
+	${ZLIBDIR}/inftrees.c
+	${ZLIBDIR}/inffast.c
+	${ZLIBDIR}/trees.c
+	${ZLIBDIR}/uncompr.c
+	${ZLIBDIR}/zutil.c
+)
+
+set(ZLIBFILES
+	${ZLIBHEADERS}
+	${ZLIBHEADERS_PRIVATE}
+	${ZLIBSOURCES}
+)
+
+set(GLEWSOURCES
+	${GLEWDIR}/src/glew.c
+)
+set(GLEWFILES
+	${GLEWSOURCES}
+)
+
+set(DOLLHEADERS_PRIVATE
 	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
+)
+set(DOLLHEADERS
 	include/doll/AxlibConfig.h
 	include/doll/Doll.hpp
 	include/doll/Core/Private/Variants.def.hpp
@@ -292,10 +336,123 @@ add_library(Doll
 	include/doll/Util/ValueStack.hpp
 	include/doll/UX/DialogueWidget.hpp
 	include/doll/UX/Widget.hpp
+)
+set(DOLLSOURCES
+	lib/DollAxlib.cpp
+	lib/Core/Config.cpp
+	lib/Core/Defs.cpp
+	lib/Core/Engine.cpp
+	lib/Core/Logger.cpp
+	lib/Core/Memory.cpp
+	lib/Front/Frontend.cpp
+	lib/Front/Input.cpp
+	lib/Front/Setup.cpp
+	lib/Gfx/Action.cpp
+	lib/Gfx/API.cpp
+	lib/Gfx/API-D3D11.cpp
+	lib/Gfx/API-GL.cpp
+	lib/Gfx/Layer.cpp
+	lib/Gfx/OSText.cpp
+	lib/Gfx/PrimitiveBuffer.cpp
+	lib/Gfx/RenderCommands.cpp
+	lib/Gfx/Sprite.cpp
+	lib/Gfx/Texture.cpp
+	lib/IO/AsyncIO.cpp
+	lib/IO/File.cpp
+	lib/IO/SysFS.cpp
+	lib/IO/VFS.cpp
+	lib/IO/VFS-SysFS.cpp
+	lib/Math/Matrix.cpp
+	lib/Math/Vector.cpp
+	lib/OS/App.cpp
+	lib/OS/Monitor.cpp
+	lib/OS/OpenGL.cpp
+	lib/OS/Window.cpp
+	lib/Script/AST.cpp
+	lib/Script/Compiler.cpp
+	lib/Script/CompilerMemory.cpp
+	lib/Script/Diagnostics.cpp
+	lib/Script/DiagnosticsFmt.cpp
+	lib/Script/Ident.cpp
+	lib/Script/LanguageVersion.cpp
+	lib/Script/Lexer.cpp
+	lib/Script/Parser.cpp
+	lib/Script/ProgramData.cpp
+	lib/Script/Scripting.cpp
+	lib/Script/Source.cpp
+	lib/Script/Token.cpp
+	lib/Script/Type.cpp
+	lib/Snd/API-XA2.cpp
+	lib/Snd/ChannelUtil.cpp
+	lib/Snd/SoundCore.cpp
+	lib/Snd/SoundMgr.cpp
+	lib/Snd/WaveFile.cpp
+	lib/Snd/WaveFmt.cpp
+	lib/Util/Counter.cpp
+	lib/Util/FuncMgr.cpp
+	lib/Util/Hash.cpp
+	lib/Util/Messages.cpp
+	lib/Util/Metrics.cpp
+	lib/UX/DialogueWidget.cpp
+	lib/UX/Widget.cpp
+)
+
+set(DOLL_ALLSOURCES_HERE
+	${PNGFILES}
+	${ZLIBFILES}
+	${GLEWFILES}
+
+	${DOLLSOURCES}
+	${Doll_OS_SPECIFIC_SOURCES}
+
+	${DOLLHEADERS_PRIVATE}
+	${DOLLHEADERS}
 	${Doll_OS_SPECIFIC_HEADERS}
 )
 
-set_source_files_properties(ext/glew/src/glew.c PROPERTIES LANGUAGE C)
+set(AXLIB_SOURCES
+	${AXLIBDIR}/include/ax_array.hpp
+	${AXLIBDIR}/include/ax_assert.h
+	${AXLIBDIR}/include/ax_config.h
+	${AXLIBDIR}/include/ax_dictionary.hpp
+	${AXLIBDIR}/include/ax_fiber.h
+	${AXLIBDIR}/include/ax_intdatetime.h
+	${AXLIBDIR}/include/ax_list.hpp
+	${AXLIBDIR}/include/ax_logger.h
+	${AXLIBDIR}/include/ax_manager.hpp
+	${AXLIBDIR}/include/ax_memory.h
+	${AXLIBDIR}/include/ax_platform.h
+	${AXLIBDIR}/include/ax_printf.h
+	${AXLIBDIR}/include/ax_string.h
+	${AXLIBDIR}/include/ax_thread.h
+	${AXLIBDIR}/include/ax_time.h
+	${AXLIBDIR}/include/ax_types.h
+	${AXLIBDIR}/include/ax_typetraits.hpp
+	${AXLIBDIR}/include/axlib.h
+	${AXLIBDIR}/include/axlib.hpp
+)
+
+set(DOLL_ALLSOURCES
+	${DOLL_ALLSOURCES_HERE}
+	${AXLIB_SOURCES}
+)
+
+add_library(Doll
+	${DOLL_ALLSOURCES}
+)
+
+source_group("ext\\axlib" FILES ${AXLIB_SOURCES})
+source_group("ext\\glew" FILES ${GLEWFILES})
+source_group("ext\\libpng" FILES ${PNGFILES})
+source_group("ext\\zlib" FILES ${ZLIBFILES})
+
+source_group(TREE "include/doll" PREFIX "src" FILES ${DOLLHEADERS} ${Doll_OS_SPECIFIC_HEADERS})
+source_group(TREE "lib" PREFIX "src" FILES ${DOLLSOURCES} ${Doll_OS_SPECIFIC_SOURCES})
+source_group(TREE "${CMAKE_BINARY_DIR}/include/doll" PREFIX "src\\.gen" FILES ${DOLLHEADERS_PRIVATE})
+
+set_source_files_properties(${GLEWSOURCES} PROPERTIES LANGUAGE C)
+set_source_files_properties(${PNGSOURCES} PROPERTIES LANGUAGE C)
+set_source_files_properties(${ZLIBSOURCES} PROPERTIES LANGUAGE C)
 
 set_target_properties(Doll PROPERTIES
     CXX_STANDARD          14
@@ -306,16 +463,15 @@ set_target_properties(Doll PROPERTIES
 target_include_directories(
 	Doll
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../axlib/include
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/glew/include
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/STB
+	PUBLIC ${AXLIBDIR}/include
+	PRIVATE ${GLEWDIR}/include
+	PRIVATE ${EXTDIR}/STB
 	PRIVATE ${CMAKE_BINARY_DIR}/include
 )
-
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	target_include_directories(
 		Doll
-		PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ext/XA2
+		PRIVATE ${EXTDIR}/XA2
 	)
 endif()
 
@@ -354,6 +510,15 @@ target_compile_definitions(
 	Doll
 	PRIVATE GLEW_STATIC=1
 	PRIVATE DOLL__BUILD=1
+	PRIVATE PNG_THREAD_UNSAFE_OK=1
+	PRIVATE PNG_NO_MMX_CODE=1
+	PRIVATE PNG_NO_MNG_FEATURES=1
+)
+
+target_include_directories(
+	Doll
+	PRIVATE ${ZLIBDIR}
+	PRIVATE ${PNGDIR}
 )
 
 if(DOLL_BUILD_VARIANT STREQUAL "DEVELOPMENT")
@@ -385,21 +550,6 @@ elseif(DOLL_BUILD_VARIANT STREQUAL "RELEASE")
 		PRIVATE DOLL_BUILD_VARIANT=DOLL_VARIANT_RELEASE
 	)
 endif()
-
-find_package(PNG REQUIRED)
-
-target_include_directories(
-	Doll
-	PRIVATE ${PNG_INCLUDE_DIRS}
-)
-target_link_libraries(
-	Doll
-	PRIVATE ${PNG_LIBRARY}
-)
-target_compile_definitions(
-	Doll
-	PRIVATE ${PNG_DEFINITIONS}
-)
 
 set(DollBuildSuffix "-${DOLL_BUILD_VARIANT}")
 

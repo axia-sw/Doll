@@ -1,5 +1,20 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxOSText
 
+#ifdef _WIN32
+# ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4458 ) // declaration of 'nativeRegion' hides class member
+# endif
+# include <Windows.h>
+//# if DOLL_OSTEXT_GDIPLUS
+#  include <wtypes.h> // needed for mingw `PROPID` definition
+#  include <gdiplus.h>
+//# endif
+# ifdef _MSC_VER
+#  pragma warning( pop )
+# endif
+#endif
+
 #include "doll/Core/Defs.hpp"
 #include "doll/Core/Logger.hpp"
 #include "doll/Core/Engine.hpp"
@@ -17,21 +32,6 @@
 #elif AX_OS_MACOSX || AX_OS_IOS
 # undef  DOLL_OSTEXT_COCOA
 # define DOLL_OSTEXT_COCOA   1
-#endif
-
-#ifdef _WIN32
-# ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4458 ) // declaration of 'nativeRegion' hides class member
-# endif
-# include <Windows.h>
-# if DOLL_OSTEXT_GDIPLUS
-#  include <wtypes.h> // needed for mingw `PROPID` definition
-#  include <gdiplus.h>
-# endif
-# ifdef _MSC_VER
-#  pragma warning( pop )
-# endif
 #endif
 
 #if DOLL_OSTEXT_COCOA
