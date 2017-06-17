@@ -248,9 +248,12 @@ set(GLEWFILES
 set(DOLLHEADERS_PRIVATE
 	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 )
-set(DOLLHEADERS
+
+set(DOLLHEADERS_Base
 	include/doll/AxlibConfig.h
 	include/doll/Doll.hpp
+)
+set(DOLLHEADERS_Core
 	include/doll/Core/Private/Variants.def.hpp
 	include/doll/Core/Private/Variants.hpp
 	include/doll/Core/Config.hpp
@@ -261,9 +264,13 @@ set(DOLLHEADERS
 	include/doll/Core/Memory.hpp
 	include/doll/Core/MemoryTags.hpp
 	include/doll/Core/Version.hpp
+)
+set(DOLLHEADERS_Front
 	include/doll/Front/Frontend.hpp
 	include/doll/Front/Input.hpp
 	include/doll/Front/Setup.hpp
+)
+set(DOLLHEADERS_Gfx
 	include/doll/Gfx/Action.hpp
 	include/doll/Gfx/API.hpp
 	include/doll/Gfx/API-D3D11.hpp
@@ -277,11 +284,15 @@ set(DOLLHEADERS
 	include/doll/Gfx/Sprite.hpp
 	include/doll/Gfx/Texture.hpp
 	include/doll/Gfx/Vertex.hpp
+)
+set(DOLLHEADERS_IO
 	include/doll/IO/AsyncIO.hpp
 	include/doll/IO/File.hpp
 	include/doll/IO/SysFS.hpp
 	include/doll/IO/VFS.hpp
 	include/doll/IO/VFS-SysFS.hpp
+)
+set(DOLLHEADERS_Math
 	include/doll/Math/Basic.hpp
 	include/doll/Math/Bits.hpp
 	include/doll/Math/Const.hpp
@@ -292,11 +303,15 @@ set(DOLLHEADERS
 	include/doll/Math/SIMD.hpp
 	include/doll/Math/Types.hpp
 	include/doll/Math/Vector.hpp
+)
+set(DOLLHEADERS_OS
 	include/doll/OS/App.hpp
 	include/doll/OS/Key.hpp
 	include/doll/OS/Monitor.hpp
 	include/doll/OS/OpenGL.hpp
 	include/doll/OS/Window.hpp
+)
+set(DOLLHEADERS_Script
 	include/doll/Script/AST.hpp
 	include/doll/Script/Compiler.hpp
 	include/doll/Script/CompilerMemory.hpp
@@ -316,14 +331,20 @@ set(DOLLHEADERS
 	include/doll/Script/Token.hpp
 	include/doll/Script/Type.hpp
 	include/doll/Script/Types.def.hpp
+)
+set(DOLLHEADERS_Snd
 	include/doll/Snd/API-XA2.hpp
 	include/doll/Snd/ChannelUtil.hpp
 	include/doll/Snd/SoundCore.hpp
 	include/doll/Snd/SoundMgr.hpp
 	include/doll/Snd/WaveFile.hpp
 	include/doll/Snd/WaveFmt.hpp
+)
+set(DOLLHEADERS_Types
 	include/doll/Types/IntVector2.hpp
 	include/doll/Types/Rect.hpp
+)
+set(DOLLHEADERS_Util
 	include/doll/Util/ByteSwap.hpp
 	include/doll/Util/Casting.hpp
 	include/doll/Util/CountDivs.hpp
@@ -334,19 +355,43 @@ set(DOLLHEADERS
 	include/doll/Util/Metrics.hpp
 	include/doll/Util/SafeDX.hpp
 	include/doll/Util/ValueStack.hpp
+)
+set(DOLLHEADERS_UX
 	include/doll/UX/DialogueWidget.hpp
 	include/doll/UX/Widget.hpp
 )
-set(DOLLSOURCES
+
+set(DOLLHEADERS
+	${DOLLHEADERS_Base}
+	${DOLLHEADERS_Core}
+	${DOLLHEADERS_Front}
+	${DOLLHEADERS_Gfx}
+	${DOLLHEADERS_IO}
+	${DOLLHEADERS_Math}
+	${DOLLHEADERS_OS}
+	${DOLLHEADERS_Script}
+	${DOLLHEADERS_Snd}
+	${DOLLHEADERS_Types}
+	${DOLLHEADERS_Util}
+	${DOLLHEADERS_UX}
+)
+
+set(DOLLSOURCES_Base
 	lib/DollAxlib.cpp
+)
+set(DOLLSOURCES_Core
 	lib/Core/Config.cpp
 	lib/Core/Defs.cpp
 	lib/Core/Engine.cpp
 	lib/Core/Logger.cpp
 	lib/Core/Memory.cpp
+)
+set(DOLLSOURCES_Front
 	lib/Front/Frontend.cpp
 	lib/Front/Input.cpp
 	lib/Front/Setup.cpp
+)
+set(DOLLSOURCES_Gfx
 	lib/Gfx/Action.cpp
 	lib/Gfx/API.cpp
 	lib/Gfx/API-D3D11.cpp
@@ -357,17 +402,25 @@ set(DOLLSOURCES
 	lib/Gfx/RenderCommands.cpp
 	lib/Gfx/Sprite.cpp
 	lib/Gfx/Texture.cpp
+)
+set(DOLLSOURCES_IO
 	lib/IO/AsyncIO.cpp
 	lib/IO/File.cpp
 	lib/IO/SysFS.cpp
 	lib/IO/VFS.cpp
 	lib/IO/VFS-SysFS.cpp
+)
+set(DOLLSOURCES_Math
 	lib/Math/Matrix.cpp
 	lib/Math/Vector.cpp
+)
+set(DOLLSOURCES_OS
 	lib/OS/App.cpp
 	lib/OS/Monitor.cpp
 	lib/OS/OpenGL.cpp
 	lib/OS/Window.cpp
+)
+set(DOLLSOURCES_Script
 	lib/Script/AST.cpp
 	lib/Script/Compiler.cpp
 	lib/Script/CompilerMemory.cpp
@@ -382,19 +435,39 @@ set(DOLLSOURCES
 	lib/Script/Source.cpp
 	lib/Script/Token.cpp
 	lib/Script/Type.cpp
+)
+set(DOLLSOURCES_Snd
 	lib/Snd/API-XA2.cpp
 	lib/Snd/ChannelUtil.cpp
 	lib/Snd/SoundCore.cpp
 	lib/Snd/SoundMgr.cpp
 	lib/Snd/WaveFile.cpp
 	lib/Snd/WaveFmt.cpp
+)
+set(DOLLSOURCES_Util
 	lib/Util/Counter.cpp
 	lib/Util/FuncMgr.cpp
 	lib/Util/Hash.cpp
 	lib/Util/Messages.cpp
 	lib/Util/Metrics.cpp
+)
+set(DOLLSOURCES_UX
 	lib/UX/DialogueWidget.cpp
 	lib/UX/Widget.cpp
+)
+
+set(DOLLSOURCES
+	${DOLLSOURCES_Base}
+	${DOLLSOURCES_Core}
+	${DOLLSOURCES_Front}
+	${DOLLSOURCES_Gfx}
+	${DOLLSOURCES_IO}
+	${DOLLSOURCES_Math}
+	${DOLLSOURCES_OS}
+	${DOLLSOURCES_Script}
+	${DOLLSOURCES_Snd}
+	${DOLLSOURCES_Util}
+	${DOLLSOURCES_UX}
 )
 
 set(DOLL_ALLSOURCES_HERE
@@ -437,22 +510,56 @@ set(DOLL_ALLSOURCES
 	${AXLIB_SOURCES}
 )
 
-add_library(Doll
-	${DOLL_ALLSOURCES}
-)
-
 source_group("ext\\axlib" FILES ${AXLIB_SOURCES})
 source_group("ext\\glew" FILES ${GLEWFILES})
 source_group("ext\\libpng" FILES ${PNGFILES})
 source_group("ext\\zlib" FILES ${ZLIBFILES})
 
-source_group(TREE "include/doll" PREFIX "src" FILES ${DOLLHEADERS} ${Doll_OS_SPECIFIC_HEADERS})
-source_group(TREE "lib" PREFIX "src" FILES ${DOLLSOURCES} ${Doll_OS_SPECIFIC_SOURCES})
+set(HeaderComponents_
+	"Core"
+	"Front"
+	"Gfx"
+	"IO"
+	"Math"
+	"OS"
+	"Script"
+	"Snd"
+	"Types"
+	"Util"
+	"UX"
+)
+set(SourceComponents_
+	"Core"
+	"Front"
+	"Gfx"
+	"IO"
+	"Math"
+	"OS"
+	"Script"
+	"Snd"
+	"Util"
+	"UX"
+)
+
+source_group("src\\Base" FILES ${DOLLHEADERS_Base})
+source_group("src\\Base" FILES ${DOLLSOURCES_Base})
+
+foreach(component_ IN ITEMS ${HeaderComponents_})
+	source_group("src\\${component_}" FILES ${DOLLHEADERS_${component_}})
+endforeach()
+foreach(component_ IN ITEMS ${SourceComponents_})
+	source_group("src\\${component_}" FILES ${DOLLSOURCES_${component_}})
+endforeach()
+
 source_group(TREE "${CMAKE_BINARY_DIR}/include/doll" PREFIX "src\\.gen" FILES ${DOLLHEADERS_PRIVATE})
 
 set_source_files_properties(${GLEWSOURCES} PROPERTIES LANGUAGE C)
 set_source_files_properties(${PNGSOURCES} PROPERTIES LANGUAGE C)
 set_source_files_properties(${ZLIBSOURCES} PROPERTIES LANGUAGE C)
+
+add_library(Doll
+	${DOLL_ALLSOURCES}
+)
 
 set_target_properties(Doll PROPERTIES
     CXX_STANDARD          14
@@ -491,8 +598,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	target_link_libraries(
 		Doll
 		PUBLIC pthread
-		PUBLIC glfw
-		PUBLIC ${OPENGL_gl_LIBRARY}
+		PUBLIC ${GLFW_STATIC_LIBRARIES}
 		PUBLIC "-framework Foundation"
 		PUBLIC "-framework AppKit"
 		PUBLIC "-framework Cocoa"
@@ -500,9 +606,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 else()
 	target_link_libraries(
 		Doll
-		PUBLIC GL
 		PUBLIC pthread
-		PUBLIC glfw
+		PUBLIC ${GLFW_LIBRARIES}
 	)
 endif()
 
