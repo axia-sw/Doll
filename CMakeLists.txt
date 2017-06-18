@@ -419,6 +419,7 @@ set(DOLLSOURCES_OS
 	lib/OS/Monitor.cpp
 	lib/OS/OpenGL.cpp
 	lib/OS/Window.cpp
+	lib/OS/Window_Delegate.hpp
 )
 set(DOLLSOURCES_Script
 	lib/Script/AST.cpp
