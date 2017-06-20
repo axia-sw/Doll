@@ -6,6 +6,7 @@ set(EXTDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext")
 set(GLEWDIR "${EXTDIR}/glew")
 set(PNGDIR "${EXTDIR}/libpng")
 set(ZLIBDIR "${EXTDIR}/zlib")
+set(GLFWDIR "${EXTDIR}/glfw")
 set(AXLIBDIR "${CMAKE_CURRENT_SOURCE_DIR}/../axlib")
 
 set(DollBuildVariantsList_ "DEVELOPMENT;DEBUG;PROFILE;RELEASE")
@@ -245,6 +246,51 @@ set(GLEWFILES
 	${GLEWSOURCES}
 )
 
+set(GLFWSOURCES)
+set(GLFWHEADERS)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	set(common_HEADERS internal.h)
+	set(common_SOURCES context.c init.c input.c monitor.c vulkan.c window.c)
+
+	if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+		set(glfw_HEADERS
+			${common_HEADERS} cocoa_platform.h cocoa_joystick.h
+			posix_thread.h nsgl_context.h egl_context.h osmesa_context.c)
+		set(glfw_SOURCES
+			${common_SOURCES} cocoa_init.m cocoa_joystick.m
+			cocoa_monitor.m cocoa_window.m cocoa_time.c posix_thread.c
+			nsgl_context.m egl_context.c osmesa_context.c)
+	else()
+		set(glfw_HEADERS
+			${common_HEADERS} x11_platform.h xkb_unicode.h posix_time.h
+			posix_thread.h glx_context.h egl_context.h osmesa_context.h)
+		set(glfw_SOURCES
+			${common_SOURCES} x11_init.c x11_monitor.c x11_window.c
+			xkb_unicode.c posix_time.c posix_thread.c glx_context.c
+			egl_context.c osmesa_context.c)
+
+		if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+			set(glfw_HEADERS ${glfw_HEADERS} linux_joystick.h)
+			set(glfw_SOURCES ${glfw_SOURCES} linux_joystick.c)
+		else()
+			set(glfw_HEADERS ${glfw_HEADERS} null_joystick.h)
+			set(glfw_SOURCES ${glfw_SOURCES} null_joystick.c)
+		endif()
+	endif()
+
+	foreach(src IN ITEMS ${glfw_SOURCES})
+		list(APPEND GLFWSOURCES "${GLFWDIR}/src/${src}")
+	endforeach()
+	foreach(hdr IN ITEMS ${glfw_HEADERS})
+		list(APPEND GLFWHEADERS "${GLFWDIR}/src/${hdr}")
+	endforeach()
+
+	list(APPEND GLFWHEADERS "${GLFWDIR}/src/glfw_config.h")
+	list(APPEND GLFWHEADERS "${GLFWDIR}/include/GLFW/glfw3.h")
+	list(APPEND GLFWHEADERS "${GLFWDIR}/include/GLFW/glfw3native.h")
+endif()
+set(GLFWFILES ${GLFWSOURCES} ${GLFWHEADERS})
+
 set(DOLLHEADERS_PRIVATE
 	${CMAKE_BINARY_DIR}/include/doll/private/gitinfo.gen.h
 )
@@ -475,6 +521,7 @@ set(DOLL_ALLSOURCES_HERE
 	${PNGFILES}
 	${ZLIBFILES}
 	${GLEWFILES}
+	${GLFWFILES}
 
 	${DOLLSOURCES}
 	${Doll_OS_SPECIFIC_SOURCES}
@@ -515,6 +562,7 @@ source_group("ext\\axlib" FILES ${AXLIB_SOURCES})
 source_group("ext\\glew" FILES ${GLEWFILES})
 source_group("ext\\libpng" FILES ${PNGFILES})
 source_group("ext\\zlib" FILES ${ZLIBFILES})
+source_group("ext\\glfw" FILES ${GLFWFILES})
 
 set(HeaderComponents_
 	"Core"
@@ -557,6 +605,7 @@ source_group(TREE "${CMAKE_BINARY_DIR}/include/doll" PREFIX "src\\.gen" FILES ${
 set_source_files_properties(${GLEWSOURCES} PROPERTIES LANGUAGE C)
 set_source_files_properties(${PNGSOURCES} PROPERTIES LANGUAGE C)
 set_source_files_properties(${ZLIBSOURCES} PROPERTIES LANGUAGE C)
+set_source_files_properties(${GLFWSOURCES} PROPERTIES LANGUAGE C)
 
 add_library(Doll
 	${DOLL_ALLSOURCES}
@@ -582,34 +631,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		PRIVATE ${EXTDIR}/XA2
 	)
 endif()
-
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	find_package(glfw3 3.2 REQUIRED)
 	find_package(OpenGL REQUIRED)
 	target_include_directories(Doll PRIVATE ${OPENGL_INCLUDE_DIR})
-endif()
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	target_link_libraries(
-		Doll
-		PUBLIC gdiplus
-		PUBLIC opengl32
-	)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	target_link_libraries(
-		Doll
-		PUBLIC pthread
-		PUBLIC ${GLFW_STATIC_LIBRARIES}
-		PUBLIC "-framework Foundation"
-		PUBLIC "-framework AppKit"
-		PUBLIC "-framework Cocoa"
-	)
-else()
-	target_link_libraries(
-		Doll
-		PUBLIC pthread
-		PUBLIC ${GLFW_LIBRARIES}
-	)
 endif()
 
 target_compile_definitions(
@@ -619,13 +643,38 @@ target_compile_definitions(
 	PRIVATE PNG_THREAD_UNSAFE_OK=1
 	PRIVATE PNG_NO_MMX_CODE=1
 	PRIVATE PNG_NO_MNG_FEATURES=1
+	PRIVATE _GLFW_USE_CONFIG_H=1
 )
 
 target_include_directories(
 	Doll
 	PRIVATE ${ZLIBDIR}
 	PRIVATE ${PNGDIR}
+	PRIVATE "${GLFWDIR}/include"
+	PRIVATE "${GLFWDIR}/src"
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	target_link_libraries(Doll
+		PUBLIC gdiplus
+		PUBLIC opengl32
+	)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	target_link_libraries(Doll
+		PUBLIC pthread
+		PUBLIC "-framework Foundation"
+		PUBLIC "-framework AppKit"
+		PUBLIC "-framework Cocoa"
+		PUBLIC "-framework OpenGL"
+		PUBLIC "-framework IOKit"
+		PUBLIC "-framework CoreVideo"
+	)
+else()
+	target_link_libraries(Doll
+		PUBLIC pthread
+		PUBLIC "-lrt"
+	)
+endif()
 
 if(DOLL_BUILD_VARIANT STREQUAL "DEVELOPMENT")
 	target_compile_definitions(
