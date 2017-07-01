@@ -7,14 +7,8 @@
 #if DOLL_GFX_OPENGL_ENABLED
 # include "doll/Gfx/API-GL.hpp"
 #endif
-#if DOLL_GFX_VULKAN_ENABLED
-# include "doll/Gfx/API-Vk.hpp"
-#endif
 #if DOLL_GFX_DIRECT3D11_ENABLED
 # include "doll/Gfx/API-D3D11.hpp"
-#endif
-#if DOLL_GFX_DIRECT3D12_ENABLED
-# include "doll/Gfx/API-D3D12.hpp"
 #endif
 
 #include "doll/Core/Logger.hpp"
@@ -32,8 +26,113 @@
 namespace doll
 {
 
+	static TSmallArr<IGfxAPIProvider*,4> g_gfxProviders;
+
 	static CGfxFrame *g_pCurrentFrame = nullptr;
 	static IGfxAPI *  g_pCurrentAPI   = nullptr;
+
+	constexpr SizeType invalidIndex = ~SizeType(0);
+
+	static SizeType findGfxAPIByNameReturningIndex( const Str &name ) {
+		SizeType i;
+
+		// First, try each API by exact name only. This allows for erroneous
+		// aliases to be ignored where necessary.
+
+		i = 0;
+		for( const IGfxAPIProvider *provider : g_gfxProviders ) {
+			AX_ASSERT_NOT_NULL( provider );
+			
+			const Str haystackName = provider->getName();
+			AX_ASSERT( haystackName.isUsed() );
+
+			if( haystackName.caseCmp( name ) ) {
+				return i;
+			}
+
+			++i;
+		}
+
+		// Next, try each API by asking if it identifies as a given name.
+		// Basically, forgive users for passing "dx11" instead of "d3d11"
+
+		i = 0;
+		for( const IGfxAPIProvider *provider : g_gfxProviders ) {
+			if( provider->is( name ) ) {
+				return i;
+			}
+
+			++i;
+		}
+
+		// Nothing has been found.
+
+		return invalidIndex;
+	}
+
+	DOLL_FUNC Bool DOLL_API doll_registerGfxAPI( IGfxAPIProvider &provider, EShouldOverrideExistingAPI shouldOverride ) {
+		const Str providerName = provider.getName();
+		AX_ASSERT( providerName.isUsed() );
+
+		DOLL_TRACE( axf("Registering API \"%.*s\"...", providerName.lenInt(),providerName.get()) );
+		fflush(nullptr);
+
+		const SizeType existingAPI = findGfxAPIByNameReturningIndex( providerName );
+		if( existingAPI != invalidIndex ) {
+			if( shouldOverride == EShouldOverrideExistingAPI::no ) {
+				basicWarnf( "API already exists and override not allowed; \"%.*s\"", providerName.lenInt(), providerName.get() );
+				return false;
+			}
+
+			AX_ASSERT( existingAPI < g_gfxProviders.len() );
+			AX_ASSERT_NOT_NULL( g_gfxProviders[ existingAPI ] );
+
+			g_gfxProviders[ existingAPI ]->drop();
+			g_gfxProviders[ existingAPI ] = &provider;
+			return true;
+		}
+
+		AX_EXPECT_MEMORY( g_gfxProviders.tryAppend( &provider ) );
+		return true;
+	}
+	DOLL_FUNC Void DOLL_API doll_unregisterGfxAPI( IGfxAPIProvider &provider ) {
+		if( g_gfxProviders.isEmpty() ) {
+			return;
+		}
+
+		SizeType index = g_gfxProviders.len() - 1;
+		AX_ASSERT( index != invalidIndex );
+
+		do {
+			if( g_gfxProviders[ index ] == &provider ) {
+				g_gfxProviders[ index ]->drop();
+				g_gfxProviders.remove( index );
+			}
+		} while( index-- != 0 );
+	}
+	DOLL_FUNC IGfxAPIProvider *DOLL_API doll_findGfxAPIByName( const Str &name ) {
+		const SizeType index = findGfxAPIByNameReturningIndex( name );
+		if( index == invalidIndex ) {
+			return nullptr;
+		}
+
+		AX_ASSERT_NOT_NULL( g_gfxProviders[ index ] );
+		return g_gfxProviders[ index ];
+	}
+	DOLL_FUNC SizeType DOLL_API doll_getGfxAPICount() {
+		return g_gfxProviders.len();
+	}
+	DOLL_FUNC IGfxAPIProvider *DOLL_API doll_getGfxAPI( SizeType index ) {
+		AX_ASSERT( index < doll_getGfxAPICount() );
+		if( index >= doll_getGfxAPICount() ) {
+			return nullptr;
+		}
+
+		AX_ASSERT_NOT_NULL( g_gfxProviders[ index ] );
+		return g_gfxProviders[ index ];
+	}
+
+	//====================================================================//
 
 	// ### TODO ### Higher performance transient (memory) vbuffer management
 	//
@@ -133,12 +232,13 @@ namespace doll
 		if( !pInitDesc || pInitDesc->apis.isEmpty() ) {
 			DOLL_TRACE( "Filling in defaults for initialization API..." );
 
-			static const EGfxAPI defAPIs[] = {
+			static IGfxAPIProvider *const defAPIs[] = {
 #if defined( _WIN32 ) && !DOLL__USE_GLFW
-				kGfxAPIDirect3D11,
+				doll_findGfxAPIByName( "d3d11" ),
 #endif
-				kGfxAPIOpenGL
+				doll_findGfxAPIByName( "gl" )
 			};
+			AX_ASSERT_NOT_NULL( defAPIs[ arraySize( defAPIs ) - 1 ] );
 
 			SGfxInitDesc desc;
 			desc.apis = defAPIs;
@@ -154,25 +254,12 @@ namespace doll
 		}
 
 		DOLL_TRACE( "Trying each API..." );
-		for( EGfxAPI api : pInitDesc->apis ) {
-			IGfxAPI *pAPI = nullptr;
-
-			switch( api ) {
-#define DOLL_GFX__API(Name_,BriefName_) \
-	case kGfxAPI##Name_: \
-		DOLL_TRACE( "Trying API \"" #Name_ "\"..." );\
-		pAPI = CGfxAPI_##BriefName_::init( wnd, *pInitDesc ); \
-		break;
-
-#include "doll/Gfx/APIs.def.hpp"
-
-#undef DOLL_GFX__API
-
-			case kNumGfxAPIs:
-				DOLL_TRACE( "Got invalid value (kNumGfxAPIs)" );
-				AX_UNREACHABLE();
+		for( IGfxAPIProvider *pAPIProvider : pInitDesc->apis ) {
+			if( !pAPIProvider ) {
+				continue;
 			}
 
+			IGfxAPI *const pAPI = pAPIProvider->initAPI( wnd, *pInitDesc );
 			if( pAPI != nullptr ) {
 				return pAPI;
 			}
@@ -183,7 +270,9 @@ namespace doll
 	}
 	DOLL_FUNC NullPtr DOLL_API gfx_finiAPI( IGfxAPI *p )
 	{
-		delete p;
+		if( p != nullptr ) {
+			p->getAPIProvider().finiAPI( p );
+		}
 		return nullptr;
 	}
 

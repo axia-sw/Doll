@@ -15,12 +15,12 @@ namespace doll
 	struct SGLContext;
 	class CGfxAPI_GL;
 
-	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc );
+	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider );
 
 	class CGfxAPI_GL: public virtual IGfxAPI
 	{
 	public:
-		CGfxAPI_GL( SGLContext *pCtx );
+		CGfxAPI_GL( IGfxAPIProvider &provider, SGLContext *pCtx );
 		virtual ~CGfxAPI_GL();
 
 		virtual EGfxAPI getAPI() const override;
@@ -71,9 +71,9 @@ namespace doll
 		virtual Void cmdDraw( ETopology, U32 cVerts, U32 uOffset ) override;
 		virtual Void cmdDrawIndexed( ETopology, U32 cIndices, U32 uOffset, U32 uBias ) override;
 
-		static CGfxAPI_GL *init( OSWindow wnd, const SGfxInitDesc &desc )
+		static CGfxAPI_GL *init( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider )
 		{
-			return gfx__api_init_gl( wnd, desc );
+			return gfx__api_init_gl( wnd, desc, provider );
 		}
 
 	private:

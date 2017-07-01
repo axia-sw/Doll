@@ -11,8 +11,41 @@
 namespace doll
 {
 
-	CGfxAPI_D3D11::CGfxAPI_D3D11( SD3D11Context *pCtx )
-	: m_pCtx( pCtx )
+	class CGfxAPIProvider_D3D11: public IGfxAPIProvider {
+	public:
+		virtual Void drop() override {
+		}
+
+		virtual Bool is( const Str &name ) const override {
+			return
+				name.caseCmp( "dx" ) ||
+				name.caseCmp( "dx11" ) ||
+				name.caseCmp( "d3d" ) ||
+				name.caseCmp( "d3d11" ) ||
+				name.caseCmp( "directx" ) ||
+				name.caseCmp( "directx11" ) ||
+				name.caseCmp( "direct3d" ) ||
+				name.caseCmp( "direct3d11" );
+		}
+		virtual Str getName() const override {
+			return Str( "d3d11" );
+		}
+		virtual Str getDescription() const override {
+			return Str( "Direct3D 11" );
+		}
+		virtual IGfxAPI *initAPI( OSWindow wnd, const SGfxInitDesc &desc ) override {
+			return CGfxAPI_D3D11::init( wnd, desc, *this );
+		}
+		virtual Void finiAPI( IGfxAPI *pAPI ) override {
+			delete pAPI;
+		}
+	};
+	static CGfxAPIProvider_D3D11 direct3D11GfxAPIProvider_;
+	IGfxAPIProvider &direct3D11GfxAPIProvider = direct3D11GfxAPIProvider_;
+
+	CGfxAPI_D3D11::CGfxAPI_D3D11( IGfxAPIProvider &provider, SD3D11Context *pCtx )
+	: IGfxAPI( provider )
+	, m_pCtx( pCtx )
 	{
 		AX_ASSERT_NOT_NULL( pCtx );
 	}
@@ -224,7 +257,7 @@ namespace doll
 		( ( Void )uBias );
 	}
 
-	DOLL_FUNC CGfxAPI_D3D11 *DOLL_API gfx__api_init_d3d11( OSWindow wnd, const SGfxInitDesc &desc )
+	DOLL_FUNC CGfxAPI_D3D11 *DOLL_API gfx__api_init_d3d11( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider )
 	{
 		( ( Void )wnd );
 		( ( Void )desc );

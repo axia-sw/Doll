@@ -13,6 +13,8 @@
 namespace doll
 {
 
+	class IGfxAPIProvider;
+
 	class IGfxAPI;
 
 	class IGfxAPITexture;
@@ -140,9 +142,9 @@ namespace doll
 
 	struct SGfxInitDesc
 	{
-		TArr<EGfxAPI>  apis;
-		EGfxScreenMode windowing;
-		S32            vsync;
+		TArr<IGfxAPIProvider*> apis;
+		EGfxScreenMode         windowing;
+		S32                    vsync;
 	};
 
 	struct SGfxLayoutElement
@@ -200,9 +202,15 @@ namespace doll
 
 	class IGfxAPI
 	{
+		IGfxAPIProvider &m_gfxAPIProvider;
+
 	public:
-		IGfxAPI() {}
+		IGfxAPI( IGfxAPIProvider &provider ): m_gfxAPIProvider( provider ) {}
 		virtual ~IGfxAPI() {}
+
+		IGfxAPIProvider &getAPIProvider() {
+			return m_gfxAPIProvider;
+		}
 
 		virtual EGfxAPI getAPI() const = 0;
 
@@ -253,6 +261,17 @@ namespace doll
 		virtual Void cmdDrawIndexed( ETopology, U32 cIndices, U32 uOffset, U32 uBias ) = 0;
 	};
 
+	class IGfxAPIProvider {
+	public:
+		virtual Void drop() = 0;
+
+		virtual Bool is( const Str &name ) const = 0;
+		virtual Str getName() const = 0;
+		virtual Str getDescription() const = 0;
+		virtual IGfxAPI *initAPI( OSWindow wnd, const SGfxInitDesc &desc ) = 0;
+		virtual Void finiAPI( IGfxAPI *pAPI ) = 0;
+	};
+
 	inline UPtr gfx_r_calcSize( EVectorSize n, EVectorType t )
 	{
 		UPtr baseSize = 0;
@@ -280,6 +299,19 @@ namespace doll
 
 		return baseSize*UPtr(n);
 	}
+
+	enum class EShouldOverrideExistingAPI {
+		no,
+		yes,
+
+		dontCare = yes
+	};
+
+	DOLL_FUNC Bool DOLL_API doll_registerGfxAPI( IGfxAPIProvider &provider, EShouldOverrideExistingAPI = EShouldOverrideExistingAPI::dontCare );
+	DOLL_FUNC Void DOLL_API doll_unregisterGfxAPI( IGfxAPIProvider &provider );
+	DOLL_FUNC IGfxAPIProvider *DOLL_API doll_findGfxAPIByName( const Str &name );
+	DOLL_FUNC SizeType DOLL_API doll_getGfxAPICount();
+	DOLL_FUNC IGfxAPIProvider *DOLL_API doll_getGfxAPI( SizeType index );
 
 	DOLL_FUNC IGfxAPI *DOLL_API gfx_initAPI( OSWindow wnd, const SGfxInitDesc *pDesc = nullptr );
 	DOLL_FUNC NullPtr DOLL_API gfx_finiAPI( IGfxAPI * );

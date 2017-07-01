@@ -10,6 +10,7 @@ namespace doll
 
 	DOLL_FUNC const char *DOLL_API doll_getEngineString();
 
+	DOLL_FUNC Void DOLL_API doll_preInit();
 	DOLL_FUNC Bool DOLL_API doll_init( const SCoreConfig *pConf = nullptr );
 	DOLL_FUNC Bool DOLL_API doll_initConsoleApp();
 	DOLL_FUNC Void DOLL_API doll_fini();

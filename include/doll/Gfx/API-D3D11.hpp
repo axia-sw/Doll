@@ -11,12 +11,12 @@ namespace doll
 	struct SD3D11Context;
 	class CGfxAPI_D3D11;
 
-	DOLL_FUNC CGfxAPI_D3D11 *DOLL_API gfx__api_init_d3d11( OSWindow wnd, const SGfxInitDesc &desc );
+	DOLL_FUNC CGfxAPI_D3D11 *DOLL_API gfx__api_init_d3d11( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider );
 
 	class CGfxAPI_D3D11: public virtual IGfxAPI
 	{
 	public:
-		CGfxAPI_D3D11( SD3D11Context *pCtx );
+		CGfxAPI_D3D11( IGfxAPIProvider &provider, SD3D11Context *pCtx );
 		virtual ~CGfxAPI_D3D11();
 
 		virtual EGfxAPI getAPI() const override;
@@ -67,12 +67,12 @@ namespace doll
 		virtual Void cmdDraw( ETopology, U32 cVerts, U32 uOffset ) override;
 		virtual Void cmdDrawIndexed( ETopology, U32 cIndices, U32 uOffset, U32 uBias ) override;
 
-		static CGfxAPI_D3D11 *init( OSWindow wnd, const SGfxInitDesc &desc )
+		static CGfxAPI_D3D11 *init( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider )
 		{
 #ifdef __clang__ // warning: private field 'm_pCtx' is not used
 			((void)(((CGfxAPI_D3D11*)0)->m_pCtx));
 #endif
-			return gfx__api_init_d3d11( wnd, desc );
+			return gfx__api_init_d3d11( wnd, desc, provider );
 		}
 
 	private:

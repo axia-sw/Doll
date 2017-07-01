@@ -855,17 +855,30 @@ namespace doll
 	{
 		SGfxInitDesc desc;
 
-		desc.apis = TArr<EGfxAPI>(); // FIXME: Parse `conf.video.szAPIs`
+		TSmallArr<IGfxAPIProvider*,4> configAPIs;
+		do {
+			TSmallArr<Str,4> splitAPIs;
+			Str(conf.video.szAPIs).splitLinesTo( splitAPIs );
+			for( const Str &apiName : splitAPIs ) {
+				DOLL_TRACE( axf( "Got API name \"%.*s\"", apiName.lenInt(), apiName.get() ) );
+
+				IGfxAPIProvider *const pAPIProvider = doll_findGfxAPIByName( apiName );
+				if( !pAPIProvider ) {
+					basicErrorf( "API not found: \"%.*s\"", apiName.lenInt(), apiName.get() );
+					continue;
+				}
+
+				if( !AX_VERIFY_MEMORY( configAPIs.tryAppend( pAPIProvider ) ) ) {
+					return false;
+				}
+			}
+		} while( false );
+
+		desc.apis = configAPIs;
 		desc.windowing = conf.video.getScreenMode();
 		desc.vsync = conf.video.iVsync;
 
-		const OSWindow gfxwnd =
-#if DOLL__USE_GLFW && 0 // FIXME: Why was this here?
-			OSWindow(0)
-#else
-			(OSWindow)g_core.view.window
-#endif
-			;
+		const OSWindow gfxwnd = (OSWindow)g_core.view.window;
 
 		axpf("gfx: Trying initAPI\n");
 		if( !AX_VERIFY_MSG( g_core.view.pGfxAPI = gfx_initAPI( gfxwnd, &desc ), "Failed to initialize graphics" ) ) {
@@ -949,6 +962,23 @@ namespace doll
 		snd_fini();
 	}
 
+#if DOLL_GFX_DIRECT3D11_ENABLED
+	extern IGfxAPIProvider &direct3D11GfxAPIProvider;
+#endif
+#if DOLL_GFX_OPENGL_ENABLED
+	extern IGfxAPIProvider &openGLGfxAPIProvider;
+#endif
+
+	DOLL_FUNC Void DOLL_API doll_preInit()
+	{
+#if DOLL_GFX_DIRECT3D11_ENABLED
+		doll_registerGfxAPI( direct3D11GfxAPIProvider );
+#endif
+#if DOLL_GFX_OPENGL_ENABLED
+		doll_registerGfxAPI( openGLGfxAPIProvider );
+#endif
+	}
+
 // Not entirely clear why this is necessary on not-Windows...
 //
 // Removing this snippet of preprocessor hackery will result in `Bool` suddenly
@@ -960,6 +990,8 @@ namespace doll
 
 	DOLL_FUNC Bool DOLL_API doll_init( const SCoreConfig *pConf )
 	{
+		doll_preInit();
+
 		AX_ASSERT( g_core.notInitialized() );
 
 		g_DebugLog += doll_getEngineString();

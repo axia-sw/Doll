@@ -20,6 +20,33 @@
 namespace doll
 {
 
+	class CGfxAPIProvider_GL: public IGfxAPIProvider {
+	public:
+		virtual Void drop() override {
+		}
+
+		virtual Bool is( const Str &name ) const override {
+			return
+				name.caseCmp( "gl" ) ||
+				name.caseCmp( "ogl" ) ||
+				name.caseCmp( "opengl" );
+		}
+		virtual Str getName() const override {
+			return Str( "gl" );
+		}
+		virtual Str getDescription() const override {
+			return Str( "OpenGL" );
+		}
+		virtual IGfxAPI *initAPI( OSWindow wnd, const SGfxInitDesc &desc ) override {
+			return CGfxAPI_GL::init( wnd, desc, *this );
+		}
+		virtual Void finiAPI( IGfxAPI *pAPI ) override {
+			delete pAPI;
+		}
+	};
+	static CGfxAPIProvider_GL openGLGfxAPIProvider_;
+	IGfxAPIProvider &openGLGfxAPIProvider = openGLGfxAPIProvider_;
+	
 	void gl_CheckError_( const char *file, int line )
 	{
 		const char *err;
@@ -120,11 +147,12 @@ namespace doll
 		return ( GLenum )( base + bias );
 	}
 
-	CGfxAPI_GL::CGfxAPI_GL( SGLContext *pCtx )
+	CGfxAPI_GL::CGfxAPI_GL( IGfxAPIProvider &provider, SGLContext *pCtx )
+	: IGfxAPI( provider )
 #if DOLL__USE_GLFW
-	: m_pCtx( g_core.view.window )
+	, m_pCtx( g_core.view.window )
 #else
-	: m_pCtx( pCtx )
+	, m_pCtx( pCtx )
 #endif
 	{
 #if DOLL__USE_GLFW
@@ -785,7 +813,7 @@ namespace doll
 		g_ErrorLog[ kLog_GfxAPIDrv ] += axf( "GL: %s: %s", title, message );
 	}
 
-	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc )
+	DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDesc &desc, IGfxAPIProvider &provider )
 	{
 		DOLL_TRACE( axf( "wnd=%p, desc=%p", (void*)wnd, (void*)&desc ) );
 #if DOLL__USE_GLFW
@@ -939,7 +967,7 @@ namespace doll
 		SGLContext *const pCtx = nullptr;
 #endif
 
-		CGfxAPI_GL *const pGLAPI = new CGfxAPI_GL( pCtx );
+		CGfxAPI_GL *const pGLAPI = new CGfxAPI_GL( provider, pCtx );
 		if( !AX_VERIFY_MEMORY( pGLAPI ) ) {
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
