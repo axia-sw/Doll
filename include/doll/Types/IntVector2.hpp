@@ -183,4 +183,100 @@ namespace doll {
 	inline SIntVector2 operator<<( S32 a, const SIntVector2 &b ) { return SIntVector2( a ) << b; }
 	inline SIntVector2 operator>>( S32 a, const SIntVector2 &b ) { return SIntVector2( a ) >> b; }
 
+	typedef SIntVector2 SPos2D;
+
+	struct SRes2D: public SIntVector2 {
+		inline SRes2D()
+		: SIntVector2()
+		{
+		}
+		inline SRes2D( S32 value )
+		: SIntVector2( value )
+		{
+		}
+		inline SRes2D( S32 x, S32 y )
+		: SIntVector2( x, y )
+		{
+		}
+		inline SRes2D( const SIntVector2 &other )
+		: SIntVector2( other )
+		{
+		}
+
+		inline SRes2D &clampMe( const SIntVector2 &min, const SIntVector2 &max )
+		{
+			if( x < min.x ) { x = min.x; }
+			if( y < min.y ) { y = min.y; }
+
+			if( x > max.x ) { x = max.x; }
+			if( y > max.y ) { y = max.y; }
+
+			return *this;
+		}
+		inline SRes2D clamped( const SIntVector2 &min, const SIntVector2 &max ) const
+		{
+			return SIntVector2( *this ).clampMe( min, max );
+		}
+
+		inline SRes2D &clampMe( const SRect &bounds ) {
+			SIntVector2::clampMe( bounds );
+			return *this;
+		}
+		inline SRes2D clamped( const SRect &bounds ) const {
+			return SRes2D( *this ).clampMe( bounds );
+		}
+
+		/*! Perform a resize with a given aspect adjustment */
+		inline SRes2D &aspectResizeMe( const SIntVector2 &Size, double fAspectRatio, EAspect Aspect = EAspect::Fit ) {
+			SIntVector2::aspectResizeMe( Size, fAspectRatio, Aspect );
+			return *this;
+		}
+		/*! Return a duplicate of this vector resized with the given aspect adjustment */
+		inline SRes2D aspectResized( const SIntVector2 &Size, double fAspectRatio, EAspect Aspect = EAspect::Fit ) const {
+			return SIntVector2::aspectResized( Size, fAspectRatio, Aspect );
+		}
+
+		inline SRes2D operator+( const SIntVector2 &v ) const { return SRes2D( x + v.x, y + v.y ); }
+		inline SRes2D operator-( const SIntVector2 &v ) const { return SRes2D( x - v.x, y - v.y ); }
+		inline SRes2D operator*( const SIntVector2 &v ) const { return SRes2D( x * v.x, y * v.y ); }
+		inline SRes2D operator/( const SIntVector2 &v ) const { return SRes2D( x / v.x, y / v.y ); }
+		inline SRes2D operator%( const SIntVector2 &v ) const { return SRes2D( x % v.x, y % v.y ); }
+		inline SRes2D operator|( const SIntVector2 &v ) const { return SRes2D( x | v.x, y | v.y ); }
+		inline SRes2D operator&( const SIntVector2 &v ) const { return SRes2D( x & v.x, y & v.y ); }
+		inline SRes2D operator^( const SIntVector2 &v ) const { return SRes2D( x ^ v.x, y ^ v.y ); }
+		inline SRes2D operator<<( const SIntVector2 &v ) const { return SRes2D( x << v.x, y << v.y ); }
+		inline SRes2D operator>>( const SIntVector2 &v ) const { return SRes2D( x >> v.x, y >> v.y ); }
+
+		inline SRes2D operator~() const { return SRes2D( ~x, ~y ); }
+		inline SRes2D operator-() const { return SRes2D( -x, -y ); }
+
+		inline SRes2D &operator+=( const SIntVector2 &v ) { *this = *this + v; return *this; }
+		inline SRes2D &operator-=( const SIntVector2 &v ) { *this = *this - v; return *this; }
+		inline SRes2D &operator*=( const SIntVector2 &v ) { *this = *this * v; return *this; }
+		inline SRes2D &operator/=( const SIntVector2 &v ) { *this = *this / v; return *this; }
+		inline SRes2D &operator%=( const SIntVector2 &v ) { *this = *this % v; return *this; }
+		inline SRes2D &operator|=( const SIntVector2 &v ) { *this = *this | v; return *this; }
+		inline SRes2D &operator&=( const SIntVector2 &v ) { *this = *this & v; return *this; }
+		inline SRes2D &operator^=( const SIntVector2 &v ) { *this = *this ^ v; return *this; }
+		inline SRes2D &operator<<=( const SIntVector2 &v ) { *this = *this << v; return *this; }
+		inline SRes2D &operator>>=( const SIntVector2 &v ) { *this = *this >> v; return *this; }
+	};
+	inline bool operator==( S32 a, const SRes2D &b ) { return SRes2D( a ) == b; }
+	inline bool operator!=( S32 a, const SRes2D &b ) { return SRes2D( a ) != b; }
+	inline bool operator<( S32 a, const SRes2D &b ) { return SRes2D( a ) < b; }
+	inline bool operator>( S32 a, const SRes2D &b ) { return SRes2D( a ) > b; }
+	inline bool operator<=( S32 a, const SRes2D &b ) { return SRes2D( a ) <= b; }
+	inline bool operator>=( S32 a, const SRes2D &b ) { return SRes2D( a ) >= b; }
+
+	inline SRes2D operator+( S32 a, const SRes2D &b ) { return SRes2D( a ) + b; }
+	inline SRes2D operator-( S32 a, const SRes2D &b ) { return SRes2D( a ) - b; }
+	inline SRes2D operator*( S32 a, const SRes2D &b ) { return SRes2D( a ) * b; }
+	inline SRes2D operator/( S32 a, const SRes2D &b ) { return SRes2D( a ) / b; }
+	inline SRes2D operator%( S32 a, const SRes2D &b ) { return SRes2D( a ) % b; }
+	inline SRes2D operator|( S32 a, const SRes2D &b ) { return SRes2D( a ) | b; }
+	inline SRes2D operator&( S32 a, const SRes2D &b ) { return SRes2D( a ) & b; }
+	inline SRes2D operator^( S32 a, const SRes2D &b ) { return SRes2D( a ) ^ b; }
+	inline SRes2D operator<<( S32 a, const SRes2D &b ) { return SRes2D( a ) << b; }
+	inline SRes2D operator>>( S32 a, const SRes2D &b ) { return SRes2D( a ) >> b; }
+
 }

@@ -34,6 +34,20 @@ namespace doll {
 		, y2( y2 )
 		{
 		}
+		inline SRect( const SRes2D &res )
+		: x1( 0 )
+		, y1( 0 )
+		, x2( res.w )
+		, y2( res.h )
+		{
+		}
+		inline SRect( const SPos2D &pos, const SRes2D &res )
+		: x1( pos.x )
+		, y1( pos.y )
+		, x2( pos.x + res.w )
+		, y2( pos.y + res.h )
+		{
+		}
 		inline SRect( const SBox & );
 		inline SRect( const SIntVector2 &topLeft, const SIntVector2 &bottomRight )
 		: x1( topLeft.x )
@@ -113,7 +127,7 @@ namespace doll {
 			return *this;
 		}
 		/*! Center this rectangle on an arbitrary point */
-		inline SRect &centerMe( const SIntVector2 &at )
+		inline SRect &centerMe( const SPos2D &at )
 		{
 			return positionMe( at - size()/2 );
 		}
@@ -123,45 +137,45 @@ namespace doll {
 			return SRect( *this ).centerMe( within );
 		}
 		/*! Creates a rectangle that matches the current rectangle centered on a point */
-		inline SRect centered( const SIntVector2 &at ) const
+		inline SRect centered( const SPos2D &at ) const
 		{
 			return SRect( *this ).centerMe( at );
 		}
 
 		/*! Retrieve the top-left point as a vector */
-		inline SIntVector2 topLeft() const
+		inline SPos2D topLeft() const
 		{
-			return SIntVector2( x1, y1 );
+			return SPos2D( x1, y1 );
 		}
 		/*! Retrieve the top-right point as a vector */
-		inline SIntVector2 topRight() const
+		inline SPos2D topRight() const
 		{
-			return SIntVector2( x2, y1 );
+			return SPos2D( x2, y1 );
 		}
 		/*! Retrieve the bottom-right point as a vector */
-		inline SIntVector2 bottomRight() const
+		inline SPos2D bottomRight() const
 		{
-			return SIntVector2( x2, y2 );
+			return SPos2D( x2, y2 );
 		}
 		/* Retrieve the bottom-left point as a vector */
-		inline SIntVector2 bottomLeft() const
+		inline SPos2D bottomLeft() const
 		{
-			return SIntVector2( x1, y2 );
+			return SPos2D( x1, y2 );
 		}
 		/*! Retrieve the center of this rectangle as a vector */
-		inline SIntVector2 center() const
+		inline SPos2D center() const
 		{
-			return SIntVector2( x1 + ( x2 - x1 ), y1 + ( y2 - y1 ) );
+			return SPos2D( x1 + ( x2 - x1 ), y1 + ( y2 - y1 ) );
 		}
 		/*! Retrieve the position of this rectangle as a vector (top left) */
-		inline SIntVector2 origin() const
+		inline SPos2D origin() const
 		{
-			return SIntVector2( x1, y1 );
+			return SPos2D( x1, y1 );
 		}
 		/*! Retrieve the size of this rectangle as a vector */
-		inline SIntVector2 size() const
+		inline SRes2D size() const
 		{
-			return SIntVector2( x2 - x1, y2 - y1 );
+			return SRes2D( x2 - x1, y2 - y1 );
 		}
 		/*! Determine whether a given point is inside this rectangle */
 		inline bool contains( const SIntVector2 &v ) const
@@ -241,8 +255,10 @@ namespace doll {
 
 		/*! Retrieve the width of this rectangle. Same as resX(). */
 		inline S32 width() const { return x2 - x1; }
+		inline S32 w() const { return x2 - x1; }
 		/*! Retrieve the height of this rectangle. Same as resY(). */
 		inline S32 height() const { return y2 - y1; }
+		inline S32 h() const { return y2 - y1; }
 
 		/*! Retrieve the x-resolution of this rectangle. Same as width(). */
 		inline S32 resX() const { return x2 - x1; }
@@ -251,8 +267,24 @@ namespace doll {
 
 		/*! Retrieve the x-origin of this rectangle. */
 		inline S32 posX() const { return x1; }
+		inline S32 x() const { return x1; }
 		/*! Retrieve the y-origin of this rectangle. */
 		inline S32 posY() const { return y1; }
+		inline S32 y() const { return y1; }
+
+		/*! Retrieve the left coordinate of this rectangle */
+		inline S32 left() const { return x(); }
+		/*! Retrieve the top coordinate of this rectangle */
+		inline S32 top() const { return y(); }
+		/*! Retrieve the right coordinate of this rectangle */
+		inline S32 right() const { return x() + w(); }
+		/*! Retrieve the bottom coordinate of this rectangle */
+		inline S32 bottom() const { return y() + h(); }
+
+		/*! Calculate the perimeter of this rectangle */
+		inline S32 perimeter() const { return w()*2 + h()*2; }
+		/*! Calculate the area of this rectangle */
+		inline S32 area() const { return w()*h(); }
 
 		inline bool operator==( const SRect &Other ) const
 		{
