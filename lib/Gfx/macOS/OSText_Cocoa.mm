@@ -58,6 +58,7 @@ namespace doll { namespace macOS {
 	CocoaFont::CocoaFont()
 	: m_font( nullptr )
 	, m_attribs( nullptr )
+	, m_paragraphStyle( nullptr )
 	{
 		DOLL_TRACE( "CocoaFont::CocoaFont()" );
 
