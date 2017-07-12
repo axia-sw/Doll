@@ -3,7 +3,7 @@
 #include "../Core/Defs.hpp"
 #include "../Core/Memory.hpp"
 #include "../Core/MemoryTags.hpp"
-#include "API-GL.hpp"
+#include "API.hpp"
 
 namespace doll
 {
