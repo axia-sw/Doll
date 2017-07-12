@@ -222,6 +222,12 @@ namespace doll
 			}
 		}
 
+		//! Move relative to the current position
+		inline Void move( const SIntVector2 &deltaPos )
+		{
+			setPosition( getPosition() + deltaPos );
+		}
+
 		//! Retrieve the widget's parent widget (or `nullptr` if no parent)
 		inline IWidget *getParent() const
 		{
