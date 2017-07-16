@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "doll/Core/Defs.hpp"
-#include "doll/Types/IntVector2.hpp"
+#include "doll/Math/IntVector2.hpp"
 
 namespace doll { namespace macOS {
 

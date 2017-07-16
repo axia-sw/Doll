@@ -344,8 +344,10 @@ set(DOLLHEADERS_Math
 	include/doll/Math/Const.hpp
 	include/doll/Math/HalfFloat.hpp
 	include/doll/Math/Intrinsics.hpp
+	include/doll/Math/IntVector2.hpp
 	include/doll/Math/Math.hpp
 	include/doll/Math/Matrix.hpp
+	include/doll/Math/Rect.hpp
 	include/doll/Math/SIMD.hpp
 	include/doll/Math/Types.hpp
 	include/doll/Math/Vector.hpp
@@ -387,8 +389,6 @@ set(DOLLHEADERS_Snd
 	include/doll/Snd/WaveFmt.hpp
 )
 set(DOLLHEADERS_Types
-	include/doll/Types/IntVector2.hpp
-	include/doll/Types/Rect.hpp
 )
 set(DOLLHEADERS_Util
 	include/doll/Util/ByteSwap.hpp

@@ -4,8 +4,8 @@
 #include "../Core/Memory.hpp"
 #include "../Core/MemoryTags.hpp"
 
-#include "../Types/IntVector2.hpp"
-#include "../Types/Rect.hpp"
+#include "../Math/IntVector2.hpp"
+#include "../Math/Rect.hpp"
 
 #include "PrimitiveBuffer.hpp"
 #include "LayerEffect.hpp"

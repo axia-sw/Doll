@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Core/Defs.hpp"
-#include "../Types/IntVector2.hpp"
-#include "../Types/Rect.hpp"
+#include "../Math/IntVector2.hpp"
+#include "../Math/Rect.hpp"
 
 namespace doll
 {
