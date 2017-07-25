@@ -166,14 +166,14 @@ namespace doll {
 	inline tInt bitRotateLeft( tInt x, tInt y )
 	{
 		static_assert( TIsInt< tInt >::value, "Integer type required" );
-		return ( x << y ) | bitShiftRightU( x, sizeof( x )*8 - y );
+		return ( x << y ) | bitShiftRightU( x, tInt( sizeof( x )*8 - y ) );
 	}
 	/// Rotate a field of bits right
 	template< typename tInt >
 	inline tInt bitRotateRight( tInt x, tInt y )
 	{
 		static_assert( TIsInt< tInt >::value, "Integer type required" );
-		return bitShiftRightU( x, y ) | ( x << ( sizeof( x )*8 - y ) );
+		return bitShiftRightU( x, y ) | tInt( x << ( sizeof( x )*8 - y ) );
 	}
 	/// Count the number of set bits
 	template< typename tInt >
