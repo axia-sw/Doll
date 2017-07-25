@@ -388,8 +388,6 @@ set(DOLLHEADERS_Snd
 	include/doll/Snd/WaveFile.hpp
 	include/doll/Snd/WaveFmt.hpp
 )
-set(DOLLHEADERS_Types
-)
 set(DOLLHEADERS_Util
 	include/doll/Util/ByteSwap.hpp
 	include/doll/Util/Casting.hpp
@@ -417,7 +415,6 @@ set(DOLLHEADERS
 	${DOLLHEADERS_OS}
 	${DOLLHEADERS_Script}
 	${DOLLHEADERS_Snd}
-	${DOLLHEADERS_Types}
 	${DOLLHEADERS_Util}
 	${DOLLHEADERS_UX}
 )
@@ -573,7 +570,6 @@ set(HeaderComponents_
 	"OS"
 	"Script"
 	"Snd"
-	"Types"
 	"Util"
 	"UX"
 )
