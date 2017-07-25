@@ -86,6 +86,17 @@ namespace doll
 	{
 	}
 
+	IGfxAPISampler *CGfxAPI_D3D11::createSampler( const SGfxSamplerDesc &desc )
+	{
+		( ( Void )desc );
+
+		return nullptr;
+	}
+	Void CGfxAPI_D3D11::destroySampler( IGfxAPISampler *pSampler )
+	{
+		( ( Void )pSampler );
+	}
+
 	IGfxAPITexture *CGfxAPI_D3D11::createTexture( ETextureFormat fmt, U16 resX, U16 resY, const U8 *pData )
 	{
 		( ( Void )fmt );
@@ -186,6 +197,11 @@ namespace doll
 	Void CGfxAPI_D3D11::tsBindTexture( IGfxAPITexture *pTex, U32 uStage )
 	{
 		( ( Void )pTex );
+		( ( Void )uStage );
+	}
+	Void CGfxAPI_D3D11::tsBindSampler( IGfxAPISampler *pSampler, U32 uStage )
+	{
+		( ( Void )pSampler );
 		( ( Void )uStage );
 	}
 	Void CGfxAPI_D3D11::iaBindVBuffer( IGfxAPIVBuffer *pVBuf )

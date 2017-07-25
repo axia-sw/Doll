@@ -21,6 +21,7 @@ namespace doll
 	class IGfxAPIVBuffer;
 	class IGfxAPIIBuffer;
 	class IGfxAPIVLayout;
+	class IGfxAPISampler;
 
 	enum EGfxAPI
 	{
@@ -85,6 +86,45 @@ namespace doll
 		kTexFmtRGB8
 	};
 
+	enum ETextureFilter
+	{
+		kTexFilterNearest,
+		kTexFilterLinear
+	};
+	enum EMipmapMode
+	{
+		kMipmapNearest,
+		kMipmapLinear
+	};
+
+	enum ETextureWrap
+	{
+		kTexWrapRepeat,
+		kTexWrapMirror,
+		kTexWrapClamp,
+		kTexWrapBorder
+	};
+
+	enum ETextureBorder
+	{
+		kTexBorderTransparentBlack,
+		kTexBorderTransparentWhite,
+		kTexBorderOpaqueBlack,
+		kTexBorderOpaqueWhite
+	};
+
+	enum EGfxCompareOp
+	{
+		kGfxCmpNever,
+		kGfxCmpLess,
+		kGfxCmpEqual,
+		kGfxCmpLessOrEqual,
+		kGfxCmpGreater,
+		kGfxCmpNotEqual,
+		kGfxCmpGreaterOrEqual,
+		kGfxCmpAlways
+	};
+
 	enum EGfxLayoutElement
 	{
 		kGfxLayoutElementVertex,
@@ -145,6 +185,24 @@ namespace doll
 		TArr<IGfxAPIProvider*> apis;
 		EGfxScreenMode         windowing;
 		S32                    vsync;
+	};
+
+	struct SGfxSamplerDesc
+	{
+		ETextureFilter magFilter;
+		ETextureFilter minFilter;
+		EMipmapMode    mipmapMode;
+		ETextureWrap   wrapU;
+		ETextureWrap   wrapV;
+		ETextureWrap   wrapW;
+		F32            mipLodBias;
+		F32            minLod;
+		F32            maxLod;
+		Bool           anisotropyEnable;
+		F32            maxAnisotropy;
+		Bool           compareEnable;
+		EGfxCompareOp  compareOp;
+		ETextureBorder borderColor;
 	};
 
 	struct SGfxLayoutElement
@@ -223,6 +281,9 @@ namespace doll
 
 		virtual Void wsiPresent() = 0;
 
+		virtual IGfxAPISampler *createSampler( const SGfxSamplerDesc &desc ) = 0;
+		virtual Void destroySampler( IGfxAPISampler * ) = 0;
+
 		virtual IGfxAPITexture *createTexture( ETextureFormat fmt, U16 resX, U16 resY, const U8 *pData ) = 0;
 		virtual Void destroyTexture( IGfxAPITexture * ) = 0;
 
@@ -247,6 +308,7 @@ namespace doll
 		virtual Void iaSetLayout( IGfxAPIVLayout * ) = 0;
 
 		virtual Void tsBindTexture( IGfxAPITexture *, U32 uStage ) = 0;
+		virtual Void tsBindSampler( IGfxAPISampler *, U32 uStage ) = 0;
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) = 0;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) = 0;
 

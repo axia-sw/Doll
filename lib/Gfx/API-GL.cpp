@@ -246,6 +246,17 @@ namespace doll
 #endif
 	}
 
+	IGfxAPISampler *CGfxAPI_GL::createSampler( const SGfxSamplerDesc &desc )
+	{
+		( ( Void )desc );
+
+		return nullptr;
+	}
+	Void CGfxAPI_GL::destroySampler( IGfxAPISampler *pSampler )
+	{
+		( ( Void )pSampler );
+	}
+
 	IGfxAPITexture *CGfxAPI_GL::createTexture( ETextureFormat fmt, U16 resX, U16 resY, const U8 *pData )
 	{
 		TMutArr<U8> emptyData;
@@ -643,6 +654,11 @@ namespace doll
 		glActiveTexture( GL_TEXTURE0 + uStage );
 		glBindTexture( GL_TEXTURE_2D, ( GLuint )( UPtr )tex );
 		CHECKGL();
+	}
+	Void CGfxAPI_GL::tsBindSampler( IGfxAPISampler *pSampler, U32 uStage )
+	{
+		( ( Void )pSampler );
+		( ( Void )uStage );
 	}
 	Void CGfxAPI_GL::iaBindVBuffer( IGfxAPIVBuffer *vb )
 	{

@@ -30,6 +30,9 @@ namespace doll
 
 		virtual Void wsiPresent() override;
 
+		virtual IGfxAPISampler *createSampler( const SGfxSamplerDesc &desc ) override;
+		virtual Void destroySampler( IGfxAPISampler * ) override;
+
 		virtual IGfxAPITexture *createTexture( ETextureFormat fmt, U16 resX, U16 resY, const U8 *pData ) override;
 		virtual Void destroyTexture( IGfxAPITexture * ) override;
 
@@ -54,6 +57,7 @@ namespace doll
 		virtual Void iaSetLayout( IGfxAPIVLayout * ) override;
 
 		virtual Void tsBindTexture( IGfxAPITexture *, U32 uStage ) override;
+		virtual Void tsBindSampler( IGfxAPISampler *, U32 uStage ) override;
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) override;
 
