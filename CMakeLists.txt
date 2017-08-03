@@ -596,7 +596,7 @@ foreach(component_ IN ITEMS ${SourceComponents_})
 	source_group("src\\${component_}" FILES ${DOLLSOURCES_${component_}})
 endforeach()
 
-source_group(TREE "${CMAKE_BINARY_DIR}/include/doll" PREFIX "src\\.gen" FILES ${DOLLHEADERS_PRIVATE})
+# source_group(TREE "${CMAKE_BINARY_DIR}/include/doll" PREFIX "src\\.gen" FILES ${DOLLHEADERS_PRIVATE})
 
 set_source_files_properties(${GLEWSOURCES} PROPERTIES LANGUAGE C)
 set_source_files_properties(${PNGSOURCES} PROPERTIES LANGUAGE C)
@@ -667,8 +667,23 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	)
 else()
 	target_link_libraries(Doll
-		PUBLIC pthread
+		PUBLIC "-lm"
 		PUBLIC "-lrt"
+		PUBLIC "-ldl"
+		PUBLIC "-lXrandr"
+		PUBLIC "-lXrender"
+		PUBLIC "-lXi"
+		PUBLIC "-lXfixes"
+		PUBLIC "-lXxf86vm"
+		PUBLIC "-lXext"
+		PUBLIC "-lX11"
+		PUBLIC "-lpthread"
+		PUBLIC "-lxcb"
+		PUBLIC "-lXau"
+		PUBLIC "-lXdmcp"
+		PUBLIC "-lXcursor"
+		PUBLIC "-lXinerama"
+		PUBLIC "-lGL"
 	)
 endif()
 

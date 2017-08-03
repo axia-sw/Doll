@@ -16,6 +16,10 @@
 # include <sys/uio.h>
 # include <sys/stat.h>
 # include <sys/types.h>
+# ifdef __linux__
+#  include <sys/file.h>
+// FIXME: Use flock(2) as appropriate
+# endif
 #endif
 
 #include "doll/IO/SysFS.hpp"
@@ -579,14 +583,18 @@ namespace doll
 			return EFileOpenResult::InvalidFilename;
 		}
 
+# ifdef O_EXLOCK
 		// FIXME: No direct semantic equivalent for flock(2) mechanism (O_SHLOCK, O_EXLOCK)
 		// Just rigging it for now
 		if( flags & kFileOpenF_ExcludeR ) {
 			oflags |= O_EXLOCK;
 		}
+# endif
+# ifdef O_SHLOCK
 		if( flags & kFileOpenF_ShareW ) {
 			oflags |= O_SHLOCK;
 		}
+# endif
 
 		if( ( flags & kFileOpen_CreateMask ) == 0 ) {
 			switch( flags & kFileOpen_AccessMask ) {
