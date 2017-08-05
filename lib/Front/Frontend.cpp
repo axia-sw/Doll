@@ -880,19 +880,19 @@ namespace doll
 
 		const OSWindow gfxwnd = (OSWindow)g_core.view.window;
 
-		axpf("gfx: Trying initAPI\n");
+		DOLL_TRACE("gfx: Trying initAPI");
 		if( !AX_VERIFY_MSG( g_core.view.pGfxAPI = gfx_initAPI( gfxwnd, &desc ), "Failed to initialize graphics" ) ) {
 			return false;
 		}
 
-		axpf("gfx: Trying newCGfxFrame\n");
+		DOLL_TRACE("gfx: Trying newCGfxFrame");
 		g_core.view.pGfxFrame = new CGfxFrame( *g_core.view.pGfxAPI );
 		if( !AX_VERIFY_MEMORY( g_core.view.pGfxFrame ) ) {
 			g_core.view.pGfxAPI = gfx_finiAPI( g_core.view.pGfxAPI );
 			return false;
 		}
 
-		axpf("gfx: Trying CGfxFrame::getMemVBuf\n");
+		DOLL_TRACE("gfx: Trying CGfxFrame::getMemVBuf");
 		if( !AX_VERIFY_MEMORY( g_core.view.pGfxFrame->getMemVBuf( 2*1024*1024 ) ) ) {
 			delete g_core.view.pGfxFrame;
 			g_core.view.pGfxFrame = nullptr;
@@ -900,11 +900,11 @@ namespace doll
 			return false;
 		}
 
-		axpf("gfx: layerMgr->setDefaultFrame\n");
+		DOLL_TRACE("gfx: layerMgr->setDefaultFrame");
 		g_layerMgr->setDefaultFrame( g_core.view.pGfxFrame );
 		gfx_r_setFrame( g_core.view.pGfxFrame );
 
-		axpf("gfx: Set aspect\n");
+		DOLL_TRACE("gfx: Set aspect");
 		gfx_setCurrentLayer( gfx_getDefaultLayer() );
 		gfx_getDefaultLayer()->setGLFrame( gfx_r_getFrame() );
 
@@ -912,7 +912,7 @@ namespace doll
 
 		gfx_setLayerSize( gfx_getDefaultLayer(), g_core.view.pGfxFrame->getResX(), g_core.view.pGfxFrame->getResY() );
 
-		axpf("gfx: spritemgr::init_gl\n");
+		DOLL_TRACE("gfx: spritemgr::init_gl");
 		if( !AX_VERIFY_MSG( g_spriteMgr.init_gl(), "Failed to initialize sprite system" ) ) {
 			delete g_core.view.pGfxFrame;
 			g_core.view.pGfxFrame = nullptr;
@@ -922,16 +922,16 @@ namespace doll
 		}
 
 #if DOLL__USE_GLFW
-		axpf("gfx: glfw: Resize properly\n");
+		DOLL_TRACE("gfx: glfw: Resize properly");
 		do {
 			int w = 0, h = 0;
 			glfwGetWindowSize( g_core.view.window, &w, &h );
-			axpf( "gfx: glfw: got %i x %i\n", w, h);
+			DOLL_TRACE( axf( "gfx: glfw: got %i x %i", w, h ) );
 			glfw_onSized_f( g_core.view.window, w, h );
 		} while( false );
 #endif
 
-		axpf("gfx: done\n");
+		DOLL_TRACE("gfx: done");
 		return true;
 	}
 	static Void doll__gfx_fini()
@@ -997,30 +997,26 @@ namespace doll
 		g_DebugLog += doll_getEngineString();
 
 		SCoreConfig conf;
-		axpf("Trying sysinit\n");
 		if( !doll__sys_init( conf, pConf ) ) {
 			return false;
 		}
 
-		axpf("Trying wndinit\n");
 		if( !doll__wnd_init( conf ) ) {
 			doll__sys_fini();
 			return false;
 		}
 
-		axpf("Trying gfxinit\n");
 		if( !doll__gfx_init( conf ) ) {
 			doll__wnd_fini();
 			doll__sys_fini();
 			return false;
 		}
 
-		axpf("Trying sndinit\n");
 		if( !doll__snd_init( conf ) ) {
 			g_WarningLog += "Not using sound.";
 		}
 
-		axpf("Making window visible\n");
+		DOLL_TRACE("Making window visible");
 #if DOLL__USE_GLFW
 		glfwShowWindow( g_core.view.window );
 		glfwFocusWindow( g_core.view.window );

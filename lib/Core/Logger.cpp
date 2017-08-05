@@ -67,17 +67,14 @@ namespace doll
 				"(unknown-Severity)";
 			axerrf
 			(
-				"%s from:%i file<%.*s> line:%u column:%u function<%.*s> :: %.*s\n"
+				"%s%s%s%s%s%s :: %.*s\n"
 				, sevMsg
-				, From
-				, file.len()
-				, file.len() > 0 ? file.get() : ""
-				, uLine
-				, uColumn
-				, func.len()
-				, func.len() > 0 ? func.get() : ""
-				, message.len()
-				, message.get()
+				, From != 0 ? axf( " from:%i", From ) : ""
+				, file.isUsed() ? axf( " file<%.*s>", file.lenInt(), file.get() ) : ""
+				, uLine > 0 ? axf( " line:%u", uLine ) : ""
+				, uColumn > 0 ? axf( " column:%u", uColumn ) : ""
+				, func.isUsed() ? axf( " function<%.*s>", func.lenInt(), func.get() ) : ""
+				, message.lenInt(), message.get()
 			);
 		}
 	}
