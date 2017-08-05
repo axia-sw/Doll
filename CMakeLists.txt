@@ -7,7 +7,7 @@ set(GLEWDIR "${EXTDIR}/glew")
 set(PNGDIR "${EXTDIR}/libpng")
 set(ZLIBDIR "${EXTDIR}/zlib")
 set(GLFWDIR "${EXTDIR}/glfw")
-set(AXLIBDIR "${CMAKE_CURRENT_SOURCE_DIR}/../axlib")
+set(AXLIBDIR "${CMAKE_CURRENT_SOURCE_DIR}/../axlib" CACHE STRING "Location of axlib")
 
 set(DollBuildVariantsList_ "DEVELOPMENT;DEBUG;PROFILE;RELEASE")
 
@@ -528,34 +528,40 @@ set(DOLL_ALLSOURCES_HERE
 	${Doll_OS_SPECIFIC_HEADERS}
 )
 
-set(AXLIB_SOURCES
-	${AXLIBDIR}/include/ax_array.hpp
-	${AXLIBDIR}/include/ax_assert.h
-	${AXLIBDIR}/include/ax_config.h
-	${AXLIBDIR}/include/ax_dictionary.hpp
-	${AXLIBDIR}/include/ax_fiber.h
-	${AXLIBDIR}/include/ax_intdatetime.h
-	${AXLIBDIR}/include/ax_list.hpp
-	${AXLIBDIR}/include/ax_logger.h
-	${AXLIBDIR}/include/ax_manager.hpp
-	${AXLIBDIR}/include/ax_memory.h
-	${AXLIBDIR}/include/ax_platform.h
-	${AXLIBDIR}/include/ax_printf.h
-	${AXLIBDIR}/include/ax_string.h
-	${AXLIBDIR}/include/ax_thread.h
-	${AXLIBDIR}/include/ax_time.h
-	${AXLIBDIR}/include/ax_types.h
-	${AXLIBDIR}/include/ax_typetraits.hpp
-	${AXLIBDIR}/include/axlib.h
-	${AXLIBDIR}/include/axlib.hpp
-)
+if(AXLIBDIR STREQUAL "")
+	set(AXLIB_SOURCES)
+else()
+	set(AXLIB_SOURCES
+		${AXLIBDIR}/include/ax_array.hpp
+		${AXLIBDIR}/include/ax_assert.h
+		${AXLIBDIR}/include/ax_config.h
+		${AXLIBDIR}/include/ax_dictionary.hpp
+		${AXLIBDIR}/include/ax_fiber.h
+		${AXLIBDIR}/include/ax_intdatetime.h
+		${AXLIBDIR}/include/ax_list.hpp
+		${AXLIBDIR}/include/ax_logger.h
+		${AXLIBDIR}/include/ax_manager.hpp
+		${AXLIBDIR}/include/ax_memory.h
+		${AXLIBDIR}/include/ax_platform.h
+		${AXLIBDIR}/include/ax_printf.h
+		${AXLIBDIR}/include/ax_string.h
+		${AXLIBDIR}/include/ax_thread.h
+		${AXLIBDIR}/include/ax_time.h
+		${AXLIBDIR}/include/ax_types.h
+		${AXLIBDIR}/include/ax_typetraits.hpp
+		${AXLIBDIR}/include/axlib.h
+		${AXLIBDIR}/include/axlib.hpp
+	)
+endif()
 
 set(DOLL_ALLSOURCES
 	${DOLL_ALLSOURCES_HERE}
 	${AXLIB_SOURCES}
 )
 
-source_group("ext\\axlib" FILES ${AXLIB_SOURCES})
+if(NOT AXLIBDIR STREQUAL "")
+	source_group("ext\\axlib" FILES ${AXLIB_SOURCES})
+endif()
 source_group("ext\\glew" FILES ${GLEWFILES})
 source_group("ext\\libpng" FILES ${PNGFILES})
 source_group("ext\\zlib" FILES ${ZLIBFILES})
@@ -616,11 +622,16 @@ set_target_properties(Doll PROPERTIES
 target_include_directories(
 	Doll
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-	PUBLIC ${AXLIBDIR}/include
 	PRIVATE ${GLEWDIR}/include
 	PRIVATE ${EXTDIR}/STB
 	PRIVATE ${CMAKE_BINARY_DIR}/include
 )
+if(NOT AXLIBDIR STREQUAL "")
+	target_include_directories(
+		Doll
+		PUBLIC ${AXLIBDIR}/include
+	)
+endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	target_include_directories(
 		Doll
