@@ -83,7 +83,9 @@ Build and run with: `g++ -o test-doll test-doll.cpp -lDoll && ./test-doll`
 Output:
 
 <span style="center">
+
 ![Screenshot of quick example program.](docs/g/readme-example-1.png "The example program running.")
+
 </span>
 
 
