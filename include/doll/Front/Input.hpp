@@ -107,7 +107,7 @@ namespace doll
 		return in_getEntry( r, wnd ), r;
 	}
 
-	// Add an input action to the given window (e.g., "Alt+Enter Å® Fullscreen")
+	// Add an input action to the given window (e.g., "Alt+Enter ‚Üí Fullscreen")
 	//
 	// Exact duplicates (within a window's stack) are silently ignored.
 	//
