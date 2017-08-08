@@ -39,7 +39,7 @@ namespace doll
 	{
 		// Sample rate (e.g., 44100Hz or 48000Hz), or 0 for system default
 		U32 cSamplesHz;
-		// Channels (See EChannelBits in "doll-snd-wavefmt.hpp"), or 0 for system default
+		// Channels (See EChannelBits in "WaveFmt.hpp"), or 0 for system default
 		U32 uChannelMask;
 	};
 
