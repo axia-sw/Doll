@@ -65,6 +65,34 @@ namespace doll
 		};
 		return TArr<EShaderFormat>(formats);
 	}
+	TArr<EShaderStage> CGfxAPI_D3D11::getSupportedShaderStages() const
+	{
+		static EShaderStage stagesBuf[6];
+		static TArr<EShaderStage> stages;
+
+		if( stages.isEmpty() ) {
+			Bool supportsTessellation = false;
+			Bool supportsCompute = false;
+			SizeType index = 0;
+
+			stagesBuf[ index++ ] = kShaderStageVertex;
+			stagesBuf[ index++ ] = kShaderStagePixel;
+			stagesBuf[ index++ ] = kShaderStageGeometry;
+
+			if( supportsTessellation ) {
+				stagesBuf[ index++ ] = kShaderStageHull;
+				stagesBuf[ index++ ] = kShaderStageDomain;
+			}
+
+			if( supportsCompute ) {
+				stagesBuf[ index++ ] = kShaderStageCompute;
+			}
+
+			stages = TArr<EShaderStage>( stagesBuf, index );
+		}
+
+		return stages;
+	}
 
 	Void CGfxAPI_D3D11::setDefaultState( const Mat4f &proj )
 	{
@@ -139,6 +167,15 @@ namespace doll
 
 		return nullptr;
 	}
+	IGfxAPIUBuffer *CGfxAPI_D3D11::createUBuffer( UPtr cBytes, const Void *pData, EBufferPerformance performance, EBufferPurpose purpose )
+	{
+		( ( Void )cBytes );
+		( ( Void )pData );
+		( ( Void )performance );
+		( ( Void )purpose );
+
+		return nullptr;
+	}
 	Void CGfxAPI_D3D11::destroyVBuffer( IGfxAPIVBuffer *pVBuf )
 	{
 		( ( Void )pVBuf );
@@ -146,6 +183,50 @@ namespace doll
 	Void CGfxAPI_D3D11::destroyIBuffer( IGfxAPIIBuffer *pIBuf )
 	{
 		( ( Void )pIBuf );
+	}
+	Void CGfxAPI_D3D11::destroyUBuffer( IGfxAPIUBuffer *pUBuf )
+	{
+		( ( Void )pUBuf );
+	}
+
+	IGfxAPIShader *CGfxAPI_D3D11::createShader( Str filename, EShaderFormat fmt, EShaderStage stage, UPtr cBytes, const Void *pData, IGfxDiagnostic *pDiag )
+	{
+		((Void)filename);
+		((Void)fmt);
+		((Void)stage);
+		((Void)cBytes);
+		((Void)pData);
+		((Void)pDiag);
+
+		return nullptr;
+	}
+	IGfxAPIProgram *CGfxAPI_D3D11::createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic *pDiag )
+	{
+		((Void)shaders);
+		((Void)pDiag);
+
+		return nullptr;
+	}
+	Void CGfxAPI_D3D11::destroyShader( IGfxAPIShader *pShader )
+	{
+		((Void)pShader);
+	}
+	Void CGfxAPI_D3D11::destroyProgram( IGfxAPIProgram *pProgram )
+	{
+		((Void)pProgram);
+	}
+	Bool CGfxAPI_D3D11::setCacheDirectory( Str basePath )
+	{
+		((Void)basePath);
+
+		return false;
+	}
+	Str CGfxAPI_D3D11::getCacheDirectory() const
+	{
+		return Str();
+	}
+	Void CGfxAPI_D3D11::invalidateShaderCache()
+	{
 	}
 
 	Void CGfxAPI_D3D11::vsSetProjectionMatrix( const F32 *matrix )
@@ -213,6 +294,13 @@ namespace doll
 		( ( Void )pIBuf );
 	}
 
+	Void CGfxAPI_D3D11::cmdBindProgram( IGfxAPIProgram *pProgram )
+	{
+		((Void)pProgram);
+	}
+	Void CGfxAPI_D3D11::cmdUnbindProgram()
+	{
+	}
 	Void CGfxAPI_D3D11::cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value )
 	{
 		( ( Void )posX );
@@ -244,6 +332,13 @@ namespace doll
 		( ( Void )size );
 		( ( Void )pData );
 	}
+	Void CGfxAPI_D3D11::cmdWriteUBuffer( IGfxAPIUBuffer *pUBuf, UPtr offset, UPtr size, const Void *pData )
+	{
+		((Void)pUBuf);
+		((Void)offset);
+		((Void)size);
+		((Void)pData);
+	}
 	Void CGfxAPI_D3D11::cmdReadVBuffer( IGfxAPIVBuffer *pVBuf, UPtr offset, UPtr size, Void *pData )
 	{
 		( ( Void )pVBuf );
@@ -257,6 +352,13 @@ namespace doll
 		( ( Void )offset );
 		( ( Void )size );
 		( ( Void )pData );
+	}
+	Void CGfxAPI_D3D11::cmdReadUBuffer( IGfxAPIUBuffer *pUBuf, UPtr offset, UPtr size, Void *pData )
+	{
+		((Void)pUBuf);
+		((Void)offset);
+		((Void)size);
+		((Void)pData);
 	}
 
 	Void CGfxAPI_D3D11::cmdDraw( ETopology topology, U32 cVerts, U32 uOffset )

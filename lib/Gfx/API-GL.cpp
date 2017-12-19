@@ -17,8 +17,31 @@
 # include <GLFW/glfw3.h>
 #endif
 
+
+#ifndef GL_TEXTURE_MAX_ANISOTROPY
+# ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#  error Neither GL_TEXTURE_MAX_ANISOTROPY nor GL_TEXTURE_MAX_ANISOTROPY_EXT are defined.
+# endif
+# define GL_TEXTURE_MAX_ANISOTROPY GL_TEXTURE_MAX_ANISOTROPY_EXT
+#endif
+
+#ifndef GL_MIRROR
+# define GL_MIRROR GL_MIRROR_CLAMP_EXT
+#endif
+
 namespace doll
 {
+
+	template<typename T>
+	constexpr T *objectToPointer( GLuint obj )
+	{
+		return reinterpret_cast< T * >( static_cast< UPtr >( obj ) );
+	}
+	template<typename T>
+	constexpr GLuint pointerToObject( T *ptr )
+	{
+		return static_cast< GLuint >( reinterpret_cast< UPtr >( ptr ) );
+	}
 
 	class CGfxAPIProvider_GL: public IGfxAPIProvider {
 	public:
@@ -177,6 +200,10 @@ namespace doll
 		};
 		return TArr<EShaderFormat>(formats);
 	}
+	TArr<EShaderStage> CGfxAPI_GL::getSupportedShaderStages() const
+	{
+		//
+	}
 
 	Void CGfxAPI_GL::setDefaultState( const Mat4f &proj )
 	{
@@ -246,15 +273,149 @@ namespace doll
 #endif
 	}
 
+	static GLenum getMipFilter( ETextureFilter f, EMipmapMode m )
+	{
+		switch( m ) {
+		case kMipmapNone:
+			switch( f ) {
+			case kTexFilterNearest: return GL_NEAREST;
+			case kTexFilterLinear:  return GL_LINEAR;
+			}
+			break;
+
+		case kMipmapNearest:
+			switch( f ) {
+			case kTexFilterNearest: return GL_NEAREST_MIPMAP_NEAREST;
+			case kTexFilterLinear:  return GL_LINEAR_MIPMAP_NEAREST;
+			}
+			break;
+
+		case kMipmapLinear:
+			switch( f ) {
+			case kTexFilterNearest: return GL_NEAREST_MIPMAP_LINEAR;
+			case kTexFilterLinear:  return GL_LINEAR_MIPMAP_LINEAR;
+			}
+			break;
+		}
+
+		AX_UNREACHABLE();
+		return 0;
+	}
+	static GLenum getWrapMode( ETextureWrap w )
+	{
+		switch( w ) {
+		case kTexWrapRepeat: return GL_REPEAT;
+		case kTexWrapMirror: return GL_MIRROR;
+		case kTexWrapClamp:  return GL_CLAMP_TO_EDGE;
+		case kTexWrapBorder: return GL_CLAMP_TO_BORDER;
+		}
+
+		AX_UNREACHABLE();
+		return 0;
+	}
+
+	static Bool isBorderWhite( ETextureBorder b )
+	{
+		return b == kTexBorderTransparentWhite || b == kTexBorderOpaqueWhite;
+	}
+	static Bool isBorderOpaque( ETextureBorder b )
+	{
+		return b == kTexBorderOpaqueBlack || b == kTexBorderOpaqueWhite;
+	}
+
+	static void fillBorderColor( float( &borderColor )[ 4 ], ETextureBorder border ) {
+		const float c = isBorderWhite( border ) ? 1.0f : 0.0f;
+		const float a = isBorderOpaque( border ) ? 1.0f : 0.0f;
+
+		borderColor[0] = c;
+		borderColor[1] = c;
+		borderColor[2] = c;
+		borderColor[3] = a;
+	}
+
+	static GLenum getCompareOp( EGfxCompareOp op )
+	{
+		switch( op )
+		{
+		case kGfxCmpNever:          return GL_NEVER;
+		case kGfxCmpLess:           return GL_LESS;
+		case kGfxCmpEqual:          return GL_EQUAL;
+		case kGfxCmpLessOrEqual:    return GL_LEQUAL;
+		case kGfxCmpGreater:        return GL_GREATER;
+		case kGfxCmpNotEqual:       return GL_NOTEQUAL;
+		case kGfxCmpGreaterOrEqual: return GL_GEQUAL;
+		case kGfxCmpAlways:         return GL_ALWAYS;
+		}
+
+		AX_UNREACHABLE();
+		return 0;
+	}
+
+	static GLuint genSamplerObject( const SGfxSamplerDesc &desc )
+	{
+		GLuint ss;
+		glGenSamplers( 1, &ss );
+		if( !ss || !glIsSampler( ss ) ) {
+			return 0;
+		}
+
+		glSamplerParameteri( ss, GL_TEXTURE_MAG_FILTER, getMipFilter( desc.magFilter, desc.mipmapMode ) );
+		glSamplerParameteri( ss, GL_TEXTURE_MIN_FILTER, getMipFilter( desc.minFilter, desc.mipmapMode ) );
+		CHECKGL();
+
+		glSamplerParameteri( ss, GL_TEXTURE_WRAP_S, getWrapMode( desc.wrapU ) );
+		glSamplerParameteri( ss, GL_TEXTURE_WRAP_T, getWrapMode( desc.wrapV ) );
+		glSamplerParameteri( ss, GL_TEXTURE_WRAP_R, getWrapMode( desc.wrapW ) );
+		CHECKGL();
+
+		glSamplerParameterf( ss, GL_TEXTURE_LOD_BIAS, desc.mipLodBias );
+		glSamplerParameterf( ss, GL_TEXTURE_MIN_LOD, desc.minLod );
+		glSamplerParameterf( ss, GL_TEXTURE_MAX_LOD, desc.maxLod );
+		CHECKGL();
+
+		float borderColor[4];
+		fillBorderColor( borderColor, desc.borderColor );
+		glSamplerParameterfv( ss, GL_TEXTURE_BORDER_COLOR, &borderColor[0] );
+		CHECKGL();
+
+		if( desc.anisotropyEnable ) {
+			glSamplerParameterf( ss, GL_TEXTURE_MAX_ANISOTROPY, desc.maxAnisotropy );
+			CHECKGL();
+		}
+
+		if( desc.compareEnable ) {
+			glSamplerParameteri( ss, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
+			glSamplerParameteri( ss, GL_TEXTURE_COMPARE_FUNC, getCompareOp( desc.compareOp ) );
+			CHECKGL();
+		}
+
+		return ss;
+	}
+
 	IGfxAPISampler *CGfxAPI_GL::createSampler( const SGfxSamplerDesc &desc )
 	{
 		( ( Void )desc );
 
-		return nullptr;
+		GLuint ss;
+
+		if( !( ss = genSamplerObject( desc ) ) ) {
+			return nullptr;
+		}
+
+		return objectToPointer<IGfxAPISampler>( ss );
 	}
 	Void CGfxAPI_GL::destroySampler( IGfxAPISampler *pSampler )
 	{
-		( ( Void )pSampler );
+		if( !pSampler ) {
+			return;
+		}
+
+		GLuint ss = pointerToObject( pSampler );
+		AX_ASSERT_MSG( objectToPointer< IGfxAPISampler >( ss ) != pSampler, "Invalid pointer" );
+		AX_ASSERT_MSG( glIsSampler( ss ), "Invalid sampler state" );
+
+		glDeleteSamplers( 1, &ss );
+		CHECKGL();
 	}
 
 	IGfxAPITexture *CGfxAPI_GL::createTexture( ETextureFormat fmt, U16 resX, U16 resY, const U8 *pData )
@@ -372,7 +533,7 @@ namespace doll
 			return nullptr;
 		}
 
-		return ( IGfxAPIVBuffer * )( UPtr )vbo;
+		return objectToPointer< IGfxAPIVBuffer >( vbo );
 	}
 	IGfxAPIIBuffer *CGfxAPI_GL::createIBuffer( UPtr cBytes, const Void *pData, EBufferPerformance perf, EBufferPurpose purpose )
 	{
@@ -401,7 +562,36 @@ namespace doll
 			return nullptr;
 		}
 
-		return ( IGfxAPIIBuffer * )( UPtr )ebo;
+		return objectToPointer< IGfxAPIIBuffer >( ebo );
+	}
+	IGfxAPIUBuffer *CGfxAPI_GL::createUBuffer( UPtr cBytes, const Void *pData, EBufferPerformance perf, EBufferPurpose purpose )
+	{
+		const GLenum usage = getBufferUsage( perf, purpose );
+		if( !usage ) {
+			return nullptr;
+		}
+
+		GLuint ubo = 0;
+		glGenBuffers( 1, &ubo );
+		if( !ubo ) {
+			return nullptr;
+		}
+
+		glGetError();
+
+		glBindBuffer( GL_UNIFORM_BUFFER, ubo );
+		CHECKGL();
+		glBufferData( GL_UNIFORM_BUFFER, cBytes, pData, usage );
+		CHECKGL();
+
+		if( glGetError() != 0 ) {
+			DOLL_ERROR_LOG += "Uniform buffer data write failed.";
+
+			glDeleteBuffers( 1, &ubo );
+			return nullptr;
+		}
+
+		return objectToPointer< IGfxAPIUBuffer >( ubo );
 	}
 
 	static Void destroyBufferGL( GLuint buf )
@@ -414,15 +604,77 @@ namespace doll
 	}
 	Void CGfxAPI_GL::destroyVBuffer( IGfxAPIVBuffer *vb )
 	{
-		if( m_layoutVBuf == (GLuint)(UPtr)vb ) {
+		const GLuint vbo = pointerToObject( vb );
+
+		if( m_layoutVBuf == vbo ) {
 			m_layoutVBuf = ~0U;
 		}
 
-		destroyBufferGL( (GLuint)(UPtr)vb );
+		destroyBufferGL( vbo );
 	}
 	Void CGfxAPI_GL::destroyIBuffer( IGfxAPIIBuffer *ib )
 	{
-		destroyBufferGL( (GLuint)(UPtr)ib );
+		destroyBufferGL( pointerToObject( ib ) );
+	}
+	Void CGfxAPI_GL::destroyUBuffer( IGfxAPIUBuffer *ub )
+	{
+		destroyBufferGL( pointerToObject( ub ) );
+	}
+
+	IGfxAPIShader *CGfxAPI_GL::createShader( Str filename, EShaderFormat fmt, EShaderStage stage, UPtr cBytes, const Void *pData, IGfxDiagnostic *pDiag )
+	{
+		((Void)filename);
+		((Void)fmt);
+		((Void)stage);
+		((Void)cBytes);
+		((Void)pData);
+		((Void)pDiag);
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::createShader() not yet implemented" );
+
+		return nullptr;
+	}
+	IGfxAPIProgram *CGfxAPI_GL::createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic *pDiag )
+	{
+		((Void)shaders);
+		((Void)pDiag);
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::createProgram() not yet implemented" );
+
+		return nullptr;
+	}
+	Void CGfxAPI_GL::destroyShader( IGfxAPIShader *pShader )
+	{
+		if( !pShader ) {
+			return;
+		}
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::destroyShader() not yet implemented" );
+	}
+	Void CGfxAPI_GL::destroyProgram( IGfxAPIProgram *pProgram )
+	{
+		if( !pProgram ) {
+			return;
+		}
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::destroyProgram() not yet implemented" );
+	}
+	Bool CGfxAPI_GL::setCacheDirectory( Str basePath )
+	{
+		((Void)basePath);
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::setCacheDirectory() not yet implemented" );
+
+		return false;
+	}
+	Str CGfxAPI_GL::getCacheDirectory() const
+	{
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::getCacheDirectory() not yet implemented" );
+		return Str();
+	}
+	Void CGfxAPI_GL::invalidateShaderCache()
+	{
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::invalidateShaderCache() not yet implemented" );
 	}
 
 	Void CGfxAPI_GL::vsSetProjectionMatrix( const F32 *matrix )
@@ -675,6 +927,16 @@ namespace doll
 		CHECKGL();
 	}
 
+	Void CGfxAPI_GL::cmdBindProgram( IGfxAPIProgram *pProgram )
+	{
+		((Void)pProgram);
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::cmdBindProgram() not yet implemented" );
+	}
+	Void CGfxAPI_GL::cmdUnbindProgram()
+	{
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::cmdUnbindProgram() not yet implemented" );
+	}
 	Void CGfxAPI_GL::cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value )
 	{
 		GLint box[ 4 ];
@@ -752,13 +1014,17 @@ namespace doll
 		glBindBuffer( target, oldvbo );
 		return bResult;
 	}
-	Void CGfxAPI_GL::cmdWriteVBuffer( IGfxAPIVBuffer *vbuf, UPtr offset, UPtr size, const Void *pData )
+	Void CGfxAPI_GL::cmdWriteVBuffer( IGfxAPIVBuffer *vb, UPtr offset, UPtr size, const Void *pData )
 	{
-		( Void )updateBufferGL( GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING, (GLuint)(UPtr)vbuf, offset, size, pData );
+		( Void )updateBufferGL( GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING, pointerToObject(vb), offset, size, pData );
 	}
-	Void CGfxAPI_GL::cmdWriteIBuffer( IGfxAPIIBuffer *ibuf, UPtr offset, UPtr size, const Void *pData )
+	Void CGfxAPI_GL::cmdWriteIBuffer( IGfxAPIIBuffer *ib, UPtr offset, UPtr size, const Void *pData )
 	{
-		( Void )updateBufferGL( GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLuint)(UPtr)ibuf, offset, size, pData );
+		( Void )updateBufferGL( GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING, pointerToObject(ib), offset, size, pData );
+	}
+	Void CGfxAPI_GL::cmdWriteUBuffer( IGfxAPIUBuffer *ub, UPtr offset, UPtr size, const Void *pData )
+	{
+		( Void )updateBufferGL( GL_UNIFORM_BUFFER, GL_UNIFORM_BUFFER_BINDING, pointerToObject(ub), offset, size, pData );
 	}
 
 	static Bool readBufferGL( GLenum target, GLenum targetBinding, UPtr buffer, UPtr offset, UPtr size, void *pData )
@@ -781,11 +1047,15 @@ namespace doll
 	}
 	Void CGfxAPI_GL::cmdReadVBuffer( IGfxAPIVBuffer *vb, UPtr offset, UPtr size, Void *pData )
 	{
-		( Void )readBufferGL( GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING, (GLuint)(UPtr)vb, offset, size, pData );
+		( Void )readBufferGL( GL_ARRAY_BUFFER, GL_ARRAY_BUFFER_BINDING, pointerToObject(vb), offset, size, pData );
 	}
 	Void CGfxAPI_GL::cmdReadIBuffer( IGfxAPIIBuffer *ib, UPtr offset, UPtr size, Void *pData )
 	{
-		( Void )readBufferGL( GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLuint)(UPtr)ib, offset, size, pData );
+		( Void )readBufferGL( GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER_BINDING, pointerToObject(ib), offset, size, pData );
+	}
+	Void CGfxAPI_GL::cmdReadUBuffer( IGfxAPIUBuffer *ub, UPtr offset, UPtr size, Void *pData )
+	{
+		( Void )readBufferGL( GL_UNIFORM_BUFFER, GL_UNIFORM_BUFFER_BINDING, pointerToObject(ub), offset, size, pData );
 	}
 
 	Void CGfxAPI_GL::cmdDraw( ETopology mode, U32 cVerts, U32 uOffset )
@@ -845,6 +1115,7 @@ namespace doll
 		DOLL_DEBUG_LOG += axf( "GL version: %s", glGetString( GL_VERSION ) );
 		DOLL_DEBUG_LOG += axf( "GL vendor: %s", glGetString( GL_VENDOR ) );
 		DOLL_DEBUG_LOG += axf( "GL renderer: %s", glGetString( GL_RENDERER ) );
+		DOLL_DEBUG_LOG += axf( "GL renderer: %s", glGetString( GL_EXTENSIONS ) );
 
 		DOLL_TRACE( "Trying to initialize GLEW..." );
 		GLenum glewErr;
@@ -887,25 +1158,35 @@ namespace doll
 		}
 
 		DOLL_TRACE( "Checking for modern GL support" );
-		if( glversion < 150 ) {
+		if( glversion < 330 ) {
 #if !DOLL__USE_GLFW
 			os_finiGL( pCtx );
 #endif
 
 			const char *const pszErrorMsg =
 				"OpenGL version is too low.\n\n"
-				"Your video driver is reporting a version of OpenGL below 1.5.\n"
+				"Your video driver is reporting a version of OpenGL below 3.3.\n"
 				"It is likely that you did not update your video drivers directly from your GPU vendor. (AMD, NVIDIA, or Intel.)\n\n"
 				"Try updating your drivers and restarting if you have not already done so.\n\n"
 				"Other possibilities include:\n"
+#ifdef _WIN32
 				" * You're in safe mode. (How? We check for that before getting here!)\n"
-				" * You're actually running this on a GPU from 2003 or earlier. (WHY!?)\n"
+#endif
+				" * You're actually running this with a GPU from 2005 or earlier. (Why!?)\n"
 				" * You have transcended the physical world and are now software. Welcome to the Wired, Lain.";
-			const char *const pszErrorCap = "Error - OpenGL version is lower than 1.5";
+			const char *const pszErrorCap = "Error - OpenGL version is lower than 3.3";
 
 			errorBox( wnd, pszErrorMsg, pszErrorCap );
 			return nullptr;
 		}
+
+		/*
+
+			FIXME: We're kind of being overly paranoid by checking these
+			-      extensions. Just seeing "version 3.3" confirms their
+			-      presence for the most part.
+
+		*/
 
 		DOLL_TRACE( "Checking OpenGL extension availability..." );
 		static const char *const pszExtNames[] = {
@@ -915,7 +1196,9 @@ namespace doll
 			"GL_ARB_fragment_program",
 			"GL_ARB_framebuffer_object",
 			"GL_ARB_shader_objects",
-			"GL_ARB_shading_language_100",
+			"GL_ARB_sampler_objects",
+			"GL_ARB_texture_storage",
+			"GL_ARB_texture_swizzle",
 			"GL_EXT_bgra"
 		};
 		static const UPtr cExtNames = sizeof( pszExtNames )/sizeof( pszExtNames[ 0 ] );
@@ -973,6 +1256,8 @@ namespace doll
 				axstr_cat( szBuf, axf( " * %s\n", pszExtNames[ i ] ) );
 			}
 			axstr_cat( szBuf, "\nTry updating your video driver or upgrading to a newer GPU." );
+
+			DOLL_TRACE( axf( "Extensions: %s", (const char *)glewGetString(GL_EXTENSIONS) ) );
 
 			errorBox( wnd, szBuf, "Error - OpenGL extensions missing" );
 			return nullptr;

@@ -22,6 +22,7 @@ namespace doll
 		virtual EGfxAPI getAPI() const override;
 
 		virtual TArr<EShaderFormat> getSupportedShaderFormats() const override;
+		virtual TArr<EShaderStage> getSupportedShaderStages() const override;
 
 		virtual Void setDefaultState( const Mat4f &proj ) override;
 
@@ -41,8 +42,18 @@ namespace doll
 
 		virtual IGfxAPIVBuffer *createVBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) override;
 		virtual IGfxAPIIBuffer *createIBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) override;
+		virtual IGfxAPIUBuffer *createUBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) override;
 		virtual Void destroyVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void destroyIBuffer( IGfxAPIIBuffer * ) override;
+		virtual Void destroyUBuffer( IGfxAPIUBuffer * ) override;
+
+		virtual IGfxAPIShader *createShader( Str filename, EShaderFormat, EShaderStage, UPtr cBytes, const Void *pData, IGfxDiagnostic * ) override;
+		virtual IGfxAPIProgram *createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic * ) override;
+		virtual Void destroyShader( IGfxAPIShader * ) override;
+		virtual Void destroyProgram( IGfxAPIProgram * ) override;
+		virtual Bool setCacheDirectory( Str basePath ) override;
+		virtual Str getCacheDirectory() const = 0;
+		virtual Void invalidateShaderCache() = 0;
 		
 		virtual Void vsSetProjectionMatrix( const F32 *matrix ) override;
 		virtual Void vsSetModelViewMatrix( const F32 *matrix ) override;
@@ -61,12 +72,16 @@ namespace doll
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) override;
 
+		virtual Void cmdBindProgram( IGfxAPIProgram * ) override;
+		virtual Void cmdUnbindProgram() override;
 		virtual Void cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value ) override;
 		virtual Void cmdUpdateTexture( IGfxAPITexture *, U16 posX, U16 posY, U16 resX, U16 resY, const U8 *pData ) override;
 		virtual Void cmdWriteVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, const Void *pData ) override;
 		virtual Void cmdWriteIBuffer( IGfxAPIIBuffer *, UPtr offset, UPtr size, const Void *pData ) override;
+		virtual Void cmdWriteUBuffer( IGfxAPIUBuffer *, UPtr offset, UPtr size, const Void *pData ) override;
 		virtual Void cmdReadVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, Void *pData ) override;
 		virtual Void cmdReadIBuffer( IGfxAPIIBuffer *, UPtr offset, UPtr size, Void *pData ) override;
+		virtual Void cmdReadUBuffer( IGfxAPIUBuffer *, UPtr offset, UPtr size, Void *pData ) override;
 
 		virtual Void cmdDraw( ETopology, U32 cVerts, U32 uOffset ) override;
 		virtual Void cmdDrawIndexed( ETopology, U32 cIndices, U32 uOffset, U32 uBias ) override;

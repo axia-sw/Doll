@@ -22,6 +22,10 @@ namespace doll
 	class IGfxAPIIBuffer;
 	class IGfxAPIVLayout;
 	class IGfxAPISampler;
+	class IGfxAPIUBuffer;
+	class IGfxAPIShader;
+	class IGfxAPIProgram;
+	class IGfxAPIBindings;
 
 	enum EGfxAPI
 	{
@@ -93,6 +97,7 @@ namespace doll
 	};
 	enum EMipmapMode
 	{
+		kMipmapNone,
 		kMipmapNearest,
 		kMipmapLinear
 	};
@@ -179,7 +184,45 @@ namespace doll
 		kShaderFormatHLSL,
 		kShaderFormatMSL
 	};
+	enum EShaderStage
+	{
+		kShaderStageVertex,
+		kShaderStageGeometry,
+		kShaderStageHull,
+		kShaderStageDomain,
+		kShaderStagePixel,
+		kShaderStageCompute
+	};
 
+#define DOLL_GFXAPI_SHADERSTAGE_BIT(Stage_) static constexpr U32 kShaderStage##Stage_##Bit = U32(1)<<kShaderStage##Stage_
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Vertex);
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Geometry);
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Hull);
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Domain);
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Pixel);
+	DOLL_GFXAPI_SHADERSTAGE_BIT(Compute);
+#undef DOLL_GFXAPI_SHADERSTAGE_BIT
+	constexpr U32 kShaderStageAllGraphicsBits =
+		kShaderStageVertexBit |
+		kShaderStageGeometryBit |
+		kShaderStageHullBit |
+		kShaderStageDomainBit |
+		kShaderStagePixelBit;
+	constexpr U32 kShaderStageAllStagesBits =
+		kShaderStageComputeBit | ( kShaderStageComputeBit - 1 );
+	constexpr Bool isShaderStageFlagsValid( U32 stages )
+	{
+		return ( stages & ~( kShaderStageAllStagesBits ) ) == 0;
+	}
+
+	enum EGfxBindingType
+	{
+		kGfxBindingSampler,
+		kGfxBindingTexture,
+		kGfxBindingUniformBuffer
+	};
+	// TODO: Push constants
+ 
 	struct SGfxInitDesc
 	{
 		TArr<IGfxAPIProvider*> apis;
@@ -223,6 +266,119 @@ namespace doll
 		SGfxLayoutElement elements[ kMaxLayoutElements ];
 
 		IGfxAPIVLayout *  pAPIObj;
+	};
+
+	struct SGfxBinding
+	{
+		EGfxBindingType type;
+		U32             location;
+		union {
+			IGfxAPISampler *sampler;
+			IGfxAPITexture *texture;
+			IGfxAPIUBuffer *ubuffer;
+		} data;
+		U32 stageBits; // kShaderStage*Bit
+
+		SGfxBinding()
+		: type(kGfxBindingSampler)
+		, location(0)
+		, stageBits(0)
+		{
+			data.sampler = nullptr;
+		}
+		SGfxBinding( IGfxAPISampler *sampler, U32 location = 0 )
+		: type(kGfxBindingSampler)
+		, location(location)
+		, stageBits(0)
+		{
+			data.sampler = sampler;
+		}
+		SGfxBinding( IGfxAPITexture *texture, U32 location = 0 )
+		: type(kGfxBindingTexture)
+		, location(location)
+		, stageBits(0)
+		{
+			data.texture = texture;
+		}
+		SGfxBinding( IGfxAPIUBuffer *ubuffer, U32 location = 0 )
+		: type(kGfxBindingUniformBuffer)
+		, location(location)
+		, stageBits(0)
+		{
+			data.ubuffer = ubuffer;
+		}
+
+		Bool is( EGfxBindingType t ) const
+		{
+			return type == t;
+		}
+		Bool isSampler() const
+		{
+			return type == kGfxBindingSampler;
+		}
+		Bool isTexture() const
+		{
+			return type == kGfxBindingTexture;
+		}
+		Bool isUniformBuffer() const
+		{
+			return type == kGfxBindingUniformBuffer;
+		}
+
+		IGfxAPISampler *getSampler() const
+		{
+			AX_ASSERT_MSG( isSampler(), "Not a sampler" );
+			return const_cast<IGfxAPISampler*>( data.sampler );
+		}
+		IGfxAPITexture *getTexture() const
+		{
+			AX_ASSERT_MSG( isTexture(), "Not a texture" );
+			return const_cast<IGfxAPITexture*>( data.texture );
+		}
+		IGfxAPIUBuffer *getUniformBuffer() const
+		{
+			AX_ASSERT_MSG( isUniformBuffer(), "Not a uniform buffer" );
+			return const_cast<IGfxAPIUBuffer*>( data.ubuffer );
+		}
+
+		SGfxBinding &enableStages( U32 stages )
+		{
+			AX_ASSERT_MSG( isShaderStageFlagsValid(stages), "Invalid shader stages" );
+			stageBits |= stages;
+			return *this;
+		}
+		SGfxBinding &disableStages( U32 stages )
+		{
+			AX_ASSERT_MSG( isShaderStageFlagsValid(stages), "Invalid shader stages" );
+			stageBits &= ~stages;
+			return *this;
+		}
+		Bool anyStagesEnabled( U32 stages ) const
+		{
+			AX_ASSERT_MSG( isShaderStageFlagsValid(stages), "Invalid shader stages" );
+			return ( stageBits & stages ) != 0;
+		}
+		Bool allStagesEnabled( U32 stages ) const
+		{
+			AX_ASSERT_MSG( isShaderStageFlagsValid(stages), "Invalid shader stages" );
+			return ( stageBits & stages ) == stages;
+		}
+
+		SGfxBinding &copyStageBits( const SGfxBinding &binding )
+		{
+			stageBits = binding.stageBits;
+			return *this;
+		}
+	};
+
+	class IGfxDiagnostic
+	{
+	public:
+		IGfxDiagnostic();
+		virtual ~IGfxDiagnostic();
+
+		virtual Void error( Str filename, Str message ) = 0;
+		virtual Void diagnostic( Str filename, Str message ) = 0;
 	};
 
 	class CGfxFrame: public TPoolObject< CGfxFrame, kTag_RenderMisc >
@@ -273,6 +429,7 @@ namespace doll
 		virtual EGfxAPI getAPI() const = 0;
 
 		virtual TArr<EShaderFormat> getSupportedShaderFormats() const = 0;
+		virtual TArr<EShaderStage> getSupportedShaderStages() const = 0;
 
 		virtual Void setDefaultState( const Mat4f &proj ) = 0;
 
@@ -292,8 +449,18 @@ namespace doll
 
 		virtual IGfxAPIVBuffer *createVBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) = 0;
 		virtual IGfxAPIIBuffer *createIBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) = 0;
+		virtual IGfxAPIUBuffer *createUBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) = 0;
 		virtual Void destroyVBuffer( IGfxAPIVBuffer * ) = 0;
 		virtual Void destroyIBuffer( IGfxAPIIBuffer * ) = 0;
+		virtual Void destroyUBuffer( IGfxAPIUBuffer * ) = 0;
+
+		virtual IGfxAPIShader *createShader( Str filename, EShaderFormat, EShaderStage, UPtr cBytes, const Void *pData, IGfxDiagnostic * = nullptr ) = 0;
+		virtual IGfxAPIProgram *createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic * = nullptr ) = 0;
+		virtual Void destroyShader( IGfxAPIShader * ) = 0;
+		virtual Void destroyProgram( IGfxAPIProgram * ) = 0;
+		virtual Bool setCacheDirectory( Str basePath ) = 0;
+		virtual Str getCacheDirectory() const = 0;
+		virtual Void invalidateShaderCache() = 0;
 
 		virtual Void vsSetProjectionMatrix( const F32 *matrix ) = 0;
 		virtual Void vsSetModelViewMatrix( const F32 *matrix ) = 0;
@@ -312,12 +479,16 @@ namespace doll
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) = 0;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) = 0;
 
+		virtual Void cmdBindProgram( IGfxAPIProgram * ) = 0;
+		virtual Void cmdUnbindProgram() = 0;
 		virtual Void cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value ) = 0;
 		virtual Void cmdUpdateTexture( IGfxAPITexture *, U16 posX, U16 posY, U16 resX, U16 resY, const U8 *pData ) = 0;
 		virtual Void cmdWriteVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, const Void *pData ) = 0;
 		virtual Void cmdWriteIBuffer( IGfxAPIIBuffer *, UPtr offset, UPtr size, const Void *pData ) = 0;
+		virtual Void cmdWriteUBuffer( IGfxAPIUBuffer *, UPtr offset, UPtr size, const Void *pData ) = 0;
 		virtual Void cmdReadVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, Void *pData ) = 0;
 		virtual Void cmdReadIBuffer( IGfxAPIIBuffer *, UPtr offset, UPtr size, Void *pData ) = 0;
+		virtual Void cmdReadUBuffer( IGfxAPIUBuffer *, UPtr offset, UPtr size, Void *pData ) = 0;
 
 		virtual Void cmdDraw( ETopology, U32 cVerts, U32 uOffset ) = 0;
 		virtual Void cmdDrawIndexed( ETopology, U32 cIndices, U32 uOffset, U32 uBias ) = 0;
