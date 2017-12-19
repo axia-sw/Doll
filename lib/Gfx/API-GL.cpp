@@ -1115,7 +1115,6 @@ namespace doll
 		DOLL_DEBUG_LOG += axf( "GL version: %s", glGetString( GL_VERSION ) );
 		DOLL_DEBUG_LOG += axf( "GL vendor: %s", glGetString( GL_VENDOR ) );
 		DOLL_DEBUG_LOG += axf( "GL renderer: %s", glGetString( GL_RENDERER ) );
-		DOLL_DEBUG_LOG += axf( "GL renderer: %s", glGetString( GL_EXTENSIONS ) );
 
 		DOLL_TRACE( "Trying to initialize GLEW..." );
 		GLenum glewErr;
