@@ -294,13 +294,18 @@ namespace doll
 		( ( Void )pIBuf );
 	}
 
-	Void CGfxAPI_D3D11::cmdBindProgram( IGfxAPIProgram *pProgram )
+	Void CGfxAPI_D3D11::plBindProgram( IGfxAPIProgram *pProgram )
 	{
 		((Void)pProgram);
 	}
-	Void CGfxAPI_D3D11::cmdUnbindProgram()
+	Void CGfxAPI_D3D11::plUnbindProgram()
 	{
 	}
+	Void CGfxAPI_D3D11::cmdUpdateProgramBindings( const SGfxBinding &binding )
+	{
+		((Void)binding);
+	}
+
 	Void CGfxAPI_D3D11::cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value )
 	{
 		( ( Void )posX );

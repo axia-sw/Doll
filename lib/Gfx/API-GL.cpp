@@ -927,16 +927,23 @@ namespace doll
 		CHECKGL();
 	}
 
-	Void CGfxAPI_GL::cmdBindProgram( IGfxAPIProgram *pProgram )
+	Void CGfxAPI_GL::plBindProgram( IGfxAPIProgram *pProgram )
 	{
 		((Void)pProgram);
 
-		AX_ASSERT_MSG( false, "CGfxAPI_GL::cmdBindProgram() not yet implemented" );
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::plBindProgram() not yet implemented" );
 	}
-	Void CGfxAPI_GL::cmdUnbindProgram()
+	Void CGfxAPI_GL::plUnbindProgram()
 	{
-		AX_ASSERT_MSG( false, "CGfxAPI_GL::cmdUnbindProgram() not yet implemented" );
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::plUnbindProgram() not yet implemented" );
 	}
+	Void CGfxAPI_GL::cmdUpdateProgramBindings( const SGfxBinding &binding )
+	{
+		((Void)binding);
+
+		AX_ASSERT_MSG( false, "CGfxAPI_GL::cmdUpdateProgramBindings() not yet implemented" );
+	}
+
 	Void CGfxAPI_GL::cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value )
 	{
 		GLint box[ 4 ];

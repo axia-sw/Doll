@@ -49,7 +49,7 @@ namespace doll
 		virtual IGfxAPIUBuffer *createUBuffer( UPtr cBytes, const Void *pData, EBufferPerformance, EBufferPurpose ) override;
 		virtual Void destroyVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void destroyIBuffer( IGfxAPIIBuffer * ) override;
-		virtual void destroyUBuffer( IGfxAPIUBuffer * ) override;
+		virtual Void destroyUBuffer( IGfxAPIUBuffer * ) override;
 
 		virtual IGfxAPIShader *createShader( Str filename, EShaderFormat, EShaderStage, UPtr cBytes, const Void *pData, IGfxDiagnostic * ) override;
 		virtual IGfxAPIProgram *createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic * ) override;
@@ -76,8 +76,10 @@ namespace doll
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) override;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) override;
 
-		virtual Void cmdBindProgram( IGfxAPIProgram * ) override;
-		virtual Void cmdUnbindProgram() override;
+		virtual Void plBindProgram( IGfxAPIProgram * ) override;
+		virtual Void plUnbindProgram() override;
+		virtual Void cmdUpdateProgramBindings( const SGfxBinding & ) override;
+
 		virtual Void cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value ) override;
 		virtual Void cmdUpdateTexture( IGfxAPITexture *, U16 posX, U16 posY, U16 resX, U16 resY, const U8 *pData ) override;
 		virtual Void cmdWriteVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, const Void *pData ) override;

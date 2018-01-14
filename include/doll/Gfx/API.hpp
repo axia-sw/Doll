@@ -479,8 +479,10 @@ namespace doll
 		virtual Void iaBindVBuffer( IGfxAPIVBuffer * ) = 0;
 		virtual Void iaBindIBuffer( IGfxAPIIBuffer * ) = 0;
 
-		virtual Void cmdBindProgram( IGfxAPIProgram * ) = 0;
-		virtual Void cmdUnbindProgram() = 0;
+		virtual Void plBindProgram( IGfxAPIProgram * ) = 0;
+		virtual Void plUnbindProgram() = 0;
+		virtual Void cmdUpdateProgramBindings( const SGfxBinding & ) = 0;
+
 		virtual Void cmdClearRect( S32 posX, S32 posY, U32 resX, U32 resY, U32 value ) = 0;
 		virtual Void cmdUpdateTexture( IGfxAPITexture *, U16 posX, U16 posY, U16 resX, U16 resY, const U8 *pData ) = 0;
 		virtual Void cmdWriteVBuffer( IGfxAPIVBuffer *, UPtr offset, UPtr size, const Void *pData ) = 0;
@@ -592,18 +594,26 @@ namespace doll
 
 	DOLL_FUNC UPtr DOLL_API gfx_r_createVBuffer( UPtr size, const void *pData, EBufferPerformance perf, EBufferPurpose purpose );
 	DOLL_FUNC UPtr DOLL_API gfx_r_createIBuffer( UPtr size, const void *pData, EBufferPerformance perf, EBufferPurpose purpose );
+	DOLL_FUNC UPtr DOLL_API gfx_r_createUBuffer( UPtr size, const void *pData, EBufferPerformance perf, EBufferPurpose purpose );
 
 	DOLL_FUNC Bool DOLL_API gfx_r_writeVBuffer( UPtr vbuffer, UPtr offset, UPtr size, const void *pData );
 	DOLL_FUNC Bool DOLL_API gfx_r_writeIBuffer( UPtr ibuffer, UPtr offset, UPtr size, const void *pData );
+	DOLL_FUNC Bool DOLL_API gfx_r_writeUBuffer( UPtr ubuffer, UPtr offset, UPtr size, const void *pData );
 
 	DOLL_FUNC Bool DOLL_API gfx_r_readVBuffer( UPtr vbuffer, UPtr offset, UPtr size, void *pData );
 	DOLL_FUNC Bool DOLL_API gfx_r_readIBuffer( UPtr ibuffer, UPtr offset, UPtr size, void *pData );
+	DOLL_FUNC Bool DOLL_API gfx_r_readUBuffer( UPtr ubuffer, UPtr offset, UPtr size, void *pData );
 
 	DOLL_FUNC Void DOLL_API gfx_r_destroyVBuffer( UPtr vbuffer );
 	DOLL_FUNC Void DOLL_API gfx_r_destroyIBuffer( UPtr ibuffer );
+	DOLL_FUNC Void DOLL_API gfx_r_destroyUBuffer( UPtr ubuffer );
 
 	DOLL_FUNC Void DOLL_API gfx_r_setVBuffer( UPtr vbuffer );
 	DOLL_FUNC Void DOLL_API gfx_r_setIBuffer( UPtr ibuffer );
+
+	DOLL_FUNC Void DOLL_API gfx_r_bindProgram( UPtr program );
+	DOLL_FUNC Void DOLL_API gfx_r_unbindProgram();
+	DOLL_FUNC Void DOLL_API gfx_r_updateProgramBindings( const SGfxBinding & );
 
 	DOLL_FUNC Void DOLL_API gfx_r_draw( ETopology mode, U32 cVerts, U32 uOffset = 0 );
 	DOLL_FUNC Void DOLL_API gfx_r_drawIndexed( ETopology mode, U32 cIndices, U32 uOffset = 0, U32 uBias = 0 );

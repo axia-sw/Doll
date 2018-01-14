@@ -567,6 +567,11 @@ namespace doll
 		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
 		return (UPtr)g_pCurrentAPI->createIBuffer( size, pData, perf, purpose );
 	}
+	DOLL_FUNC UPtr DOLL_API gfx_r_createUBuffer( UPtr size, const void *pData, EBufferPerformance perf, EBufferPurpose purpose )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		return (UPtr)g_pCurrentAPI->createUBuffer( size, pData, perf, purpose );
+	}
 
 	DOLL_FUNC Bool DOLL_API gfx_r_writeVBuffer( UPtr vbuffer, UPtr offset, UPtr size, const void *pData )
 	{
@@ -580,6 +585,13 @@ namespace doll
 		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
 		AX_ASSERT_NOT_NULL( ibuffer );
 		g_pCurrentAPI->cmdWriteIBuffer( (IGfxAPIIBuffer*)ibuffer, offset, size, pData );
+		return true;
+	}
+	DOLL_FUNC Bool DOLL_API gfx_r_writeUBuffer( UPtr ubuffer, UPtr offset, UPtr size, const void *pData )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		AX_ASSERT_NOT_NULL( ubuffer );
+		g_pCurrentAPI->cmdWriteUBuffer( (IGfxAPIUBuffer*)ubuffer, offset, size, pData );
 		return true;
 	}
 
@@ -597,6 +609,13 @@ namespace doll
 		g_pCurrentAPI->cmdReadIBuffer( (IGfxAPIIBuffer*)ibuffer, offset, size, pData );
 		return true;
 	}
+	DOLL_FUNC Bool DOLL_API gfx_r_readUBuffer( UPtr ubuffer, UPtr offset, UPtr size, void *pData )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		AX_ASSERT_NOT_NULL( ubuffer );
+		g_pCurrentAPI->cmdReadUBuffer( (IGfxAPIUBuffer*)ubuffer, offset, size, pData );
+		return true;
+	}
 
 	DOLL_FUNC Void DOLL_API gfx_r_destroyVBuffer( UPtr vbuffer )
 	{
@@ -608,6 +627,11 @@ namespace doll
 		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
 		g_pCurrentAPI->destroyIBuffer( (IGfxAPIIBuffer*)ibuffer );
 	}
+	DOLL_FUNC Void DOLL_API gfx_r_destroyUBuffer( UPtr ubuffer )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->destroyUBuffer( (IGfxAPIUBuffer*)ubuffer );
+	}
 
 	DOLL_FUNC Void DOLL_API gfx_r_setVBuffer( UPtr vbuffer )
 	{
@@ -618,6 +642,22 @@ namespace doll
 	{
 		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
 		g_pCurrentAPI->iaBindIBuffer( (IGfxAPIIBuffer*)ibuffer );
+	}
+
+	DOLL_FUNC Void DOLL_API gfx_r_bindProgram( UPtr program )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->plBindProgram( (IGfxAPIProgram*)program );
+	}
+	DOLL_FUNC Void DOLL_API gfx_r_unbindProgram()
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->plUnbindProgram();
+	}
+	DOLL_FUNC Void DOLL_API gfx_r_updateProgramBindings( const SGfxBinding &binding )
+	{
+		DOLL_GFXAPI_ASSERT_CURFRAME( g_pCurrentAPI );
+		g_pCurrentAPI->cmdUpdateProgramBindings( binding );
 	}
 
 	DOLL_FUNC Void DOLL_API gfx_r_draw( ETopology mode, U32 cVerts, U32 uOffset )
