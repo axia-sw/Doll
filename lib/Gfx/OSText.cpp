@@ -401,8 +401,8 @@ namespace doll
 		//FontFamily fontFamily( L"MS Gothic" );
 
 		GraphicsPath path;
-		StringFormat strfmt;
-		path.AddString( wszText, (INT)wcslen( wszText ), item.pStyle->font.ptr(), Gdiplus::FontStyleRegular, (Gdiplus::REAL)item.pStyle->fontSize, Gdiplus::Rect( 0, 0, item.drawSize.x, item.drawSize.y ), &strfmt );
+		//StringFormat strfmt;
+		path.AddString( wszText, (INT)wcslen( wszText ), item.pStyle->font.ptr(), Gdiplus::FontStyleRegular, (Gdiplus::REAL)item.pStyle->fontSize, Gdiplus::Rect( 0, 0, item.drawSize.x, item.drawSize.y ), StringFormat::GenericTypographic() );
 
 		Pen pen( getGdipColor( item.uLineColor ), 3 );
 		pen.SetLineJoin(LineJoinRound);
