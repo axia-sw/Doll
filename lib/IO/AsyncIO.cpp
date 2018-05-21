@@ -336,6 +336,7 @@ namespace doll
 		do {
 			CAsyncOp *const pOp = g_core.io.transferOps.head();
 			if( !pOp ) {
+				g_core.io.transferOpsLock.release();
 				return false;
 			}
 
