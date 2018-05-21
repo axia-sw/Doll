@@ -465,12 +465,11 @@ namespace doll
 		gfx.SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
 		gfx.SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
 
-		const StringFormat fmt;
 		RectF boundingBox;
 
-		Font font( style->font.ptr(), REAL(style->fontSize), FontStyleRegular, UnitPoint );
+		Font font( style->font.ptr(), REAL(style->fontSize), FontStyleRegular, UnitPixel );
 
-		gfx.MeasureString( wszText, -1, &font, PointF(), &fmt, &boundingBox );
+		gfx.MeasureString( wszText, -1, &font, PointF(), StringFormat::GenericTypographic(), &boundingBox );
 
 		if( hDC != hGLDC ) {
 			DeleteDC( hDC );
