@@ -27,4 +27,6 @@ namespace doll
 	DOLL_FUNC RTexture *DOLL_API gfx_renderOSText( Str text, const SIntVector2 &size, U32 lineColor = DOLL_OSTEXT_LINE_COLOR, U32 fillColor = DOLL_OSTEXT_FILL_COLOR, CTextureAtlas *pDefAtlas = nullptr );
 	DOLL_FUNC void DOLL_API gfx_drawOSText( Str text, const SRect &area );
 
+	DOLL_FUNC void DOLL_API gfx_measureOSText( Str text, SRect &dstArea );
+
 }

@@ -197,6 +197,8 @@ namespace doll
 		Void addRenderedText( RTexture *texture );
 		Void clearRenderedTexts();
 
+		Void measureText( const STextStyle *style, Str text, SRect &dstArea );
+
 	private:
 		STextStyle *              m_pDefStyle;
 		TSmallArr<STextItem *, 8> m_items;
@@ -236,6 +238,26 @@ namespace doll
 
 	Bool MOSText::setDefStyle( Str fontFamily, U32 fontSize )
 	{
+		static const char *const defaultFontFamily =
+#if AX_OS_WINDOWS || AX_OS_UWP
+			"Verdana"
+#elif AX_OS_MACOSX || AX_OS_IOS
+			"Helvetica"
+#else
+			"sans"
+#endif
+			;
+		static const U32 defaultFontSize =
+			18
+			;
+
+		if( fontFamily.isEmpty() ) {
+			fontFamily = defaultFontFamily;
+		}
+		if( !fontSize ) {
+			fontSize = defaultFontSize;
+		}
+
 		DOLL_TRACE( axf( "MOSText::setDefStyle(fontFamily: \"%.*s\", size: %u)",
 			fontFamily.lenInt(), fontFamily.get(), fontSize ) );
 
@@ -271,20 +293,10 @@ namespace doll
 	}
 	STextItem *MOSText::newText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
 	{
-		static const char *const defaultFontFamily =
-#if AX_OS_WINDOWS || AX_OS_UWP
-			"Verdana"
-#elif AX_OS_MACOSX || AX_OS_IOS
-			"Helvetica"
-#else
-			"sans"
-#endif
-			;
-
 		DOLL_TRACE( axf( "MOSText::newText(text: \"%.*s\", size: [%i, %i], lineColor: 0x%.8X, fillColor: 0x%.8X)",
 			text.lenInt(), text.get(), size.x, size.y, lineColor, fillColor ) );
 
-		if( !m_pDefStyle && !setDefStyle( defaultFontFamily, 18 ) ) {
+		if( !m_pDefStyle && !setDefStyle( Str(), 0 ) ) {
 			DOLL_TRACE( " - !setDefStyle()" );
 			return nullptr;
 		}
@@ -429,6 +441,48 @@ namespace doll
 		m_renderCache.clear();
 	}
 
+	Void MOSText::measureText( const STextStyle *style_, Str text, SRect &dstArea ) {
+		dstArea = SRect();
+		
+		if( !style_ && !m_pDefStyle && !setDefStyle( Str(), 0 ) ) {
+			return;
+		}
+
+		const STextStyle *const style = style_ != nullptr ? style_ : m_pDefStyle;
+		AX_ASSERT_NOT_NULL( style );
+
+#if DOLL_OSTEXT_GDIPLUS
+		wchar_t wszText[ 4096 ];
+		if( !text.toWStr( wszText ) ) {
+			return;
+		}
+
+		const HDC hGLDC = wglGetCurrentDC();
+		const HDC hDC = hGLDC != NULL ? hGLDC : CreateDCW( nullptr, nullptr, nullptr, nullptr );
+
+		Graphics gfx( hDC );
+
+		gfx.SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
+		gfx.SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+
+		const StringFormat fmt;
+		RectF boundingBox;
+
+		Font font( style->font.ptr(), REAL(style->fontSize), FontStyleRegular, UnitPoint );
+
+		gfx.MeasureString( wszText, -1, &font, PointF(), &fmt, &boundingBox );
+
+		if( hDC != hGLDC ) {
+			DeleteDC( hDC );
+		}
+
+		dstArea.x1 = S32(boundingBox.X);
+		dstArea.y1 = S32(boundingBox.Y);
+		dstArea.x2 = S32(boundingBox.X + boundingBox.Width);
+		dstArea.y2 = S32(boundingBox.Y + boundingBox.Height);
+#endif
+	}
+
 	DOLL_FUNC STextItem *DOLL_API gfx_newOSText( Str text, const SIntVector2 &size, U32 lineColor, U32 fillColor )
 	{
 		return g_osTextMgr->newText( text, size, lineColor, fillColor );
@@ -502,6 +556,11 @@ namespace doll
 		g_osTextMgr->addRenderedText( tex );
 
 		gfx_queDrawImage( area.x1, area.y1, area.resX(), area.resY(), 0, 0, area.resX(), area.resY(), ~0U, ~0U, ~0U, ~0U, tex );
+	}
+
+	DOLL_FUNC void DOLL_API gfx_measureOSText( Str text, SRect &dstArea )
+	{
+		g_osTextMgr->measureText( nullptr, text, dstArea );
 	}
 
 }
