@@ -6,6 +6,7 @@
 #if DOLL_GFX_OPENGL_ENABLED
 
 #include "doll/Gfx/API-GL.hpp"
+#include "DummyDiag.hpp"
 
 #include "doll/Core/Logger.hpp"
 #include "doll/Math/Matrix.hpp"
@@ -642,15 +643,18 @@ namespace doll
 		destroyBufferGL( pointerToObject( ub ) );
 	}
 
+	static IGfxDiagnostic &getDiag( IGfxDiagnostic *pDiag )
+	{
+		static DummyDiag diag;
+		return pDiag != nullptr ? *pDiag : diag;
+	}
+
 	IGfxAPIShader *CGfxAPI_GL::createShader( Str filename, EShaderFormat fmt, EShaderStage stage, UPtr cBytes, const Void *pData, IGfxDiagnostic *pDiag )
 	{
-		if( fmt != kShaderFormatGLSL ) {
-			if( pDiag != nullptr ) {
-				pDiag->error( filename, 0, 0, "Expected GLSL format." );
-			} else {
-				g_ErrorLog( filename ) += "Expected GLSL format.";
-			}
+		IGfxDiagnostic &diag = getDiag( pDiag );
 
+		if( fmt != kShaderFormatGLSL ) {
+			diag.error( filename, 0, 0, "Expected GLSL format." );
 			return nullptr;
 		}
 
