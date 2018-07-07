@@ -377,8 +377,8 @@ namespace doll
 		IGfxDiagnostic();
 		virtual ~IGfxDiagnostic();
 
-		virtual Void error( Str filename, Str message ) = 0;
-		virtual Void diagnostic( Str filename, Str message ) = 0;
+		virtual Void error( Str filename, U32 line, U32 column, Str message ) = 0;
+		virtual Void diagnostic( Str filename, U32 line, U32 column, Str message ) = 0;
 	};
 
 	class CGfxFrame: public TPoolObject< CGfxFrame, kTag_RenderMisc >

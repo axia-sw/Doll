@@ -43,6 +43,21 @@ namespace doll
 		return static_cast< GLuint >( reinterpret_cast< UPtr >( ptr ) );
 	}
 
+	struct GLBindPoint {
+		GLuint location;
+		UPtr   nameIndex;
+	};
+	struct GLProgram {
+		GLuint               programObject;
+		TSmallArr<MutStr,20> stringTable;
+
+		struct {
+			TSmallArr<GLBindPoint, 4> samplers;
+			TSmallArr<GLBindPoint, 4> textures;
+			TSmallArr<GLBindPoint, 4> ubuffers;
+		} bindPoints;
+	};
+
 	class CGfxAPIProvider_GL: public IGfxAPIProvider {
 	public:
 		virtual Void drop() override {
@@ -202,7 +217,12 @@ namespace doll
 	}
 	TArr<EShaderStage> CGfxAPI_GL::getSupportedShaderStages() const
 	{
-		//
+		static const EShaderStage shaderStages[] = {
+			kShaderStageVertex,
+			kShaderStagePixel
+		};
+
+		return TArr<EShaderStage>( shaderStages );
 	}
 
 	Void CGfxAPI_GL::setDefaultState( const Mat4f &proj )
@@ -623,14 +643,15 @@ namespace doll
 
 	IGfxAPIShader *CGfxAPI_GL::createShader( Str filename, EShaderFormat fmt, EShaderStage stage, UPtr cBytes, const Void *pData, IGfxDiagnostic *pDiag )
 	{
-		((Void)filename);
-		((Void)fmt);
-		((Void)stage);
-		((Void)cBytes);
-		((Void)pData);
-		((Void)pDiag);
+		if( fmt != kShaderFormatGLSL ) {
+			if( pDiag != nullptr ) {
+				pDiag->error( filename, 0, 0, "Expected GLSL format." );
+			} else {
+				g_ErrorLog( filename ) += "Expected GLSL format.";
+			}
 
-		AX_ASSERT_MSG( false, "CGfxAPI_GL::createShader() not yet implemented" );
+			return nullptr;
+		}
 
 		return nullptr;
 	}
