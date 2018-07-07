@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/OS/OpenGL.hpp"
 
 #include "doll/Core/Logger.hpp"

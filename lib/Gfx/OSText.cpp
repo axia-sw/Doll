@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxOSText
+#include "../BuildSettings.hpp"
 
 #ifdef _WIN32
 # ifdef _MSC_VER

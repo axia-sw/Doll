@@ -1,4 +1,6 @@
-﻿#include "OSText_Cocoa.hpp"
+﻿#include "../BuildSettings.hpp"
+
+#include "OSText_Cocoa.hpp"
 #import <AppKit/AppKit.h>
 
 #include "doll/Core/Logger.hpp"

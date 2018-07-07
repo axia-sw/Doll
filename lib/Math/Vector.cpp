@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Math/Vector.hpp"
 #include "doll/Math/Matrix.hpp"
 

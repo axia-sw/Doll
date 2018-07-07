@@ -9,6 +9,8 @@
 # undef max
 #endif
 
+#include "../BuildSettings.hpp"
+
 #include "doll/IO/File.hpp"
 #include "doll/IO/VFS.hpp"
 

@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxAPIDrv
+#include "../BuildSettings.hpp"
 
 #include "doll/Core/Defs.hpp"
 #include "doll/Gfx/APIs.def.hpp"

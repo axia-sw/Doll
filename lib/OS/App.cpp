@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_OSApp
+#include "../BuildSettings.hpp"
 
 #include "doll/OS/App.hpp"
 

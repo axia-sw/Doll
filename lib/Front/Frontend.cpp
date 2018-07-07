@@ -8,6 +8,7 @@
 #endif
 
 #define DOLL_TRACE_FACILITY doll::kLog_FrontendEngine
+#include "../BuildSettings.hpp"
 
 #include "doll/Front/Frontend.hpp"
 #include "doll/Front/Input.hpp"

@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Script/Token.hpp"
 
 namespace doll { namespace script {

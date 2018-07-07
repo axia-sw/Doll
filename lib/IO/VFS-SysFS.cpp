@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/IO/VFS-SysFS.hpp"
 
 namespace doll

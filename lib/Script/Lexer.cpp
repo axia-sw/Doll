@@ -1,3 +1,5 @@
+#include "../BuildSettings.hpp"
+
 #include "doll/Script/Lexer.hpp"
 #include "doll/Script/Compiler.hpp"
 #include "doll/Script/Diagnostics.hpp"

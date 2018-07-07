@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_SndAPI
+#include "../BuildSettings.hpp"
 
 #include "doll/Snd/API-XA2.hpp"
 

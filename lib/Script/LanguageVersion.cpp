@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Script/LanguageVersion.hpp"
 
 namespace doll { namespace script {

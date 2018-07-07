@@ -1,3 +1,5 @@
+#include "../BuildSettings.hpp"
+
 #include "doll/Script/ProgramData.hpp"
 #include "doll/Util/Hash.hpp"
 

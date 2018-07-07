@@ -1,9 +1,8 @@
 #define DOLL_TRACE_FACILITY doll::kLog_SndFile
+#include "../BuildSettings.hpp"
 
 #include "doll/Snd/WaveFmt.hpp"
-
 #include "doll/Core/Logger.hpp"
-
 #include "doll/Util/ByteSwap.hpp"
 
 namespace doll

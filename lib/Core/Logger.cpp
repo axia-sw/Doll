@@ -1,4 +1,6 @@
-﻿#if defined( _WIN32 )
+﻿#include "../BuildSettings.hpp"
+
+#if defined( _WIN32 )
 # undef  _WIN32_WINNT
 # undef  WIN32_LEAN_AND_MEAN
 # define _WIN32_WINNT 0x0600

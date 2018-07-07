@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxTexture
+#include "../BuildSettings.hpp"
 
 #include "doll/Gfx/Texture.hpp"
 #include "doll/Gfx/API-GL.hpp"

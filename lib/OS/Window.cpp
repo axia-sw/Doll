@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_OSWindow
+#include "../BuildSettings.hpp"
 
 #include "doll/OS/Window.hpp"
 

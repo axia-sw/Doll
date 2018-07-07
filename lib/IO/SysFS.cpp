@@ -22,6 +22,7 @@
 # endif
 #endif
 
+#include "../BuildSettings.hpp"
 #include "doll/IO/SysFS.hpp"
 
 #include "doll/Core/Memory.hpp"

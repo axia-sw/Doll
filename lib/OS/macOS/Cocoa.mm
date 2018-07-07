@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "Cocoa.h"
 
 #include "doll/OS/Monitor.hpp"

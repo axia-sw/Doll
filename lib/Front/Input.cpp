@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_FrontendInput
+#include "../BuildSettings.hpp"
 
 #include "doll/Front/Input.hpp"
 #include "doll/Front/Frontend.hpp"

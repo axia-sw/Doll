@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_FrontendSetup
+#include "../BuildSettings.hpp"
 
 #include "doll/Front/Setup.hpp"
 #include "doll/Core/Config.hpp"

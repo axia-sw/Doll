@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/UX/Widget.hpp"
 
 #include "doll/Gfx/RenderCommands.hpp"

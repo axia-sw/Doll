@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Snd/ChannelUtil.hpp"
 
 #include "doll/Math/Basic.hpp"

@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Core/Defs.hpp"
 
 

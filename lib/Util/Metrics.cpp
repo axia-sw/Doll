@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_UtilMetrics
+#include "../BuildSettings.hpp"
 
 #include "doll/Util/Metrics.hpp"
 

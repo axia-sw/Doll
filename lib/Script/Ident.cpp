@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Script/Ident.hpp"
 
 namespace doll { namespace script {

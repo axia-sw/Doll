@@ -1,5 +1,6 @@
-#include "doll/Script/CompilerMemory.hpp"
+#include "../BuildSettings.hpp"
 
+#include "doll/Script/CompilerMemory.hpp"
 #include "doll/Core/MemoryTags.hpp"
 
 namespace doll { namespace script {

@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxSprite
+#include "../BuildSettings.hpp"
 
 #include "doll/Gfx/Sprite.hpp"
 #include "doll/Gfx/Action.hpp"

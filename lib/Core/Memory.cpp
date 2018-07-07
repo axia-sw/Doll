@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_CoreMemory
+#include "../BuildSettings.hpp"
 
 #include "doll/Core/Memory.hpp"
 #include "doll/Core/MemoryTags.hpp"

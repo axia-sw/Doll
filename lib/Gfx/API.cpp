@@ -1,4 +1,5 @@
 ﻿#define DOLL_TRACE_FACILITY doll::kLog_APIMgr
+#include "../BuildSettings.hpp"
 
 #include "doll/Gfx/API.hpp"
 

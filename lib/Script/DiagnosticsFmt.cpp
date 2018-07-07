@@ -1,3 +1,5 @@
+#include "../BuildSettings.hpp"
+
 #include "doll/Script/DiagnosticsFmt.hpp"
 #include "doll/Script/Ident.hpp"
 

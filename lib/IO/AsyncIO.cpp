@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_CoreAsyncIO
+#include "../BuildSettings.hpp"
 
 #include "doll/IO/AsyncIO.hpp"
 

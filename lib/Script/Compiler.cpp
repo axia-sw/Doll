@@ -1,3 +1,5 @@
+#include "../BuildSettings.hpp"
+
 #include "doll/Script/Compiler.hpp"
 #include "doll/Script/LanguageVersion.hpp"
 #include "doll/Script/Type.hpp"

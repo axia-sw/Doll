@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Util/FuncMgr.hpp"
 
 namespace doll

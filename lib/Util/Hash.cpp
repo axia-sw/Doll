@@ -1,3 +1,4 @@
+#include "../BuildSettings.hpp"
 #include "doll/Util/Hash.hpp"
 
 namespace doll

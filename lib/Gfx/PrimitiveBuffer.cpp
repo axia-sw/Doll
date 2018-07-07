@@ -1,4 +1,5 @@
 #define DOLL_TRACE_FACILITY doll::kLog_GfxPrimitiveBuffer
+#include "../BuildSettings.hpp"
 
 #include "doll/Gfx/PrimitiveBuffer.hpp"
 #include "doll/Gfx/API-GL.hpp"
