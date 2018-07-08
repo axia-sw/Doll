@@ -9,6 +9,7 @@
 #include "DummyDiag.hpp"
 
 #include "doll/Core/Logger.hpp"
+#include "doll/IO/File.hpp"
 #include "doll/Math/Matrix.hpp"
 #include "doll/OS/OpenGL.hpp"
 
@@ -649,6 +650,21 @@ namespace doll
 		return pDiag != nullptr ? *pDiag : diag;
 	}
 
+	static GLenum shaderStageToEnum(EShaderStage stage)
+	{
+		switch(stage) {
+		case kShaderStageCompute:  return GL_COMPUTE_SHADER;
+		case kShaderStageVertex:   return GL_VERTEX_SHADER;
+		case kShaderStageHull:     return GL_TESS_CONTROL_SHADER;
+		case kShaderStageDomain:   return GL_TESS_EVALUATION_SHADER;
+		case kShaderStageGeometry: return GL_GEOMETRY_SHADER;
+		case kShaderStagePixel:    return GL_FRAGMENT_SHADER;
+		}
+
+		AX_ASSERT_MSG(false, "Invalid shader stage");
+		return 0;
+	}
+
 	IGfxAPIShader *CGfxAPI_GL::createShader( Str filename, EShaderFormat fmt, EShaderStage stage, UPtr cBytes, const Void *pData, IGfxDiagnostic *pDiag )
 	{
 		IGfxDiagnostic &diag = getDiag( pDiag );
@@ -658,7 +674,60 @@ namespace doll
 			return nullptr;
 		}
 
-		return nullptr;
+		// TODO: Use a shader cache to avoid compiling on each call
+		// TODO: Use a generic lexer/preprocessor to process the text rather than just using it as-is
+
+		MutStr shaderSource;
+		if( !core_readText(shaderSource, filename) ) {
+			diag.error( filename, 0, 0, "Failed to read." );
+			return nullptr;
+		}
+
+		GLuint shaderObj = glCreateShader(shaderStageToEnum(stage));
+		if( !shaderObj ) {
+			CHECKGL();
+			diag.error( filename, 0, 0, "Failed to create shader object." );
+			return nullptr;
+		}
+
+		const GLchar *sources[] { reinterpret_cast<const GLchar *>(shaderSource.get()) };
+		const GLint lengths[] { GLint(shaderSource.lenInt()) };
+		static_assert( arraySize(sources) == arraySize(lengths), "Arrays must match in size" );
+
+		glShaderSource(shaderObj, GLsizei(arraySize(sources)), sources, lengths);
+		CHECKGL();
+
+		glCompileShader(shaderObj);
+		CHECKGL();
+
+		GLint didCompileSucceed = 0;
+		glGetShaderiv(shaderObj, GL_COMPILE_STATUS, &didCompileSucceed);
+
+		GLint logSize = 0;
+		glGetShaderiv(shaderObj, GL_INFO_LOG_LENGTH, &logSize);
+
+		MutStr diagString;
+		diagString.reserveAndSetLen(axstr_size_t(GLuint(logSize)));
+		glGetShaderInfoLog(shaderObj, GLsizei(diagString.len()), &logSize, reinterpret_cast<GLchar*>(diagString.data()));
+
+		// FIXME: Parse the info log and make separate diagnostics calls
+
+		if( !didCompileSucceed ) {
+			if( diagString.isUsed() ) {
+				diag.error(filename, 0, 0, diagString);
+			} else {
+				diag.error(filename, 0, 0, "Unknown compilation error (GLSL compiler infolog is empty)");
+			}
+
+			glDeleteShader(shaderObj);
+			return nullptr;
+		}
+		
+		if( diagString.isUsed() ) {
+			diag.diagnostic(filename, 0, 0, diagString);
+		}
+
+		return objectToPointer<IGfxAPIShader>(shaderObj);
 	}
 	IGfxAPIProgram *CGfxAPI_GL::createProgram( TArr<IGfxAPIShader> shaders, IGfxDiagnostic *pDiag )
 	{
@@ -674,6 +743,11 @@ namespace doll
 		if( !pShader ) {
 			return;
 		}
+
+		GLuint shaderObj = pointerToObject(pShader);
+		AX_ASSERT_MSG( glIsShader(shaderObj), "Expected shader object" );
+
+		glDeleteShader(shaderObj);
 
 		AX_ASSERT_MSG( false, "CGfxAPI_GL::destroyShader() not yet implemented" );
 	}
