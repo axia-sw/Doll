@@ -398,6 +398,7 @@ set(DOLLHEADERS_Util
 	include/doll/Util/Counter.hpp
 	include/doll/Util/FuncMgr.hpp
 	include/doll/Util/Hash.hpp
+	include/doll/Util/IndexMap.hpp
 	include/doll/Util/Messages.hpp
 	include/doll/Util/Metrics.hpp
 	include/doll/Util/SafeDX.hpp
@@ -496,6 +497,7 @@ set(DOLLSOURCES_Util
 	lib/Util/FuncMgr.cpp
 	lib/Util/Hash.cpp
 	lib/Util/Messages.cpp
+	lib/Util/IndexMap.cpp
 	lib/Util/Metrics.cpp
 )
 set(DOLLSOURCES_UX
