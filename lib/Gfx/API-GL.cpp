@@ -753,9 +753,9 @@ constexpr size_t shaderTypeToIndex( GLenum shaderType ) {
 	switch( shaderType ) {
 	case GL_VERTEX_SHADER:
 		return 0;
-	case GL_TESS_EVALUATION_SHADER:
-		return 1;
 	case GL_TESS_CONTROL_SHADER:
+		return 1;
+	case GL_TESS_EVALUATION_SHADER:
 		return 2;
 	case GL_GEOMETRY_SHADER:
 		return 3;
@@ -772,9 +772,9 @@ constexpr const char *shaderTypeToString( GLenum shaderType ) {
 	switch( shaderType ) {
 	case GL_VERTEX_SHADER:
 		return "vertex";
-	case GL_TESS_EVALUATION_SHADER:
-		return "hull";
 	case GL_TESS_CONTROL_SHADER:
+		return "hull";
+	case GL_TESS_EVALUATION_SHADER:
 		return "domain";
 	case GL_GEOMETRY_SHADER:
 		return "geometry";
