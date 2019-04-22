@@ -926,7 +926,7 @@ namespace doll
 		DOLL_TRACE("gfx: glfw: Resize properly");
 		do {
 			int w = 0, h = 0;
-			glfwGetWindowSize( g_core.view.window, &w, &h );
+			glfwGetFramebufferSize( g_core.view.window, &w, &h );
 			DOLL_TRACE( axf( "gfx: glfw: got %i x %i", w, h ) );
 			glfw_onSized_f( g_core.view.window, w, h );
 		} while( false );

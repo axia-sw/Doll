@@ -296,7 +296,7 @@ Void CGfxAPI_GL::resize( U32 uResX, U32 uResY ) {
 Void CGfxAPI_GL::getSize( U32 &uResX, U32 &uResY ) {
 #	if DOLL__USE_GLFW
 	int w, h;
-	glfwGetWindowSize( m_pCtx, &w, &h );
+	glfwGetFramebufferSize( m_pCtx, &w, &h );
 	uResX = U32( w );
 	uResY = U32( h );
 #	else
