@@ -1395,7 +1395,7 @@ DOLL_FUNC CGfxAPI_GL *DOLL_API gfx__api_init_gl( OSWindow wnd, const SGfxInitDes
 	}
 
 	DOLL_TRACE( "Checking for modern GL support" );
-	if( glversion < 330 ) {
+	if( glversion < 210 ) {
 #	if !DOLL__USE_GLFW
 		os_finiGL( pCtx );
 #	endif
