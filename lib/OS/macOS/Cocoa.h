@@ -30,7 +30,7 @@ namespace doll { namespace macOS {
 
     namespace wm {
 
-        typedef struct {} *Window;
+        typedef struct __WindowBase {} *Window;
 
         Window open( const SWndCreateInfo &info, void *initData );
         void close( Window );
