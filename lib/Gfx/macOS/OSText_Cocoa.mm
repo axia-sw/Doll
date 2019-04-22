@@ -1,4 +1,4 @@
-﻿#include "../BuildSettings.hpp"
+﻿#include "../../BuildSettings.hpp"
 
 #include "OSText_Cocoa.hpp"
 #import <AppKit/AppKit.h>
