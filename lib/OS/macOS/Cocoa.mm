@@ -191,7 +191,7 @@ namespace macOS {
 				CFDictionaryRef info;
 				CFIndex vendorID, productID, serialNumber;
 				CFNumberRef vendorIDRef, productIDRef, serialNumberRef;
-				Boolean success;
+				Boolean success = true;
 				
 				info = IODisplayCreateInfoDictionary(serv, kIODisplayOnlyPreferredName);
 				
@@ -199,9 +199,15 @@ namespace macOS {
 				productIDRef = (CFNumberRef)CFDictionaryGetValue(info, CFSTR(kDisplayProductID));
 				serialNumberRef = (CFNumberRef)CFDictionaryGetValue(info, CFSTR(kDisplaySerialNumber));
 				
-				success = CFNumberGetValue(vendorIDRef, kCFNumberCFIndexType, &vendorID);
-				success &= CFNumberGetValue(productIDRef, kCFNumberCFIndexType, &productID);
-				success &= CFNumberGetValue(serialNumberRef, kCFNumberCFIndexType, &serialNumber);
+				if( vendorIDRef != nil ) {
+					success &= CFNumberGetValue(vendorIDRef, kCFNumberCFIndexType, &vendorID);
+				}
+				if( productIDRef != nil ) {
+					success &= CFNumberGetValue(productIDRef, kCFNumberCFIndexType, &productID);
+				}
+				if( serialNumberRef != nil ) {
+					success &= CFNumberGetValue(serialNumberRef, kCFNumberCFIndexType, &serialNumber);
+				}
 				
 				if (!success) {
 					CFRelease(info);
