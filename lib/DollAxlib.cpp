@@ -1,6 +1,8 @@
 #define AXASSERT_IMPLEMENTATION
 #define   AXCONF_IMPLEMENTATION
+/*
 #define  AXFIBER_IMPLEMENTATION
+*/
 #define    AXLOG_IMPLEMENTATION
 #define     AXMM_IMPLEMENTATION
 #define AXPRINTF_IMPLEMENTATION
@@ -9,5 +11,4 @@
 #define   AXTIME_IMPLEMENTATION
 
 #include "doll/AxlibConfig.h"
-
-#include <axlib.hpp>
+#include "doll/Core/Defs.hpp"

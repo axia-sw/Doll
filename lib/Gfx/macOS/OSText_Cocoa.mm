@@ -181,9 +181,16 @@ namespace doll { namespace macOS {
 
 		[textStr drawInRect:rc withAttributes:toCocoa(m_attribs)];
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 		NSBitmapImageRep *const bmp =
 			[[NSBitmapImageRep alloc]
 				initWithFocusedViewRect:rc];
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 		[image unlockFocus];
 

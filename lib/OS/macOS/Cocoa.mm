@@ -143,6 +143,96 @@ namespace macOS {
 
 	namespace monitor {
 
+		// =BEGIN= : GLFW CODE : =BEGIN= //
+
+		//========================================================================
+		// GLFW 3.1 OS X - www.glfw.org
+		//------------------------------------------------------------------------
+		// Copyright (c) 2002-2006 Marcus Geelnard
+		// Copyright (c) 2006-2010 Camilla Berglund <elmindreda@elmindreda.org>
+		//
+		// This software is provided 'as-is', without any express or implied
+		// warranty. In no event will the authors be held liable for any damages
+		// arising from the use of this software.
+		//
+		// Permission is granted to anyone to use this software for any purpose,
+		// including commercial applications, and to alter it and redistribute it
+		// freely, subject to the following restrictions:
+		//
+		// 1. The origin of this software must not be misrepresented; you must not
+		//    claim that you wrote the original software. If you use this software
+		//    in a product, an acknowledgment in the product documentation would
+		//    be appreciated but is not required.
+		//
+		// 2. Altered source versions must be plainly marked as such, and must not
+		//    be misrepresented as being the original software.
+		//
+		// 3. This notice may not be removed or altered from any source
+		//    distribution.
+		//
+		//========================================================================
+
+		// Returns the io_service_t corresponding to a CG display ID, or 0 on failure.
+		// The io_service_t should be released with IOObjectRelease when not needed.
+		//
+		static io_service_t IOServicePortFromCGDisplayID(CGDirectDisplayID displayID) {
+			io_iterator_t iter;
+			io_service_t serv, servicePort = 0;
+			
+			CFMutableDictionaryRef matching = IOServiceMatching("IODisplayConnect");
+			
+			// releases matching for us
+			kern_return_t err = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &iter);
+			if (err) {
+				return 0;
+			}
+			
+			while ((serv = IOIteratorNext(iter)) != 0) {
+				CFDictionaryRef info;
+				CFIndex vendorID, productID, serialNumber;
+				CFNumberRef vendorIDRef, productIDRef, serialNumberRef;
+				Boolean success;
+				
+				info = IODisplayCreateInfoDictionary(serv, kIODisplayOnlyPreferredName);
+				
+				vendorIDRef = (CFNumberRef)CFDictionaryGetValue(info, CFSTR(kDisplayVendorID));
+				productIDRef = (CFNumberRef)CFDictionaryGetValue(info, CFSTR(kDisplayProductID));
+				serialNumberRef = (CFNumberRef)CFDictionaryGetValue(info, CFSTR(kDisplaySerialNumber));
+				
+				success = CFNumberGetValue(vendorIDRef, kCFNumberCFIndexType, &vendorID);
+				success &= CFNumberGetValue(productIDRef, kCFNumberCFIndexType, &productID);
+				success &= CFNumberGetValue(serialNumberRef, kCFNumberCFIndexType, &serialNumber);
+				
+				if (!success) {
+					CFRelease(info);
+					continue;
+				}
+				
+				// If the vendor and product id along with the serial don't match
+				// then we are not looking at the correct monitor.
+				// NOTE: The serial number is important in cases where two monitors
+				//       are the exact same.
+				if (CGDisplayVendorNumber(displayID) != vendorID  ||
+					CGDisplayModelNumber(displayID) != productID  ||
+					CGDisplaySerialNumber(displayID) != serialNumber)
+				{
+					CFRelease(info);
+					continue;
+				}
+				
+				// The VendorID, Product ID, and the Serial Number all Match Up!
+				// Therefore we have found the appropriate display io_service
+				servicePort = serv;
+				CFRelease(info);
+				break;
+			}
+			
+			IOObjectRelease(iter);
+			return servicePort;
+		}
+
+		// =END= : GLFW CODE : =END= //
+
 		bool queryDesktopInfo( SDesktopInfo &dst ) {
 			TMutArr<SMonitorInfo> monitors;
 
@@ -164,10 +254,18 @@ namespace macOS {
 					const NSSize pixelSize    = [[description objectForKey:NSDeviceSize] sizeValue];
 					const CGSize physicalSize = CGDisplayScreenSize( displayIdUInt );
 
-					NSDictionary *deviceInfo     = (NSDictionary *)IODisplayCreateInfoDictionary( CGDisplayIOServicePort( displayIdUInt ), kIODisplayOnlyPreferredName );
-					NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
+					io_service_t serv = IOServicePortFromCGDisplayID( displayIdUInt );
 
-					NSString *screenName = [localizedNames count] > 0 ? [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain] : @"macOS Display";
+					NSString *screenName = @"macOS Display";
+
+					if( serv != 0 ) {
+						NSDictionary *deviceInfo     = (NSDictionary *)IODisplayCreateInfoDictionary( serv, kIODisplayOnlyPreferredName );
+						NSDictionary *localizedNames = [deviceInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
+
+						if( [localizedNames count] > 0 ) {
+							screenName = [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain];
+						}
+					}
 
 					const float inchesScalar = 25.4f;
 
@@ -182,6 +280,10 @@ namespace macOS {
 					mon.dotsPerInch.y = (int)( pixelSize.height / physicalSize.height * inchesScalar );
 					mon.workArea.positionMe( SIntVector2( (int)visibleFrame.origin.x, (int)visibleFrame.origin.y ) );
 					mon.workArea.resizeMe( SIntVector2( (int)visibleFrame.size.width, (int)visibleFrame.size.height ) );
+
+					if( serv != 0 ) {
+						IOObjectRelease( serv );
+					}
 
 					if( !AX_VERIFY_MEMORY( monitors.tryAppend( mon ) ) ) {
 						return false;

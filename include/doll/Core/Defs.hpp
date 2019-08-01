@@ -1,7 +1,32 @@
 #pragma once
 
 #include "../AxlibConfig.h"
-#include <axlib.hpp>
+
+#include "ax_intdatetime.h"
+
+#include "ax_platform.h"
+#include "ax_types.h"
+
+#include "ax_printf.h"
+#include "ax_string.h"
+#include "ax_logger.h"
+#include "ax_assert.h"
+
+#include "ax_thread.h"
+#include "ax_memory.h"
+
+#include "ax_time.h"
+#include "ax_thread.h"
+//#include "ax_fiber.h"
+
+#include "ax_config.h"
+
+#include "ax_typetraits.hpp"
+#include "ax_manager.hpp"
+#include "ax_list.hpp"
+#include "ax_array.hpp"
+
+#include "ax_dictionary.hpp"
 
 #ifdef DOLL__BUILD
 # include "Private/Variants.hpp"

@@ -108,6 +108,8 @@ namespace doll
 	{
 #if AX_OS_WINDOWS
 		return wglMakeCurrent( ctx.hDC, ctx.hRC ) != FALSE;
+#else
+		return false;
 #endif
 	}
 	DOLL_FUNC Void DOLL_API os_deactivateGL()
@@ -123,12 +125,16 @@ namespace doll
 		return
 			wglGetCurrentDC() == ctx.hDC &&
 			wglGetCurrentContext() == ctx.hRC;
+#else
+		return false;
 #endif
 	}
 	DOLL_FUNC Bool DOLL_API os_hasActiveGL()
 	{
 #if AX_OS_WINDOWS
 		return wglGetCurrentContext() != NULL;
+#else
+		return false;
 #endif
 	}
 
@@ -136,6 +142,8 @@ namespace doll
 	{
 #if AX_OS_WINDOWS
 		return SwapBuffers( wglGetCurrentDC() ) != FALSE;
+#else
+		return false;
 #endif
 	}
 
