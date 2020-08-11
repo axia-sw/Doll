@@ -99,10 +99,6 @@ namespace macOS {
 			[NSApp terminate:nil];
 		}
 
-		NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny
-		                                    untilDate:[NSDate distantPast]
-		                                       inMode:NSDefaultRunLoopMode
-		                                      dequeue:YES];
 		bool waitForAndProcessEvent( bool &inoutReceivedQuit ) {
 			NSEvent *const event =
 			    [NSApp nextEventMatchingMask:NSEventMaskAny
@@ -332,7 +328,16 @@ namespace macOS {
 		}
 
 		void setTitle( Window wnd, Str title ) {
-			//
+			@autoreleasepool {
+				[asNSWnd( wnd ) setTitle:
+					[[NSString alloc]
+						initWithBytesNoCopy:(void*)title.get()
+						/* */        length:(NSUInteger)title.len()
+						/* */      encoding:NSUTF8StringEncoding
+						/* */  freeWhenDone:false
+					]
+				];
+			}
 		}
 		UPtr getTitle( Window wnd, char *pszOutTitleUTF8, UPtr cMaxOutBytes ) {
 			return 0;

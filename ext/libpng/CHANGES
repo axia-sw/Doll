@@ -1416,7 +1416,7 @@ Version 1.2.6beta3 [July 18, 2004]
   Relocated #ifndef PNGAPI guards in pngconf.h (Simon-Pierre, Cosmin).
   Updated scripts/makefile.vc(a)win32 (Cosmin).
   Updated the MSVC project (Simon-Pierre, Cosmin).
-  Updated the Borland C++ Builder project (Cosmin).
+  Updated the Borland C++ builder project (Cosmin).
   Avoided access to asm_flags in pngvcrd.c, if PNG_1_0_X is defined (Cosmin).
   Commented out warning about uninitialized mmx_support in pngvcrd.c (Cosmin).
   Removed scripts/makefile.bd32 and scripts/pngdef.pas (Cosmin).

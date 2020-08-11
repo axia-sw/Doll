@@ -171,8 +171,13 @@ namespace doll
 	static void glfw_getMouse( GLFWwindow *window, S32 &dstClientPosX, S32 &dstClientPosY )
 	{
 		double mousePosX, mousePosY;
+		float  xscale   , yscale;
 
 		glfwGetCursorPos( window, &mousePosX, &mousePosY );
+
+		glfwGetWindowContentScale( window, &xscale, &yscale );
+		mousePosX *= xscale;
+		mousePosY *= yscale;
 
 		dstClientPosX = S32( mousePosX );
 		dstClientPosY = S32( mousePosY );
@@ -208,10 +213,13 @@ namespace doll
 			(void)in_onMouseRelease_f( OSWindow(0), button, clientPosX, clientPosY, mods );
 		}
 	}
-	static void glfw_mousePos_f( GLFWwindow *, double x, double y )
+	static void glfw_mousePos_f( GLFWwindow *wnd, double x, double y )
 	{
-		const S32 clientPosX = S32( x );
-		const S32 clientPosY = S32( y );
+		float xscale, yscale;
+		glfwGetWindowContentScale( wnd, &xscale, &yscale );
+
+		const S32 clientPosX = S32( x*xscale );
+		const S32 clientPosY = S32( y*yscale );
 
 		// FIXME: Use current mods
 		const U32 mods = 0;
