@@ -1,3 +1,0 @@
-/Users/notkyon/Code/axia-sw/Doll/build.2/CMakeFiles/rebuild_cache.dir
-/Users/notkyon/Code/axia-sw/Doll/build.2/CMakeFiles/edit_cache.dir
-/Users/notkyon/Code/axia-sw/Doll/build.2/CMakeFiles/Doll.dir

@@ -20,6 +20,7 @@
 [Oo]bj/
 [Oo]bj32/
 [Oo]bj64/
+build.*/
 
 # Premake generated files
 *.make
