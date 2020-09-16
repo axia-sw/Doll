@@ -156,9 +156,23 @@ namespace doll
 		// Render this layer
 		gfx_setCurrentLayer( this );
 		prerenderGL( pView );
+		if( m_View.virtualShape.area() != 0 ) {
+			Mat4f proj;
+
+			const float left   = m_View.virtualShape.x1;
+			const float right  = m_View.virtualShape.x2;
+			const float top    = m_View.virtualShape.y1;
+			const float bottom = m_View.virtualShape.y2;
+
+			proj.loadOrthoProj( left, right, bottom, top, 0, 1000 );
+			gfx_r_loadProjection( proj.ptr() );
+		} else {
+			static const Mat4f identityProj = Mat4f().loadIdentity();
+			gfx_r_loadProjection( identityProj.ptr() );
+		}
 		gfx_drawQueueNowGL( pView );
 		if( m_Properties.bAutoclear ) {
-			gfx_clearQueue();
+			m_Renderer.commands.clear();
 		}
 		setViewport( VP );
 		postrenderGL( pView );
@@ -446,6 +460,10 @@ namespace doll
 		m_View.shape = calculateAspectAdjustments( m_View.desiredShape );
 		reflow();
 	}
+	Void RLayer::setVirtualSpace( const SRect &Shape )
+	{
+		m_View.virtualShape = Shape;
+	}
 
 	SIntVector2 RLayer::getPosition() const
 	{
@@ -458,6 +476,10 @@ namespace doll
 	SIntVector2 RLayer::getSize() const
 	{
 		return m_View.shape.size();
+	}
+	SRect RLayer::getVirtualSpace() const
+	{
+		return m_View.virtualShape;
 	}
 	
 	Void RLayer::setAspect( float fAspectRatio, EAspect aspectMode )
@@ -980,6 +1002,88 @@ namespace doll
 		}
 
 		return layer->getSize().y;
+	}
+	DOLL_FUNC Void DOLL_API gfx_setLayerVirtualSpace( RLayer *layer, S32 left, S32 top, S32 right, S32 bottom )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return;
+		}
+
+		layer->setVirtualSpace( SRect( left, top, right, bottom ) );
+	}
+	DOLL_FUNC Void DOLL_API gfx_setLayerVirtualSpaceRect( RLayer *layer, const SRect &rect )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return;
+		}
+
+		layer->setVirtualSpace( rect );
+	}
+	DOLL_FUNC Bool DOLL_API gfx_getLayerVirtualSpace( SRect &dst, const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return false;
+		}
+
+		dst = layer->getVirtualSpace();
+		return true;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceX1( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().x1;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceY1( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().y1;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceX2( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().x2;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceY2( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().y2;
+	}
+	DOLL_FUNC Bool DOLL_API gfx_getLayerVirtualSize( SIntVector2 &dst, const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return false;
+		}
+
+		dst = layer->getVirtualSpace().size();
+		return true;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSizeX( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().w();
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSizeY( const RLayer *layer )
+	{
+		if( !AX_VERIFY_NOT_NULL( layer ) ) {
+			return 0;
+		}
+
+		return layer->getVirtualSpace().h();
 	}
 	DOLL_FUNC Bool DOLL_API gfx_layerClientToScreen( SIntVector2 &dst, RLayer *layer, const SIntVector2 &local )
 	{

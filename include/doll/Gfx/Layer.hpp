@@ -401,10 +401,12 @@ namespace doll
 		Void setPosition( const SIntVector2 &Pos );
 		Void setOffset( const SIntVector2 &Off );
 		Void setSize( const SIntVector2 &Res );
+		Void setVirtualSpace( const SRect &Shape );
 
 		SIntVector2 getPosition() const;
 		SIntVector2 getOffset() const;
 		SIntVector2 getSize() const;
+		SRect getVirtualSpace() const;
 		
 		Void setAspect( float fAspectRatio, EAspect aspectMode );
 		float getAspectRatio() const;
@@ -768,6 +770,26 @@ namespace doll
 	}
 	DOLL_FUNC S32 DOLL_API gfx_getLayerSizeX( const RLayer *layer );
 	DOLL_FUNC S32 DOLL_API gfx_getLayerSizeY( const RLayer *layer );
+	DOLL_FUNC Void DOLL_API gfx_setLayerVirtualSpace( RLayer *layer, S32 left, S32 top, S32 right, S32 bottom );
+	DOLL_FUNC Void DOLL_API gfx_setLayerVirtualSpaceRect( RLayer *layer, const SRect &rect );
+	DOLL_FUNC Bool DOLL_API gfx_getLayerVirtualSpace( SRect &dst, const RLayer *layer );
+	inline SRect DOLL_API gfx_getLayerVirtualSpace( const RLayer *layer )
+	{
+		SRect r;
+		return gfx_getLayerVirtualSpace( r, layer ), r;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceX1( const RLayer *layer );
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceY1( const RLayer *layer );
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceX2( const RLayer *layer );
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSpaceY2( const RLayer *layer );
+	DOLL_FUNC Bool DOLL_API gfx_getLayerVirtualSize( SIntVector2 &dst, const RLayer *layer );
+	inline SIntVector2 DOLL_API gfx_getLayerVirtualSize( const RLayer *layer )
+	{
+		SIntVector2 r;
+		return gfx_getLayerVirtualSize( r, layer ), r;
+	}
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSizeX( const RLayer *layer );
+	DOLL_FUNC S32 DOLL_API gfx_getLayerVirtualSizeY( const RLayer *layer );
 	DOLL_FUNC Bool DOLL_API gfx_layerClientToScreen( SIntVector2 &dst, RLayer *layer, const SIntVector2 &local );
 	DOLL_FUNC Bool DOLL_API gfx_layerScreenToClient( SIntVector2 &dst, RLayer *layer, const SIntVector2 &global );
 	inline SIntVector2 DOLL_API gfx_layerClientToScreen( RLayer *layer, const SIntVector2 &local )
