@@ -278,8 +278,8 @@ Void CGfxAPI_GL::setDefaultState( const Mat4f &proj ) {
 
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
-	glMatrixMode( GL_PROJECTION );
-	glLoadMatrixf( proj.ptr() );
+	//glMatrixMode( GL_PROJECTION );
+	//glLoadMatrixf( proj.ptr() );
 
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
