@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
 project(Doll LANGUAGES C CXX)
-cmake_minimum_required(VERSION 3.4)
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build the shared library")
 set(DollIsShared_ ${BUILD_SHARED_LIBS})
