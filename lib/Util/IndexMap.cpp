@@ -161,7 +161,7 @@ Bool IndexMap::tryAllocateHashTable( SizeType hashTableSize ) {
 	}
 
 	m_hashTable = hashTable;
-	m_cHashTable = hashTableSize;
+	m_cHashTable = static_cast<UInt32>(hashTableSize);
 
 	return true;
 }
@@ -187,7 +187,7 @@ Bool IndexMap::tryAllocateLinkTable( SizeType linkTableSize ) {
 	}
 
 	m_linkTable = linkTable;
-	m_cLinkTable = linkTableSize;
+	m_cLinkTable = static_cast<UInt32>(linkTableSize);
 
 	m_indexMask = ~IndexInt(0);
 

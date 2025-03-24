@@ -8,6 +8,7 @@
 # endif
 # include <Windows.h>
 //# if DOLL_OSTEXT_GDIPLUS
+#  include <unknwn.h>
 #  include <wtypes.h> // needed for mingw `PROPID` definition
 #  include <gdiplus.h>
 //# endif
@@ -444,7 +445,7 @@ namespace doll
 
 	Void MOSText::measureText( const STextStyle *style_, Str text, SRect &dstArea ) {
 		dstArea = SRect();
-		
+
 		if( !style_ && !m_pDefStyle && !setDefStyle( Str(), 0 ) ) {
 			return;
 		}
