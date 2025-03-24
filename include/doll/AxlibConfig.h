@@ -16,7 +16,7 @@
 
 #ifndef DOLL_DLLFUNC
 # if defined(_WIN32) && !defined(DOLL_STATIC)
-#  ifdef DOLL__BUILD
+#  if defined(DOLL__BUILD) || defined(Doll_EXPORTS)
 #   define DOLL_DLLFUNC __declspec(dllexport)
 #  else
 #   define DOLL_DLLFUNC __declspec(dllimport)
