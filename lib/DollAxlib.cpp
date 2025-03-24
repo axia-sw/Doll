@@ -10,5 +10,8 @@
 #define AXTHREAD_IMPLEMENTATION
 #define   AXTIME_IMPLEMENTATION
 
+#undef  DOLL__BUILD
+#define DOLL__BUILD 1
+
 #include "doll/AxlibConfig.h"
 #include "doll/Core/Defs.hpp"
