@@ -15,6 +15,7 @@
 #include "Core/Version.hpp"
 
 #include "Core/Config.hpp"
+#include "Core/Handle.hpp"
 #include "Core/Logger.hpp"
 #include "Core/Memory.hpp"
 #include "Core/MemoryTags.hpp"
