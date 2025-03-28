@@ -10,32 +10,44 @@ namespace doll {
 	///
 	/// @typedef V128 P_V128
 	/// @brief 128-bit SIMD vector type for parameter passing.
-	
+
 #if AX_INTRIN_SSE
-	typedef __m128					V128;
-	
-	typedef __m128					P_V128;
+	class V128 {
+	public:
+		__m128 v;
+
+		inline V128() = default;
+		inline V128(__m128 v): v(v) {}
+		inline V128(const V128 &v): v(v.v) {}
+
+		inline V128 &operator=(__m128 v) { this->v = v; return *this; }
+		inline V128 &operator=(const V128 &v) { this->v = v.v; return *this; }
+
+		inline operator __m128() const { return v; }
+		inline operator __m128 &() { return v; }
+	};
+	typedef const V128 &            P_V128;
 #elif AX_INTRIN_NONE
-	struct V128
-	{
+	class V128 {
+	public:
 		union
 		{
-			F32					f[ 4 ];
-			int32					i[ 4 ];
-			U32					u[ 4 ];
+			F32                     f[4];
+			Int32                   i[4];
+			U32                     u[4];
 		};
 	};
 
-	typedef const V128 &			P_V128;
+	typedef const V128 &            P_V128;
 #else
 # error AX_INTRIN: Unhandled intrinsic
 #endif
 
 	/*
 	===========================================================================
-	
+
 		BASIC VECTOR PROCESSING FUNCTIONS
-	
+
 	===========================================================================
 	*/
 
@@ -205,7 +217,7 @@ namespace doll {
 		return _mm_mul_ps( a, b );
 #elif AX_INTRIN_NONE
 		V128 r;
-		
+
 		r.f[ 0 ] = a.f[ 0 ]*b.f[ 0 ];
 		r.f[ 1 ] = a.f[ 1 ]*b.f[ 1 ];
 		r.f[ 2 ] = a.f[ 2 ]*b.f[ 2 ];
@@ -229,7 +241,7 @@ namespace doll {
 		r.f[ 1 ] = a.f[ 1 ]/b.f[ 1 ];
 		r.f[ 2 ] = a.f[ 2 ]/b.f[ 2 ];
 		r.f[ 3 ] = a.f[ 3 ]/b.f[ 3 ];
-		
+
 		return r;
 #else
 # error AX_INTRIN: Unhandled intrinsic
@@ -242,12 +254,12 @@ namespace doll {
 		return _mm_mul_ps( a, _mm_set_ps1( b ) );
 #elif AX_INTRIN_NONE
 		V128 r;
-		
+
 		r.f[ 0 ] = a.f[ 0 ]*b;
 		r.f[ 1 ] = a.f[ 1 ]*b;
 		r.f[ 2 ] = a.f[ 2 ]*b;
 		r.f[ 3 ] = a.f[ 3 ]*b;
-		
+
 		return r;
 #else
 # error AX_INTRIN: Unhandled intrinsic
@@ -257,9 +269,9 @@ namespace doll {
 
 	/*
 	===========================================================================
-	
+
 		VECTOR SWIZZLE
-	
+
 	===========================================================================
 	*/
 
@@ -274,7 +286,7 @@ namespace doll {
 		G,
 		B,
 		A,
-		
+
 		S = 0,
 		T,
 		P,
@@ -330,12 +342,12 @@ namespace doll {
 		// special case optimization for returning the exact same value
 		return a;
 	}
-	
+
 	/*
 	===========================================================================
-	
+
 		GEOMETRY FUNCTIONS
-	
+
 	===========================================================================
 	*/
 
@@ -404,7 +416,7 @@ namespace doll {
 # error AX_INTRIN: Unhandled intrinsic
 #endif
 	}
-	
+
 	/// @brief Performs a 4D cross product.
 	///
 	/// This is useful for matrix inverses.
@@ -483,9 +495,9 @@ namespace doll {
 
 	/*
 	===========================================================================
-	
+
 		VECTOR OPERATORS
-	
+
 	===========================================================================
 	*/
 
@@ -528,7 +540,7 @@ namespace doll {
 	{
 		return a*( 1.0f/b );
 	}
-	
+
 	inline V128 &AX_VCALL operator+=( V128 &a, P_V128 b )
 	{
 		a = a + b;
